@@ -218,14 +218,14 @@
             const userStr = localStorage.getItem('userData');
             
             if (!token || !userStr) {
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
                 return;
             }
             
             const user = JSON.parse(userStr);
             if (user.role !== 'Area Owner') {
                 alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
                 return;
             }
 
@@ -361,7 +361,7 @@
 
             const token = localStorage.getItem('authToken');
             try {
-                const res = await fetch(`http://localhost:3000/api/assessment/${recordId}/resolve`, {
+                const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${recordId}/resolve`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -386,7 +386,7 @@
 
         function logout() {
             localStorage.clear();
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
     </script>
 </body>

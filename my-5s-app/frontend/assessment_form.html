@@ -319,7 +319,7 @@
         const userStr = localStorage.getItem('userData');
         if (!token || !userStr) {
             alert('กรุณาเข้าสู่ระบบก่อน');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
             return;
         }
         const user = JSON.parse(userStr);
@@ -467,7 +467,7 @@
         const token = localStorage.getItem('authToken'); 
         if (!token) {
             alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
-            window.location.href = 'login.html'; 
+            window.location.href = 'index.html'; 
             return;
         }
         
@@ -513,7 +513,7 @@
 
     function logout() {
         localStorage.clear(); 
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 </script>
 </body>
