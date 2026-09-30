@@ -251,26 +251,6 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .btn-submit-doc:hover { background: var(--gov-primary-dark); }
-        .btn-print-doc {
-            background: #ffffff;
-            color: var(--gov-text);
-            border: 1px solid var(--gov-border);
-            padding: 8px 18px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .btn-print-doc:hover { background: #f1f5f9; }
-
-        @media print {
-            .gov-header, .btn-submit-doc, .btn-print-doc, #previewContainer, input[type="file"], .btn-quick-pass {
-                display: none !important;
-            }
-            body { background: white; padding: 0; }
-            .container { max-width: 100%; margin: 0; padding: 0; }
-            .doc-paper { border: none; box-shadow: none; padding: 0; }
-        }
     </style>
 </head>
 <body>
@@ -294,11 +274,6 @@
 
 <main class="container">
     <div class="doc-paper">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div></div>
-            <button class="btn-print-doc" onclick="window.print()">🖨️ สั่งพิมพ์เอกสารราชการ (PDF)</button>
-        </div>
-
         <div class="doc-header-center">
             <h2>แบบตรวจประเมินกิจกรรม Green 7S Plus</h2>
             <p id="formTitleDisplay">ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด</p>
