@@ -1076,20 +1076,38 @@
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
+    // โหลดรายชื่อพื้นที่เข้ามาใส่ทั้งในช่อง "เพิ่มผู้ใช้" และ "แก้ไขผู้ใช้"
     async function loadAreasForSelect() {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch('https://my-7s-app.onrender.com/api/area', {
-                method: 'GET',
+            // เช็คเส้น API ให้ตรง (รองรับทั้ง /api/areas และ /api/area)
+            let res = await fetch('https://my-7s-app.onrender.com/api/areas', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            
+            if (!res.ok) {
+                res = await fetch('https://my-7s-app.onrender.com/api/area', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            }
+
             if (res.ok) {
                 const areas = await res.json();
-                const areaSelect = document.getElementById('newAssignedArea');
-                areaSelect.innerHTML = '<option value="">-- เลือกพื้นที่รับผิดชอบ --</option>';
+                
+                // สร้างตัวเลือกสำหรับ Dropdown
+                let optionsHtml = '<option value="">-- เลือกพื้นที่รับผิดชอบ --</option>';
                 areas.forEach(a => {
-                    areaSelect.innerHTML += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`;
+                    optionsHtml += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`;
                 });
+
+                // ใส่ข้อมูลลงทั้ง 2 Dropdown (ฟอร์มเพิ่มใหม่ และ ฟอร์มแก้ไข)
+                const newAreaSelect = document.getElementById('newAssignedArea');
+                const editAreaSelect = document.getElementById('editAssignedArea');
+                
+                if (newAreaSelect) newAreaSelect.innerHTML = optionsHtml;
+                if (editAreaSelect) editAreaSelect.innerHTML = optionsHtml;
+            } else {
+                console.error("โหลดข้อมูลพื้นที่ไม่สำเร็จ สถานะ:", res.status);
             }
         } catch (error) {
             console.error("โหลดข้อมูลพื้นที่ล้มเหลว:", error);
@@ -1108,8 +1126,16 @@
         document.getElementById('editRole').value = user.role;
         document.getElementById('editPassword').value = '';
 
-        document.getElementById('editAssignedArea').innerHTML = document.getElementById('newAssignedArea').innerHTML;
-        document.getElementById('editAssignedArea').value = user.assignedArea ? (user.assignedArea._id || user.assignedArea) : "";
+        // คัดลอกตัวเลือกทั้งหมดจาก Dropdown ฝั่งเพิ่มผู้ใช้มาใส่ฝั่งแก้ไข
+        const newAssignedArea = document.getElementById('newAssignedArea');
+        const editAssignedArea = document.getElementById('editAssignedArea');
+        if (newAssignedArea && editAssignedArea) {
+            editAssignedArea.innerHTML = newAssignedArea.innerHTML;
+        }
+
+        // กำหนดค่าพื้นที่เดิมของผู้ใช้คนนี้
+        const currentAreaId = user.assignedArea ? (user.assignedArea._id || user.assignedArea) : "";
+        editAssignedArea.value = currentAreaId;
 
         document.getElementById('editUserModal').style.display = 'flex';
     }
