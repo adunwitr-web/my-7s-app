@@ -3,217 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area Owner Portal - ระบบประเมิน 7ส. ออนไลน์</title>
+    <title>ระบบติดตามผลและปรับปรุงสถานที่ - หัวหน้างาน/ผู้รับผิดชอบสถานที่</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1b5e20;
-            --primary-light: #2e7d32;
-            --primary-surface: #e8f5e9;
-            --secondary: #0d47a1;
-            --secondary-surface: #e3f2fd;
-            --warning: #b76e00;
-            --warning-surface: #fff8e1;
-            --danger: #c62828;
-            --danger-surface: #ffebee;
-            --bg-page: #f8fafc;
-            --surface-card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #475569;
-            --border: #e2e8f0;
-            --radius-md: 10px;
-            --radius-lg: 14px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.12);
+            --gov-primary: #1b5e20;
+            --gov-primary-dark: #0f3d13;
+            --gov-gold: #b38600;
+            --gov-bg: #f8fafc;
+            --gov-card: #ffffff;
+            --gov-text: #0f172a;
+            --gov-muted: #475569;
+            --gov-border: #cbd5e1;
         }
 
         * { box-sizing: border-box; }
         body {
-            font-family: 'Sarabun', 'Inter', sans-serif;
-            background-color: var(--bg-page);
-            color: var(--text-main);
+            font-family: 'Sarabun', -apple-system, sans-serif;
+            background-color: var(--gov-bg);
+            color: var(--gov-text);
             margin: 0;
-            padding-bottom: 60px;
+            padding-bottom: 70px;
         }
 
-        .header-bar {
-            background: linear-gradient(135deg, #1b5e20 0%, #144618 100%);
+        .gov-header {
+            background: linear-gradient(135deg, var(--gov-primary-dark) 0%, var(--gov-primary) 100%);
             color: white;
-            padding: 0 28px;
-            height: 72px;
+            padding: 0 30px;
+            height: 75px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            border-bottom: 3px solid var(--gov-gold);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
         }
-        .brand-section {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .brand-logo-badge {
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-        }
-        .brand-title h1 {
-            font-size: 1.15em;
-            margin: 0;
-            font-weight: 700;
-        }
-        .brand-title p {
-            font-size: 0.78em;
-            margin: 0;
-            opacity: 0.85;
-        }
+        .gov-title-box { display: flex; align-items: center; gap: 14px; }
+        .gov-emblem { font-size: 26px; }
+        .gov-title h1 { margin: 0; font-size: 1.15em; font-weight: 700; }
+        .gov-title p { margin: 0; font-size: 0.8em; opacity: 0.9; }
 
-        .user-nav {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .user-chip {
-            background: rgba(255, 255, 255, 0.12);
+        .gov-user-panel { display: flex; align-items: center; gap: 12px; }
+        .gov-user-tag {
+            background: rgba(255, 255, 255, 0.15);
             padding: 6px 14px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 4px;
             font-size: 0.9em;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255,255,255,0.25);
         }
-        .user-avatar-dot {
-            width: 8px;
-            height: 8px;
-            background: #38bdf8;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #38bdf8;
-        }
-        .btn-logout {
+        .btn-gov-logout {
             background: #ffffff;
-            color: var(--danger);
+            color: #b91c1c;
             border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 7px 15px;
+            border-radius: 4px;
             font-weight: 600;
             font-size: 0.85em;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-logout:hover { background: var(--danger-surface); }
-
-        .container {
-            max-width: 1100px;
-            margin: 28px auto;
-            padding: 0 20px;
         }
 
-        .panel {
-            background: var(--surface-card);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            padding: 26px;
-            margin-bottom: 26px;
+        .container { max-width: 1100px; margin: 25px auto; padding: 0 20px; }
+
+        /* หนังสือแจ้งเตือนราชการ (Official Alert Banner) */
+        .official-notice-box {
+            display: none;
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            border-left: 6px solid #ea580c;
+            border-radius: 6px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 14px;
+
+        .doc-panel {
+            background: var(--gov-card);
+            border-radius: 6px;
+            border: 1px solid var(--gov-border);
+            padding: 24px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .doc-panel-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
             margin-bottom: 18px;
         }
-        .panel-title {
-            font-size: 1.15em;
-            font-weight: 700;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .doc-panel-header h2 { margin: 0; font-size: 1.15em; font-weight: 700; }
 
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-        }
-        table {
+        .gov-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.92em;
+        }
+        .gov-table th, .gov-table td {
+            border: 1px solid var(--gov-border);
+            padding: 12px 14px;
             text-align: left;
         }
-        th {
-            background-color: #f8fafc;
-            color: var(--text-muted);
-            font-weight: 600;
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.8em;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        td {
-            padding: 15px 18px;
-            border-bottom: 1px solid #f1f5f9;
-            color: var(--text-main);
-            vertical-align: middle;
-        }
-        tr:last-child td { border-bottom: none; }
-        tbody tr:hover { background-color: #fafbfc; }
+        .gov-table th { background-color: #f1f5f9; font-weight: 700; }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.82em;
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
             font-weight: 600;
         }
-        .badge::before {
-            content: "";
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-        .badge-warning { background: var(--warning-surface); color: var(--warning); }
-        .badge-warning::before { background: var(--warning); }
-        .badge-info { background: var(--secondary-surface); color: var(--secondary); }
-        .badge-info::before { background: var(--secondary); }
-        .badge-success { background: var(--primary-surface); color: var(--primary); }
-        .badge-success::before { background: var(--primary); }
+        .status-warning { background: #fee2e2; color: #991b1b; }
+        .status-info { background: #e0f2fe; color: #075985; }
+        .status-success { background: #dcfce7; color: #166534; }
 
-        .btn-action {
-            background: var(--secondary-surface);
-            color: var(--secondary);
-            border: 1px solid #bfdbfe;
-            padding: 6px 14px;
-            border-radius: 6px;
+        .btn-action-gov {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
             font-weight: 600;
-            font-size: 0.86em;
+            font-size: 0.88em;
             cursor: pointer;
-            transition: all 0.15s;
-        }
-        .btn-action:hover {
-            background: #dbeafe;
-            transform: translateY(-1px);
         }
 
+        /* หน้าต่างป๊อปอัปส่งมอบงาน */
         .modal {
             display: none;
             position: fixed;
@@ -223,168 +136,149 @@
             width: 100%;
             height: 100%;
             background-color: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
             align-items: center;
             justify-content: center;
         }
         .modal-content {
             background-color: #ffffff;
-            border-radius: var(--radius-lg);
+            border-radius: 6px;
             width: 90%;
-            max-width: 620px;
-            box-shadow: var(--shadow-lg);
+            max-width: 650px;
             max-height: 90vh;
             overflow-y: auto;
             padding: 28px;
-            border: 1px solid var(--border);
-            animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes modalScale {
-            from { opacity: 0; transform: scale(0.96); }
-            to { opacity: 1; transform: scale(1); }
+            border: 1px solid var(--gov-border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 16px;
-            margin-bottom: 20px;
+            border-bottom: 1px solid var(--gov-border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
         }
-        .modal-header h3 { margin: 0; font-size: 1.2em; font-weight: 700; color: var(--text-main); }
-        .close-btn {
-            background: #f1f5f9;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            font-size: 18px;
-            cursor: pointer;
-        }
-
+        .modal-header h3 { margin: 0; font-size: 1.15em; font-weight: 700; }
         .form-control {
             width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 9px 12px;
+            border: 1px solid var(--gov-border);
+            border-radius: 4px;
             font-family: inherit;
             font-size: 0.95em;
-            background: #ffffff;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
         }
     </style>
 </head>
 <body>
 
-<header class="header-bar">
-    <div class="brand-section">
-        <div class="brand-logo-badge">🏢</div>
-        <div class="brand-title">
-            <h1>ระบบติดตามและปรับปรุงพื้นที่ 7ส. (Area Owner Portal)</h1>
+<header class="gov-header">
+    <div class="gov-title-box">
+        <div class="gov-emblem">🏛️</div>
+        <div class="gov-title">
+            <h1>ระบบติดตามผลการประเมินมาตรฐานสถานที่ (ฝ่ายสถานที่และกายภาพ)</h1>
             <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
         </div>
     </div>
-    <div class="user-nav">
-        <div class="user-chip">
-            <span class="user-avatar-dot"></span>
-            <span id="ownerName">ผู้รับผิดชอบพื้นที่</span>
+    <div class="gov-user-panel">
+        <div class="gov-user-tag">
+            <span>ผู้รับผิดชอบสถานที่: </span>
+            <strong id="ownerName">กำลังโหลด...</strong>
         </div>
-        <button class="btn-logout" onclick="logout()">🚪 ออกจากระบบ</button>
+        <button class="btn-gov-logout" onclick="logout()">ออกจากระบบงาน</button>
     </div>
 </header>
 
 <main class="container">
-    <!-- 🟢 1. Alertbox สำหรับแจ้งเตือนด่วน -->
-    <div id="urgentAlertBox" style="display: none; background: #fff1f2; border: 1px solid #fecdd3; border-left: 6px solid #e11d48; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);">
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 15px;">
-            <div style="display: flex; gap: 14px;">
-                <div style="font-size: 28px; line-height: 1;">⚠️</div>
-                <div>
-                    <h3 style="margin: 0 0 6px 0; color: #9f1239; font-size: 1.15em; font-weight: 700;">
-                        แจ้งเตือน: มีพื้นที่ประเมินไม่ผ่านเกณฑ์มาตรฐาน Green 7S Plus
-                    </h3>
-                    <p id="alertAreaDetails" style="margin: 0 0 8px 0; font-size: 0.92em; color: #4c0519; line-height: 1.5;">
-                        <!-- ข้อความจะถูกนำมาใส่ด้วย JavaScript -->
-                    </p>
-                    <div id="alertAssessorComment" style="font-size: 0.88em; color: #881337; font-style: italic; background: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 6px; border: 1px solid #ffe4e6; display: inline-block;">
-                    </div>
-                </div>
+    <!-- หนังสือแจ้งเตือนราชการเมื่อมีจุดบกพร่อง -->
+    <div id="urgentAlertBox" class="official-notice-box">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+            <div>
+                <h3 style="margin: 0 0 6px 0; color: #9a3412; font-size: 1.1em; font-weight: 700;">
+                    ⚠️ บันทึกข้อความแจ้งเตือน: มีรายการตรวจพบที่ไม่ผ่านเกณฑ์มาตรฐาน
+                </h3>
+                <p id="alertAreaDetails" style="margin: 0 0 8px 0; font-size: 0.95em; color: #431407; line-height: 1.5;"></p>
+                <div id="alertAssessorComment" style="font-size: 0.9em; color: #7c2d12; background: white; padding: 8px 12px; border-radius: 4px; border: 1px solid #fed7aa; display: inline-block;"></div>
             </div>
-            <button id="btnOpenFixFromAlert" style="background: #e11d48; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9em; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(225, 29, 72, 0.25);">
-                🛠️ ดูจุดบกพร่อง & ส่งงานแก้ไข
+            <button id="btnOpenFixFromAlert" class="btn-action-gov" style="background: #ea580c; white-space: nowrap; padding: 8px 16px;">
+                ตรวจสอบและส่งรายงานการแก้ไข
             </button>
         </div>
     </div>
 
-    <!-- 🟢 2. ตารางเดิม (Tasks to fix Panel) -->
-    <section class="panel" style="border-top: 4px solid var(--warning);">
-        <div class="panel-header">
-            <h2 class="panel-title" style="color: var(--warning);">⚠️ รายการพื้นที่ที่ต้องดำเนินการปรับปรุงแก้ไข (Needs Improvement)</h2>
+    <!-- รายการข้อตรวจพบที่ต้องดำเนินการแก้ไข -->
+    <section class="doc-panel" style="border-top: 4px solid #ea580c;">
+        <div class="doc-panel-header">
+            <h2 style="color: #9a3412;">📋 บัญชีรายการข้อตรวจพบที่ต้องปรับปรุงแก้ไข (Action Plan)</h2>
         </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>วันที่ประเมิน</th><th>พื้นที่รับผิดชอบ</th><th>คะแนนที่ได้</th><th>สถานะความคืบหน้า</th><th>การดำเนินการ</th></tr>
-                </thead>
-                <tbody id="tablePendingTasks">
-                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">กำลังโหลดข้อมูลงาน...</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <table class="gov-table">
+            <thead>
+                <tr>
+                    <th>วันที่มีการตรวจ</th>
+                    <th>สถานที่รับผิดชอบ</th>
+                    <th>ร้อยละที่ได้</th>
+                    <th>สถานะการพิจารณา</th>
+                    <th>การปฏิบัติการ</th>
+                </tr>
+            </thead>
+            <tbody id="tablePendingTasks">
+                <tr><td colspan="5" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังตรวจสอบข้อมูลสารสนเทศ...</td></tr>
+            </tbody>
+        </table>
     </section>
 
-    <!-- History Panel -->
-    <section class="panel" style="border-top: 4px solid var(--primary);">
-        <div class="panel-header">
-            <h2 class="panel-title" style="color: var(--primary);">📜 ประวัติผลการประเมินที่ผ่านเกณฑ์มาตรฐาน</h2>
+    <!-- ประวัติสถานที่ที่ผ่านการรับรองมาตรฐาน -->
+    <section class="doc-panel" style="border-top: 4px solid var(--gov-primary);">
+        <div class="doc-panel-header">
+            <h2 style="color: var(--gov-primary);">📜 ทะเบียนประวัติสถานที่ที่ผ่านการรับรองมาตรฐานแล้ว</h2>
         </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>วันที่ประเมิน</th><th>พื้นที่รับผิดชอบ</th><th>คะแนนรวม</th><th>ผลการรับรอง</th></tr>
-                </thead>
-                <tbody id="tableHistoryTasks">
-                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">กำลังโหลดประวัติ...</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <table class="gov-table">
+            <thead>
+                <tr>
+                    <th>วันที่มีการตรวจ</th>
+                    <th>สถานที่รับผิดชอบ</th>
+                    <th>ร้อยละที่ได้</th>
+                    <th>ผลการรับรองมาตรฐาน</th>
+                </tr>
+            </thead>
+            <tbody id="tableHistoryTasks">
+                <tr><td colspan="4" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังรวบรวมประวัติการรับรอง...</td></tr>
+            </tbody>
+        </table>
     </section>
 </main>
 
-<!-- Correction & Image Upload Modal -->
+<!-- หน้าต่างรายงานผลการปรับปรุงสถานที่ -->
 <div id="correctionModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>🛠️ รายละเอียดข้อเสนอแนะและส่งหลักฐานแก้ไข</h3>
-            <button class="close-btn" onclick="closeCorrectionModal()">&times;</button>
+            <h3>รายงานผลการปรับปรุงแก้ไขมาตรฐานสถานที่</h3>
+            <button onclick="closeCorrectionModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
 
-        <div style="background: var(--warning-surface); border: 1px solid #ffe0b2; border-left: 4px solid var(--warning); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
-            <p style="margin: 0 0 6px 0; font-weight: 700; color: #b45309; font-size: 0.95em;">📸 ภาพถ่ายจุดที่ไม่ผ่านเกณฑ์ (จากกรรมการผู้ตรวจ):</p>
-            <div id="assessorImageContainer" style="margin-top: 10px; text-align: center;"></div>
-            <p id="assessorCommentText" style="margin: 8px 0 0 0; color: #78350f; font-size: 0.9em; font-style: italic;"></p>
+        <div style="background: #fff7ed; border-left: 4px solid #ea580c; padding: 14px; border-radius: 4px; margin-bottom: 16px;">
+            <p style="margin: 0 0 6px 0; font-weight: 700; color: #9a3412; font-size: 0.95em;">📸 ภาพถ่ายจุดบกพร่องจากคณะกรรมการตรวจประเมิน:</p>
+            <div id="assessorImageContainer" style="margin-top: 8px; text-align: center;"></div>
+            <p id="assessorCommentText" style="margin: 8px 0 0 0; color: #7c2d12; font-size: 0.9em; font-style: italic;"></p>
         </div>
 
-        <div style="background: #f8fafc; padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border);">
-            <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 1em;">📝 บันทึกผลการดำเนินงานแก้ไข</h4>
-            <div style="margin-bottom: 14px;">
-                <label style="display:block; font-weight: 600; font-size: 0.88em; margin-bottom: 6px;">รายละเอียดการปรับปรุงพื้นที่:</label>
-                <textarea id="correctionDetail" placeholder="เช่น ทำความสะอาดจุดสัมผัส, จัดระเบียบสายไฟและอุปกรณ์เรียบร้อย..." class="form-control" style="height: 85px;"></textarea>
+        <div style="background: #f8fafc; padding: 16px; border-radius: 4px; border: 1px solid var(--gov-border);">
+            <h4 style="margin: 0 0 10px 0; color: var(--gov-primary-dark); font-size: 0.98em;">บันทึกรายงานการดำเนินการปรับปรุง:</h4>
+            <div style="margin-bottom: 12px;">
+                <label style="display:block; font-size: 0.88em; font-weight: 600; margin-bottom: 5px;">สรุปผลการดำเนินงานแก้ไข:</label>
+                <textarea id="correctionDetail" placeholder="ระบุการดำเนินงาน เช่น ทำความสะอาดจุดสัมผัส, จัดระเบียบสายไฟและอุปกรณ์เรียบร้อย..." class="form-control" style="height: 85px;"></textarea>
             </div>
             <div>
-                <label style="display:block; font-weight: 600; font-size: 0.88em; margin-bottom: 6px;">📷 ภาพถ่ายหลักฐานหลังดำเนินการแก้ไขเสร็จสิ้น:</label>
+                <label style="display:block; font-size: 0.88em; font-weight: 600; margin-bottom: 5px;">📷 ภาพถ่ายเชิงประจักษ์หลังการปรับปรุงเสร็จสิ้น:</label>
                 <input type="file" id="ownerFixPhotoInput" accept="image/*">
-                <div id="ownerFixPreviewContainer" style="display: none; margin-top: 12px; text-align: center;">
-                    <img id="ownerFixPreview" style="max-width: 100%; max-height: 220px; border-radius: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+                <div id="ownerFixPreviewContainer" style="display: none; margin-top: 10px; text-align: center;">
+                    <img id="ownerFixPreview" style="max-width: 100%; max-height: 220px; border-radius: 4px; border: 1px solid var(--gov-border);">
                 </div>
             </div>
-            <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                <button onclick="closeCorrectionModal()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 8px; cursor: pointer; font-weight: 500;">ยกเลิก</button>
-                <button onclick="submitCorrection()" style="background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-weight: 600;">📤 ส่งมอบงานให้ Admin รับรอง</button>
+            <div style="text-align: right; margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="closeCorrectionModal()" style="padding: 8px 16px; border: 1px solid var(--gov-border); background: white; border-radius: 4px; cursor: pointer;">ยกเลิก</button>
+                <button onclick="submitCorrection()" class="btn-action-gov" style="background: var(--gov-primary); padding: 8px 20px;">
+                    ส่งรายงานให้เลขานุการตรวจสอบ
+                </button>
             </div>
         </div>
     </div>
@@ -402,9 +296,8 @@
             window.location.href = 'index.html';
             return;
         }
-
         const user = JSON.parse(userStr);
-        document.getElementById('ownerName').innerText = user.fullName || user.firstName || user.username;
+        document.getElementById('ownerName').innerText = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
         loadOwnerTasks();
     };
 
@@ -432,24 +325,23 @@
 
                 if (item.status === 'Needs Improvement' || item.status === 'Corrected') {
                     hasPending = true;
-
                     if (item.status === 'Needs Improvement' && !firstUnresolvedTask) {
                         firstUnresolvedTask = item;
                     }
 
-                    const statusBadge = item.status === 'Needs Improvement' 
-                        ? `<span class="badge badge-warning">รอการแก้ไข</span>`
-                        : `<span class="badge badge-info">รอ Admin ตรวจรับงาน</span>`;
+                    const statusBadge = item.status === 'Needs Improvement'
+                        ? `<span class="status-pill status-warning">ส่งกลับเพื่อปรับปรุง</span>`
+                        : `<span class="status-pill status-info">ส่งรายงานแล้ว (รอการตรวจรับ)</span>`;
 
                     const btnFix = item.status === 'Needs Improvement'
-                        ? `<button class="btn-action" onclick="openCorrectionModal('${item._id}')">🛠️ ส่งงานแก้ไข</button>`
-                        : `<span style="font-size:0.85em; color:var(--text-muted); font-weight:500;">ส่งเอกสารแล้ว</span>`;
+                        ? `<button class="btn-action-gov" onclick="openCorrectionModal('${item._id}')">ส่งรายงานแก้ไข</button>`
+                        : `<span style="font-size:0.85em; color:var(--gov-muted);">รอดำเนินการรับรอง</span>`;
 
                     tbPending.innerHTML += `
                         <tr>
                             <td>${date}</td>
                             <td><b>${location}</b></td>
-                            <td><strong style="color:var(--danger); font-family:Inter;">${item.percentage}%</strong></td>
+                            <td><strong style="color:#b91c1c;">${item.percentage}%</strong></td>
                             <td>${statusBadge}</td>
                             <td>${btnFix}</td>
                         </tr>
@@ -460,25 +352,23 @@
                         <tr>
                             <td>${date}</td>
                             <td><b>${location}</b></td>
-                            <td><strong style="color:var(--primary); font-family:Inter;">${item.percentage}%</strong></td>
-                            <td><span class="badge badge-success">ผ่านเกณฑ์รับรอง</span></td>
+                            <td><strong style="color:var(--gov-primary);">${item.percentage}%</strong></td>
+                            <td><span class="status-pill status-success">ผ่านการรับรองมาตรฐาน</span></td>
                         </tr>
                     `;
                 }
             });
 
-            // ควบคุมการแสดงผล Urgent Alertbox
             const alertBox = document.getElementById('urgentAlertBox');
             if (firstUnresolvedTask) {
-                const areaName = firstUnresolvedTask.area ? firstUnresolvedTask.area.areaName : 'พื้นที่ของคุณ';
+                const areaName = firstUnresolvedTask.area ? firstUnresolvedTask.area.areaName : 'สถานที่ของท่าน';
                 document.getElementById('alertAreaDetails').innerHTML = `
-                    พื้นที่ <b>"${areaName}"</b> ได้คะแนนรวม <b style="color:#e11d48;">${firstUnresolvedTask.percentage}%</b> (ต่ำกว่าเกณฑ์ 80%) กรุณาตรวจสอบหลักฐานและดำเนินการปรับปรุงพื้นที่
+                    สถานที่ <b>"${areaName}"</b> มีผลการประเมินร้อยละ <b style="color:#b91c1c;">${firstUnresolvedTask.percentage}%</b> (ต่ำกว่าเกณฑ์มาตรฐานร้อยละ 80) จึงขอความอนุเคราะห์ดำเนินการปรับปรุงแก้ไขให้เป็นไปตามระเบียบ
                 `;
-                
                 const commentBox = document.getElementById('alertAssessorComment');
                 if (firstUnresolvedTask.assessorComment) {
                     commentBox.style.display = 'inline-block';
-                    commentBox.innerHTML = `💬 <b>ข้อเสนอแนะจากกรรมการ:</b> "${firstUnresolvedTask.assessorComment}"`;
+                    commentBox.innerHTML = `💬 <b>ข้อเสนอแนะของคณะกรรมการ:</b> "${firstUnresolvedTask.assessorComment}"`;
                 } else {
                     commentBox.style.display = 'none';
                 }
@@ -486,16 +376,15 @@
                 document.getElementById('btnOpenFixFromAlert').onclick = function() {
                     openCorrectionModal(firstUnresolvedTask._id);
                 };
-
                 alertBox.style.display = 'block';
             } else {
                 alertBox.style.display = 'none';
             }
 
-            if (!hasPending) tbPending.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">ไม่มีรายการที่ต้องปรับปรุงแก้ไขในขณะนี้</td></tr>';
-            if (!hasHistory) tbHistory.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">ยังไม่มีประวัติการประเมินที่ผ่านเกณฑ์</td></tr>';
+            if (!hasPending) tbPending.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--gov-muted); padding: 20px;">ไม่มีรายการที่ต้องปรับปรุงแก้ไขในขณะนี้</td></tr>';
+            if (!hasHistory) tbHistory.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--gov-muted); padding: 20px;">ยังไม่มีประวัติสถานที่ที่ผ่านการรับรอง</td></tr>';
         } catch (err) {
-            console.error('Error fetching tasks:', err);
+            console.error(err);
         }
     }
 
@@ -524,12 +413,12 @@
 
         const imgContainer = document.getElementById('assessorImageContainer');
         if (task.evidencePhoto) {
-            imgContainer.innerHTML = `<img src="${task.evidencePhoto}" style="max-width:100%; max-height:220px; border-radius:8px; border:1px solid #fecdd3; box-shadow:var(--shadow-sm);">`;
+            imgContainer.innerHTML = `<img src="${task.evidencePhoto}" style="max-width:100%; max-height:220px; border-radius:4px; border:1px solid var(--gov-border);">`;
         } else {
-            imgContainer.innerHTML = '<span style="color: var(--text-muted); font-size:0.9em;">(กรรมการผู้ตรวจไม่ได้แนบรูปภาพ)</span>';
+            imgContainer.innerHTML = '<span style="color: var(--gov-muted); font-size:0.9em;">(คณะกรรมการไม่ได้แนบภาพถ่าย)</span>';
         }
 
-        document.getElementById('assessorCommentText').innerText = task.assessorComment ? `คำแนะนำ: "${task.assessorComment}"` : '';
+        document.getElementById('assessorCommentText').innerText = task.assessorComment ? `ข้อเสนอแนะ: "${task.assessorComment}"` : '';
         document.getElementById('correctionModal').style.display = 'flex';
     }
 
@@ -540,7 +429,7 @@
     async function submitCorrection() {
         const detail = document.getElementById('correctionDetail').value.trim();
         if (!detail) {
-            alert('กรุณาระบุรายละเอียดสิ่งที่ได้ทำการปรับปรุงแก้ไข');
+            alert('กรุณาระบุรายละเอียดการดำเนินการปรับปรุงแก้ไข');
             return;
         }
 
@@ -559,14 +448,14 @@
             });
 
             if (res.ok) {
-                alert('ส่งมอบรายงานการแก้ไขให้ผู้ดูแลระบบเรียบร้อยแล้ว');
+                alert('ส่งรายงานผลการปรับปรุงสถานที่เข้าสู่ระบบสารสนเทศเรียบร้อยแล้ว');
                 closeCorrectionModal();
                 loadOwnerTasks();
             } else {
-                alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+                alert('ไม่สามารถส่งรายงานได้');
             }
         } catch (err) {
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบได้');
         }
     }
 

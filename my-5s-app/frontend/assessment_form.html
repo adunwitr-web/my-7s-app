@@ -3,330 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบประเมิน Green 7S Plus - คณะกรรมการผู้ตรวจประเมิน</title>
+    <title>แบบตรวจประเมินมาตรฐาน 7ส. และสิ่งแวดล้อม (Green 7S Plus) - ทางราชการ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1b5e20;
-            --primary-light: #2e7d32;
-            --primary-surface: #e8f5e9;
-            --secondary: #0d47a1;
-            --secondary-surface: #e3f2fd;
-            --warning: #b76e00;
-            --warning-surface: #fff8e1;
-            --danger: #c62828;
-            --danger-surface: #ffebee;
-            --bg-page: #f8fafc;
-            --surface-card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #475569;
-            --border: #e2e8f0;
-            --radius-md: 10px;
-            --radius-lg: 14px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+            --gov-primary: #1b5e20;
+            --gov-primary-dark: #0f3d13;
+            --gov-gold: #b38600;
+            --gov-bg: #f8fafc;
+            --gov-card: #ffffff;
+            --gov-text: #0f172a;
+            --gov-muted: #475569;
+            --gov-border: #cbd5e1;
         }
 
         * { box-sizing: border-box; }
         body {
-            font-family: 'Sarabun', 'Inter', sans-serif;
-            background-color: var(--bg-page);
-            color: var(--text-main);
+            font-family: 'Sarabun', -apple-system, sans-serif;
+            background-color: var(--gov-bg);
+            color: var(--gov-text);
             margin: 0;
-            padding-bottom: 70px;
+            padding-bottom: 80px;
+            line-height: 1.6;
         }
 
-        .header-bar {
-            background: linear-gradient(135deg, #1b5e20 0%, #144618 100%);
+        .gov-header {
+            background: linear-gradient(135deg, var(--gov-primary-dark) 0%, var(--gov-primary) 100%);
             color: white;
-            padding: 0 28px;
-            height: 72px;
+            padding: 0 30px;
+            height: 75px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            border-bottom: 3px solid var(--gov-gold);
         }
-        .brand-section { display: flex; align-items: center; gap: 14px; }
-        .brand-logo-badge {
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-        }
-        .brand-title h1 { font-size: 1.15em; margin: 0; font-weight: 700; }
-        .brand-title p { font-size: 0.78em; margin: 0; opacity: 0.85; }
+        .gov-title-box { display: flex; align-items: center; gap: 14px; }
+        .gov-emblem { font-size: 26px; }
+        .gov-title h1 { margin: 0; font-size: 1.15em; font-weight: 700; }
+        .gov-title p { margin: 0; font-size: 0.8em; opacity: 0.9; }
 
-        .user-nav { display: flex; align-items: center; gap: 12px; }
-        .user-chip {
-            background: rgba(255, 255, 255, 0.12);
+        .gov-user-panel { display: flex; align-items: center; gap: 12px; }
+        .gov-user-tag {
+            background: rgba(255, 255, 255, 0.15);
             padding: 6px 14px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 4px;
             font-size: 0.9em;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255,255,255,0.25);
         }
-        .user-avatar-dot {
-            width: 8px;
-            height: 8px;
-            background: #4ade80;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #4ade80;
-        }
-        .btn-logout {
+        .btn-gov-logout {
             background: #ffffff;
-            color: var(--danger);
+            color: #b91c1c;
             border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 7px 15px;
+            border-radius: 4px;
             font-weight: 600;
             font-size: 0.85em;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-logout:hover { background: var(--danger-surface); }
-
-        .container {
-            max-width: 980px;
-            margin: 28px auto;
-            padding: 0 20px;
         }
 
-        .panel {
-            background: var(--surface-card);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            padding: 26px;
-            margin-bottom: 22px;
-        }
-        .panel-header {
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-        }
-        .panel-title {
-            font-size: 1.15em;
-            font-weight: 700;
-            margin: 0;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .container { max-width: 1040px; margin: 25px auto; padding: 0 20px; }
+        .doc-paper {
+            background: var(--gov-card);
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid var(--gov-border);
+            padding: 30px 40px;
+            margin-bottom: 24px;
         }
 
+        .doc-header-center { text-align: center; margin-bottom: 25px; }
+        .doc-header-center h2 { margin: 0; font-size: 1.35em; color: var(--gov-primary-dark); font-weight: 700; }
+        .doc-header-center p { margin: 4px 0 0 0; color: var(--gov-muted); font-size: 0.95em; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            background: #f1f5f9;
+            padding: 18px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        .form-field label { display: block; font-weight: 600; font-size: 0.9em; margin-bottom: 5px; }
         .form-control {
             width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--gov-border);
+            border-radius: 4px;
             font-family: inherit;
             font-size: 0.95em;
             background: #ffffff;
         }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
-        }
 
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-        }
-        table {
+        /* ตารางแบบฟอร์มราชการ */
+        .doc-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.92em;
-            text-align: left;
+            font-size: 0.9em;
+            margin-top: 15px;
         }
-        th {
-            background-color: #f8fafc;
-            color: var(--text-muted);
-            font-weight: 600;
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.8em;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+        .doc-table th, .doc-table td {
+            border: 1px solid var(--gov-border);
+            padding: 10px 12px;
         }
-        td {
-            padding: 14px 18px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: top;
+        .doc-table th {
+            background-color: #f1f5f9;
+            color: var(--gov-text);
+            font-weight: 700;
+            text-align: center;
         }
-        tr:last-child td { border-bottom: none; }
-
+        .score-cell { text-align: center; vertical-align: middle; width: 110px; }
         .score-input {
-            width: 65px;
+            width: 60px;
             text-align: center;
             font-size: 1.1em;
             font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            padding: 8px;
-            color: var(--primary);
+            border-radius: 4px;
+            border: 1px solid var(--gov-border);
+            padding: 6px;
+            color: var(--gov-primary);
         }
 
-        .summary-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            padding: 20px;
+        .summary-box {
+            background: #f8fafc;
+            border: 1px solid var(--gov-border);
+            border-radius: 6px;
+            padding: 18px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            text-align: center;
             margin-top: 20px;
+            text-align: center;
         }
-        .summary-value {
-            font-size: 2em;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            color: var(--primary);
-        }
+        .summary-num { font-size: 1.9em; font-weight: 700; color: var(--gov-primary); }
 
-        .btn-submit {
-            background: linear-gradient(135deg, var(--primary) 0%, #2e7d32 100%);
+        .btn-submit-doc {
+            background: var(--gov-primary);
             color: white;
             border: none;
-            padding: 14px 28px;
+            padding: 12px 28px;
             font-size: 1.05em;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
             width: 100%;
-            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.2);
-            transition: all 0.2s;
-            margin-top: 20px;
+            margin-top: 24px;
         }
-        .btn-submit:hover { opacity: 0.95; transform: translateY(-1px); }
+        .btn-submit-doc:hover { background: var(--gov-primary-dark); }
     </style>
 </head>
 <body>
 
-<header class="header-bar">
-    <div class="brand-section">
-        <div class="brand-logo-badge">📋</div>
-        <div class="brand-title">
-            <h1>ระบบประเมิน 7ส. ออนไลน์ (Green 7S Plus)</h1>
+<header class="gov-header">
+    <div class="gov-title-box">
+        <div class="gov-emblem">🏛️</div>
+        <div class="gov-title">
+            <h1>ระบบสารสนเทศการประเมินมาตรฐาน 7ส. และสิ่งแวดล้อม (Green 7S Plus)</h1>
             <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
         </div>
     </div>
-    <div class="user-nav">
-        <div class="user-chip">
-            <span class="user-avatar-dot"></span>
-            <span id="assessorName">กรรมการผู้ประเมิน</span>
+    <div class="gov-user-panel">
+        <div class="gov-user-tag">
+            <span>คณะกรรมการตรวจประเมิน: </span>
+            <strong id="assessorName">กำลังโหลด...</strong>
         </div>
-        <button class="btn-logout" onclick="logout()">🚪 ออกจากระบบ</button>
+        <button class="btn-gov-logout" onclick="logout()">ออกจากระบบงาน</button>
     </div>
 </header>
 
 <main class="container">
-    <section class="panel">
-        <div class="panel-header">
-            <h2 class="panel-title">🏢 ข้อมูลพื้นที่ตรวจประเมิน</h2>
+    <div class="doc-paper">
+        <div class="doc-header-center">
+            <h2>แบบบันทึกผลการตรวจประเมินมาตรฐานสถานที่ปฏิบัติงาน (แบบ ปม. 7ส.)</h2>
+            <p id="formTitleDisplay">แบบตรวจประเมินมาตรฐาน 7ส. และความปลอดภัย</p>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-            <div>
-                <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">เลือกพื้นที่ที่รับผิดชอบตรวจ:</label>
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label>สถานที่รับการตรวจประเมิน:</label>
                 <select id="areaSelect" class="form-control" onchange="onAreaChanged()">
-                    <option value="">-- กำลังโหลดข้อมูลพื้นที่... --</option>
+                    <option value="">-- โปรดระบุสถานที่ที่รับผิดชอบตรวจ --</option>
                 </select>
             </div>
-            <div>
-                <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">รอบการประเมิน:</label>
+            <div class="form-field">
+                <label>รอบการตรวจประเมินตามแผนปฏิบัติราชการ:</label>
                 <select id="roundSelect" class="form-control">
-                    <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 1">ประเมินภายในระดับหน่วยงาน ครั้งที่ 1</option>
-                    <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 2">ประเมินภายในระดับหน่วยงาน ครั้งที่ 2</option>
-                    <option value="ประเมินโดยมหาวิทยาลัย">ประเมินโดยมหาวิทยาลัย (คณะกรรมการแต่งตั้ง)</option>
-                    <option value="ประเมินตนเอง ครั้งที่ 1">ประเมินตนเอง ครั้งที่ 1</option>
+                    <option value="การประเมินภายในระดับหน่วยงาน ครั้งที่ 1">การประเมินภายในระดับหน่วยงาน ครั้งที่ 1</option>
+                    <option value="การประเมินภายในระดับหน่วยงาน ครั้งที่ 2">การประเมินภายในระดับหน่วยงาน ครั้งที่ 2</option>
+                    <option value="การประเมินโดยคณะกรรมการมหาวิทยาลัย">การประเมินโดยคณะกรรมการมหาวิทยาลัย</option>
+                    <option value="การประเมินตนเอง (Self-Assessment)">การประเมินตนเอง (Self-Assessment)</option>
                 </select>
             </div>
         </div>
 
-        <div style="background: #f8fafc; padding: 14px 18px; border-radius: var(--radius-md); margin-top: 18px; border-left: 4px solid var(--primary); font-size: 0.92em; line-height: 1.8;">
-            <div><b>ผู้รับผิดชอบพื้นที่ (Area Owner):</b> <span id="ownerNameDisplay" style="color: var(--primary); font-weight: 600;">-</span></div>
-            <div><b>หมวดหมู่พื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></div>
-            <div><b>เกณฑ์มาตรฐานที่ใช้:</b> <span id="formTitleDisplay" style="font-weight: 600; color: #1e4620;">-</span></div>
-        </div>
-    </section>
-
-    <section class="panel">
-        <div class="panel-header">
-            <h2 class="panel-title" id="tableHeaderTitle">📊 ตารางเกณฑ์การประเมินมาตรฐาน</h2>
-            <p style="font-size: 0.85em; color: var(--text-muted); margin: 6px 0 0 0;">
-                ระดับคะแนน (0 - 4): 4 = ดีเยี่ยม/ครบถ้วน, 3 = ดีตามเกณฑ์, 2 = พอใช้/ปรับปรุง, 1 = ต้องปรับปรุงเร่งด่วน, 0 = ไม่ผ่านเกณฑ์
-            </p>
+        <div style="font-size: 0.92em; line-height: 1.8; margin-bottom: 15px;">
+            <span><b>หัวหน้างาน/ผู้รับผิดชอบสถานที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
+            <span><b>ประเภทการใช้สอยอาคาร:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
         </div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 78%;">รายละเอียดเกณฑ์การประเมิน</th>
-                        <th style="width: 22%; text-align: center;">คะแนน (0 - 4)</th>
-                    </tr>
-                </thead>
-                <tbody id="evaluationItems">
-                    <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 20px;">กรุณาเลือกพื้นที่ประเมินด้านบนก่อน</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <!-- ตารางข้อกำหนดเกณฑ์ 10-12 ข้อ -->
+        <table class="doc-table">
+            <thead>
+                <tr>
+                    <th style="width: 80%;">หมวดรายการเกณฑ์มาตรฐานการตรวจประเมิน</th>
+                    <th style="width: 20%;">ระดับคะแนน (0 - 4)</th>
+                </tr>
+            </thead>
+            <tbody id="evaluationItems">
+                <tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจประเมินด้านบน</td></tr>
+            </tbody>
+        </table>
 
-        <div class="summary-card">
+        <!-- ผลรวมคะแนนตามมาตรฐาน -->
+        <div class="summary-box">
             <div>
-                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 4px;">คะแนนรวมที่ได้</div>
-                <div><span class="summary-value" id="totalScore">0</span> / <span id="maxScoreDisplay">0</span></div>
+                <div style="font-size: 0.9em; color: var(--gov-muted);">คะแนนรวมที่ได้</div>
+                <div><span class="summary-num" id="totalScore">0</span> / <span id="maxScoreDisplay">0</span></div>
             </div>
             <div>
-                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 4px;">คิดเป็นเปอร์เซ็นต์</div>
-                <div><span class="summary-value" id="percentage">0.00</span> %</div>
+                <div style="font-size: 0.9em; color: var(--gov-muted);">ร้อยละความสอดคล้อง</div>
+                <div><span class="summary-num" id="percentage">0.00</span> %</div>
             </div>
             <div>
-                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 4px;">ผลสรุปตามเกณฑ์</div>
-                <div id="evalStatus" style="font-weight: 700; font-size: 1.1em; color: var(--text-muted);">-</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="panel" style="border-top: 4px solid var(--warning);">
-        <div class="panel-header">
-            <h2 class="panel-title" style="color: var(--warning);">📷 ภาพถ่ายหลักฐานจุดที่ต้องปรับปรุง / ข้อเสนอแนะ</h2>
-            <p style="font-size: 0.85em; color: var(--text-muted); margin: 6px 0 0 0;">
-                กรณีพื้นที่ไม่ผ่านเกณฑ์ หรือมีจุดที่ต้องปรับปรุง สามารถแนบรูปถ่ายและข้อคิดเห็นเพื่อให้เจ้าของห้องนำไปแก้ไขได้
-            </p>
-        </div>
-
-        <div style="margin-bottom: 16px;">
-            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">แนบรูปถ่ายหลักฐาน:</label>
-            <input type="file" id="evidenceFileInput" accept="image/*">
-            <div id="previewContainer" style="display: none; margin-top: 12px;">
-                <img id="evidencePreview" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+                <div style="font-size: 0.9em; color: var(--gov-muted);">ผลการพิจารณาตามเกณฑ์มาตรฐาน</div>
+                <div id="evalStatus" style="font-weight: 700; font-size: 1.1em; color: var(--gov-muted);">-</div>
             </div>
         </div>
 
-        <div>
-            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">ข้อเสนอแนะเพิ่มเติมสำหรับเจ้าของพื้นที่:</label>
-            <textarea id="assessorComment" placeholder="ระบุสิ่งที่ควรจัดเก็บ ทำความสะอาด หรือคำแนะนำที่เป็นประโยชน์..." class="form-control" style="height: 85px;"></textarea>
+        <!-- รายงานข้อบกพร่องและเอกสารหลักฐาน -->
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--gov-border);">
+            <h3 style="margin: 0 0 10px 0; font-size: 1.05em; color: #b45309;">📷 หลักฐานเชิงประจักษ์จุดที่ต้องปรับปรุงแก้ไข (กรณีไม่ผ่านเกณฑ์มาตรฐาน)</h3>
+            <p style="font-size: 0.88em; color: var(--gov-muted); margin-top: 0;">แนบภาพถ่ายจุดบกพร่องเพื่อประกอบรายงานและแจ้งให้ผู้รับผิดชอบสถานที่ดำเนินการปรับปรุง</p>
+
+            <input type="file" id="evidenceFileInput" accept="image/*" style="margin-bottom: 10px;">
+            <div id="previewContainer" style="display: none; margin-bottom: 15px;">
+                <img id="evidencePreview" style="max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid var(--gov-border);">
+            </div>
+
+            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">ข้อเสนอแนะและข้อสั่งการของคณะกรรมการตรวจประเมิน:</label>
+            <textarea id="assessorComment" placeholder="ระบุรายละเอียดข้อบกพร่องที่ตรวจพบ หรือจุดที่ต้องปรับปรุงแก้ไขตามมาตรฐาน..." class="form-control" style="height: 85px;"></textarea>
         </div>
 
-        <button onclick="submitAssessment()" class="btn-submit">💾 บันทึกผลการตรวจประเมินอย่างเป็นทางการ</button>
-    </section>
+        <button onclick="submitAssessment()" class="btn-submit-doc">💾 ลงนามและบันทึกผลการตรวจประเมิน</button>
+    </div>
 </main>
 
 <script>
@@ -337,212 +260,42 @@
 
     const FORM_TEMPLATES = {
         office: {
-            title: "แบบตรวจประเมินสำนักงานหรือห้องพักบุคลากร (G01)",
+            title: "แบบตรวจประเมินสำนักงานและห้องพักบุคลากร (แบบ ปม. 7ส.-01)",
             maxScore: 48,
             criteria: [
-                { title: "1. สภาพพื้นที่โดยรวม", items: ["1.1 จัดวางวัสดุ อุปกรณ์ เอกสาร เป็นหมวดหมู่", "1.2 มีป้ายบ่งชี้จุดจัดเก็บชัดเจน", "1.3 พื้นที่ไม่กีดขวางทางสัญจร ทางหนีไฟ และแสงสว่างเหมาะสม", "1.4 พื้นที่สะอาด เป็นระเบียบ พร้อมใช้งาน"], evidence: "หลักฐาน: ภาพถ่ายสภาพพื้นที่จริง / ผังพื้นที่ / ป้ายบ่งชี้จุดจัดเก็บ" },
-                { title: "2. โต๊ะทำงาน ลิ้นชัก และเก้าอี้ปฏิบัติงาน", items: ["2.1 บนโต๊ะมีเฉพาะของจำเป็นต่อการปฏิบัติงาน", "2.2 ลิ้นชักโต๊ะทำงานจัดเก็บเป็นระเบียบ", "2.3 เก้าอี้ โต๊ะ อุปกรณ์สะอาด พร้อมใช้งาน", "2.4 สิ้นสุดงานจัดเก็บเอกสารและอุปกรณ์เรียบร้อย"], evidence: "หลักฐาน: ภาพถ่ายจุดปฏิบัติงาน / ภาพก่อน-หลังปรับปรุง" },
-                { title: "3. คอมพิวเตอร์และอุปกรณ์ต่อพ่วง", items: ["3.1 จัดวางคอมพิวเตอร์และอุปกรณ์เป็นระเบียบ ปลอดภัย", "3.2 สายไฟ ปลั๊กไฟ สายสัญญาณไม่ชำรุด", "3.3 ไม่วางอาหาร/เครื่องดื่มในตำแหน่งเสี่ยงเกิดความเสียหาย", "3.4 อุปกรณ์พร้อมใช้งาน มีการตั้งค่าประหยัดพลังงาน"], evidence: "หลักฐาน: ภาพถ่ายอุปกรณ์" },
-                { title: "4. ตู้เก็บเอกสารและชั้นวางของ", items: ["4.1 มีชื่อหรือรหัสอ้างอิงตู้/ชั้นวางชัดเจน", "4.2 จัดเก็บเอกสารเป็นหมวดหมู่ ค้นหาง่าย", "4.3 แฟ้มเอกสารมีป้ายสันแฟ้มเป็นระบบ", "4.4 ไม่วางสิ่งของเสี่ยงต่อการตกหล่น"], evidence: "หลักฐาน: ภาพถ่ายตู้/ชั้นวาง, ดัชนีเอกสาร" },
-                { title: "5. ระบบเอกสารและการจัดเก็บข้อมูล", items: ["5.1 คัดแยกเอกสารตามประเภท/ภารกิจชัดเจน", "5.2 มีระบบเอกสารรอดำเนินการ ระหว่างทำ และเก็บถาวร", "5.3 ลดเอกสารซ้ำซ้อน ส่งเสริมเอกสารอิเล็กทรอนิกส์", "5.4 เอกสารสำคัญจัดเก็บปลอดภัย และสืบค้นได้"], evidence: "หลักฐาน: ระบบสารบรรณ / ระบบเอกสารอิเล็กทรอนิกส์" },
-                { title: "6. อุปกรณ์สำนักงานส่วนกลาง", items: ["6.1 จัดวางอุปกรณ์ส่วนกลางเหมาะสม เป็นระเบียบ", "6.2 มีวิธีใช้หรือข้อปฏิบัติแสดงชัดเจน", "6.3 พื้นที่รอบอุปกรณ์สะอาด ไม่มีสิ่งกีดขวาง", "6.4 อุปกรณ์พร้อมใช้งานและได้รับการดูแลรักษา"], evidence: "หลักฐาน: ภาพถ่ายอุปกรณ์ / ป้ายแนะนำการใช้งาน" },
-                { title: "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", items: ["7.1 ปิดไฟ แอร์ และอุปกรณ์เมื่อเลิกใช้งาน", "7.2 ประหยัดกระดาษ น้ำ วัสดุสิ้นเปลือง", "7.3 ส่งเสริมแนวปฏิบัติลดใช้ทรัพยากร (เช่น พิมพ์สองหน้า)", "7.4 มีมาตรการรณรงค์ประหยัดพลังงานต่อเนื่อง"], evidence: "หลักฐาน: ป้ายรณรงค์ / เอกสารการใช้กระดาษสองหน้า" },
-                { title: "8. การแสดงข้อมูลสถิติการใช้พลังงาน", items: ["8.1 รวบรวมสถิติการใช้ไฟฟ้า น้ำ กระดาษ อย่างต่อเนื่อง", "8.2 เปรียบเทียบผลกับค่าเป้าหมายหรือปีฐาน", "8.3 วิเคราะห์สาเหตุเมื่อไม่เป็นไปตามเป้าหมายและกำหนดแนวทางแก้", "8.4 สื่อสารผลให้บุคลากรทราบสม่ำเสมอ"], evidence: "หลักฐาน: ตารางสถิติรายเดือน / กราฟเปรียบเทียบ" },
-                { title: "9. การคัดแยกขยะและการจัดการของเสีย", items: ["9.1 มีถังขยะแยกประเภทชัดเจน", "9.2 บุคลากรแยกขยะทั่วไป รีไซเคิล อันตรายถูกต้อง", "9.3 ไม่มีขยะตกค้าง ส่งกลิ่น หรือสกปรก", "9.4 มีแนวทางลดของเสียและนำกลับมาใช้ประโยชน์"], evidence: "หลักฐาน: ภาพถ่ายจุดคัดแยกขยะ / ป้ายประเภทขยะ" },
-                { title: "10. สุขลักษณะและบรรยากาศการทำงาน", items: ["10.1 พื้น ผนัง ฝ้าเพดาน จุดสัมผัสร่วมสะอาดเรียบร้อย", "10.2 แสงสว่างเพียงพอ อากาศถ่ายเท ไม่มีกลิ่นรบกวน", "10.3 ไม่มีฝุ่นสะสมหรือจุดอับต่อสุขอนามัย", "10.4 บรรยากาศเอื้อต่อการทำงาน ภาพลักษณ์ดี"], evidence: "หลักฐาน: ภาพถ่ายพื้นที่ / บันทึกทำความสะอาด" },
-                { title: "11. จุดรับรองแขกหรือพื้นที่ใช้งานร่วม", items: ["11.1 พื้นที่รับรองสะอาด เป็นระเบียบ เหมาะสม", "11.2 ชุดรับรองพร้อมใช้งาน", "11.3 ใช้วัสดุ/ภาชนะที่เป็นมิตรต่อสิ่งแวดล้อม", "11.4 ไม่วางสิ่งของเกินจำเป็น"], evidence: "หลักฐาน: ภาพถ่ายพื้นที่รับรอง" },
-                { title: "12. พฤติกรรม วินัย และการปรับปรุงต่อเนื่อง", items: ["12.1 บุคลากรปฏิบัติตามมาตรฐานการใช้พื้นที่ร่วมกัน", "12.2 ดูแลพื้นที่ตนเองให้สะอาด ประหยัดพลังงาน แยกขยะ", "12.3 มีการสื่อสารมาตรฐานและกำหนดผู้รับผิดชอบชัดเจน", "12.4 นำผลตรวจรอบก่อนมาปรับปรุงแก้ไข"], evidence: "หลักฐาน: บันทึกสื่อสาร / ภาพ Before-After" }
+                { title: "ข้อที่ 1 การจัดระเบียบพื้นที่และสิ่งอำนวยความสะดวกโดยรวม (สะสาง/สะดวก)", items: ["จัดวางวัสดุ ครุภัณฑ์ เอกสาร เป็นหมวดหมู่ชัดเจน", "มีป้ายบ่งชี้จุดจัดเก็บเป็นระเบียบ", "ไม่มีสิ่งของกีดขวางแนวสัญจรและทางหนีไฟ"] },
+                { title: "ข้อที่ 2 โต๊ะปฏิบัติงานและอุปกรณ์ประจำตัว (สะสาง/สะดวก/สะอาด)", items: ["บนโต๊ะปฏิบัติงานมีเฉพาะของจำเป็นต่อการปฏิบัติงาน", "ลิ้นชักและชั้นเก็บเอกสารจัดวางเป็นระเบียบ", "โต๊ะ เก้าอี้ สะอาด ปราศจากฝุ่นละออง"] },
+                { title: "ข้อที่ 3 เครื่องคอมพิวเตอร์และอุปกรณ์ต่อพ่วง (สะอาด/ปลอดภัย)", items: ["จัดระเบียบสายไฟ สายสัญญาณ ไม่ชำรุดปลอดภัย", "ไม่มีอาหารหรือเครื่องดื่มวางในตำแหน่งเสี่ยงต่อความเสียหาย", "ตั้งค่าประหยัดพลังงานเมื่อเลิกใช้งาน"] },
+                { title: "ข้อที่ 4 ตู้เก็บเอกสารและชั้นวางพัสดุ (สะสาง/สะดวก)", items: ["มีรหัสอ้างอิงตู้และดัชนีเอกสารชัดเจน", "แฟ้มเอกสารมีป้ายสันแฟ้มตามระบบงานสารบรรณ", "ไม่วางสิ่งของซ้อนทับเสี่ยงต่อการร่วงหล่น"] },
+                { title: "ข้อที่ 5 ระบบการบริหารจัดการเอกสารและสารสนเทศ (สะดวก/สร้างสรรค์)", items: ["คัดแยกเอกสารรอดำเนินการ ระหว่างทำ และเก็บถาวร", "ส่งเสริมการปฏิบัติงานด้วยระบบสารบรรณอิเล็กทรอนิกส์ (e-Document)", "จัดเก็บเอกสารสำคัญอย่างปลอดภัยและสืบค้นได้รวดเร็ว"] },
+                { title: "ข้อที่ 6 อุปกรณ์และเครื่องใช้ส่วนกลาง (สะดวก/สะอาด)", items: ["จัดวางเครื่องพิมพ์ เครื่องถ่ายเอกสารส่วนกลางเหมาะสม", "มีคู่มือหรือแนวปฏิบัติการใช้อุปกรณ์ติดตั้งชัดเจน", "บริเวณรอบอุปกรณ์สะอาด พร้อมใช้งานตลอดเวลา"] },
+                { title: "ข้อที่ 7 การใช้พลังงานและทรัพยากรอย่างคุ้มค่า (สิ่งแวดล้อม)", items: ["มาตรการปิดไฟ เครื่องปรับอากาศเมื่อไม่ใช้งานหรือพักเที่ยง", "การใช้กระดาษสองหน้าและการลดปริมาณวัสดุสิ้นเปลือง", "รณรงค์ประหยัดพลังงานอย่างต่อเนื่อง"] },
+                { title: "ข้อที่ 8 การติดตามข้อมูลสถิติการใช้พลังงาน (สิ่งแวดล้อม/สร้างสรรค์)", items: ["มีสถิติเปรียบเทียบการใช้ไฟฟ้า น้ำประปา และวัสดุสิ้นเปลือง", "วิเคราะห์และกำหนดแนวทางลดการใช้พลังงาน", "สื่อสารข้อมูลสถิติให้บุคลากรในหน่วยงานทราบ"] },
+                { title: "ข้อที่ 9 การคัดแยกขยะและการจัดการของเสีย (สิ่งแวดล้อม/สุขลักษณะ)", items: ["จัดตั้งถังขยะแยกประเภทตามมาตรฐาน (ทั่วไป, รีไซเคิล, อันตราย)", "ไม่มีขยะตกค้าง ส่งกลิ่น หรือสกปรกในพื้นที่ปฏิบัติงาน", "มีแนวทางลดขยะพลาสติกที่ใช้ครั้งเดียวทิ้ง"] },
+                { title: "ข้อที่ 10 สุขลักษณะ สภาพแวดล้อม และบรรยากาศการทำงาน (สุขลักษณะ)", items: ["แสงสว่างเพียงพอ อากาศถ่ายเท ไม่มีกลิ่นอับชื้น", "พื้น ผนัง เพดาน และจุดสัมผัสร่วมสะอาดเรียบร้อย", "บรรยากาศส่งเสริมภาพลักษณ์องค์กรที่ดี"] },
+                { title: "ข้อที่ 11 พื้นที่รับรองผู้มาติดต่อและจุดบริการร่วม (สร้างสรรค์)", items: ["พื้นที่รับรองสะอาด เป็นระเบียบ เรียบร้อย", "จัดเตรียมสิ่งอำนวยความสะดวกที่เป็นมิตรต่อสิ่งแวดล้อม", "ไม่มีสิ่งของที่ไม่เกี่ยวข้องวางปะปน"] },
+                { title: "ข้อที่ 12 วินัย พฤติกรรม และการปรับปรุงอย่างต่อเนื่อง (สร้างนิสัย)", items: ["บุคลากรปฏิบัติตามมาตรฐาน 7ส. อย่างสม่ำเสมอ", "มีผู้รับผิดชอบพื้นที่และร่วมกิจกรรมสม่ำเสมอ", "นำข้อเสนอแนะจากการประเมินครั้งก่อนมาแก้ไขจริง"] }
             ]
         },
         classroom: {
-            title: "แบบตรวจประเมินห้องเรียน (G02)",
+            title: "แบบตรวจประเมินห้องเรียนและห้องบรรยาย (แบบ ปม. 7ส.-02)",
             maxScore: 48,
             criteria: [
-                { title: "1. สภาพพื้นที่โดยรวม", items: ["1.1 จัดวางโต๊ะ เก้าอี้ สื่อการเรียนรู้เป็นระเบียบ", "1.2 กำหนดจุดจัดเก็บอุปกรณ์ชัดเจน", "1.3 พื้นที่ไม่กีดขวางทางสัญจร ทางหนีไฟ", "1.4 ห้องเรียนสะอาด พร้อมใช้งาน"], evidence: "หลักฐาน: ภาพถ่ายสภาพห้อง / ผังห้องเรียน" },
-                { title: "2. ความพร้อมใช้งานโต๊ะ เก้าอี้ และอุปกรณ์ประจำห้อง", items: ["2.1 โต๊ะเก้าอี้นักศึกษามั่นคง ปลอดภัย พร้อมใช้", "2.2 โต๊ะผู้สอน โพเดียม เรียบร้อยพร้อมใช้", "2.3 กระดาน จอภาพ อุปกรณ์ประกอบการสอนพร้อมใช้", "2.4 ไม่มีอุปกรณ์ชำรุดที่ก่อให้เกิดอันตราย"], evidence: "หลักฐาน: บันทึกตรวจความพร้อม / ทะเบียนครุภัณฑ์" },
-                { title: "3. การจัดเก็บวัสดุ อุปกรณ์ และสื่อการเรียนรู้", items: ["3.1 เก็บอุปกรณ์และสื่อการเรียนรู้เป็นหมวดหมู่", "3.2 มีป้ายกำกับชัดเจน หยิบใช้และเก็บคืนง่าย", "3.3 ไม่วางกองรวมเสี่ยงต่อความเสียหาย", "3.4 ดูแลรักษาและตรวจความพร้อมสม่ำเสมอ"], evidence: "หลักฐาน: ทะเบียนคุมอุปกรณ์ / ภาพตู้เก็บ" },
-                { title: "4. ระบบป้าย คู่มือ และข้อมูลกำกับการใช้ห้อง", items: ["4.1 ป้ายชื่อห้องชัดเจน", "4.2 มีข้อปฏิบัติการใช้ห้องเรียนเหมาะสม", "4.3 มีป้ายระบุสวิตช์ไฟและจุดควบคุม", "4.4 ข้อมูลเป็นปัจจุบัน เข้าใจง่าย"], evidence: "หลักฐาน: ป้ายชื่อห้อง / ข้อปฏิบัติการใช้ห้อง" },
-                { title: "5. ความสะอาดและสุขลักษณะของห้องเรียน", items: ["5.1 พื้น ผนัง หน้าต่าง สะอาด เรียบร้อย", "5.2 ไม่มีฝุ่นสะสม คราบสกปรก หรือกลิ่นรบกวน", "5.3 ทำความสะอาดสม่ำเสมอ", "5.4 จุดสัมผัสร่วมได้รับการดูแลเหมาะสม"], evidence: "หลักฐาน: แบบตรวจเช็คการทำความสะอาด" },
-                { title: "6. สภาพแวดล้อมที่เอื้อต่อการเรียนรู้", items: ["6.1 แสงสว่างเพียงพอเหมาะสม", "6.2 อากาศถ่ายเท ระบบปรับอากาศพร้อมใช้", "6.3 ไม่มีเสียง กลิ่น รบกวนการเรียนรู้", "6.4 บรรยากาศส่งเสริมการเรียนรู้"], evidence: "หลักฐาน: บันทึกตรวจแสงสว่างและระบบแอร์" },
-                { title: "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", items: ["7.1 ปิดไฟ แอร์ โปรเจกเตอร์เมื่อไม่ใช้", "7.2 ใช้วัสดุสิ้นเปลืองอย่างประหยัด", "7.3 ส่งเสริมการใช้สื่ออิเล็กทรอนิกส์แทนกระดาษ", "7.4 ผู้ใช้ห้องมีส่วนร่วมประหยัดพลังงาน"], evidence: "หลักฐาน: ป้ายรณรงค์ / ภาพการปิดอุปกรณ์" },
-                { title: "8. การติดตามข้อมูลการใช้พลังงานและทรัพยากร", items: ["8.1 รวบรวมสถิติการใช้ไฟฟ้า/ทรัพยากรอย่างเป็นระบบ", "8.2 เปรียบเทียบผลกับค่าเป้าหมายหรือรอบก่อน", "8.3 วิเคราะห์สาเหตุเมื่อไม่เป็นไปตามเป้า", "8.4 สื่อสารผลให้ผู้เกี่ยวข้องทราบ"], evidence: "หลักฐาน: กราฟสถิติรายเดือน / รายงานผล" },
-                { title: "9. การจัดการของเสียและการตรวจเช็คความสะอาด", items: ["9.1 มีจุดทิ้งขยะแยกประเภทชัดเจน", "9.2 ผู้ใช้ห้องแยกขยะถูกต้อง", "9.3 ตรวจเช็คความสะอาด ไม่พบขยะตกค้าง", "9.4 ส่งเสริมการลดของเสียและใช้ซ้ำ"], evidence: "หลักฐาน: ภาพจุดแยกขยะ / บันทึกตรวจความสะอาด" },
-                { title: "10. ความปลอดภัยและความพร้อมต่อเหตุฉุกเฉิน", items: ["10.1 ทางออกและทางสัญจรไม่ถูกกีดขวาง", "10.2 ปลั๊กไฟ สายไฟ ปลอดภัย ไม่ชำรุด", "10.3 มีป้ายเตือนและป้ายทางออกฉุกเฉิน", "10.4 ถังดับเพลิงและเส้นทางหนีไฟพร้อมใช้งาน"], evidence: "หลักฐาน: บันทึกตรวจถังดับเพลิง / ภาพทางหนีไฟ" },
-                { title: "11. การบริหารจัดการและการปรับปรุงต่อเนื่อง", items: ["11.1 มีตารางการใช้ห้องเรียนชัดเจน", "11.2 มีระบบแจ้งซ่อมและบำรุงรักษาเป็นระบบ", "11.3 กำหนดผู้รับผิดชอบห้องเรียนชัดเจน", "11.4 นำผลตรวจครั้งก่อนมาปรับปรุงจริง"], evidence: "หลักฐาน: ตารางใช้ห้อง / ใบแจ้งซ่อม / ภาพปรับปรุง" },
-                { title: "12. ผลการประเมินความพึงพอใจของผู้ใช้ห้องเรียน", items: ["12.1 มีการสำรวจความพึงพอใจอย่างน้อยปีละ 1 ครั้ง", "12.2 สรุปผลด้านความสะอาด ความพร้อม ปลอดภัย", "12.3 วิเคราะห์ประเด็นที่ควรปรับปรุง", "12.4 นำผลประเมินไปปรับปรุงห้องเรียนจริง"], evidence: "หลักฐาน: รายงานสรุปความพึงพอใจ / QR Code" }
-            ]
-        },
-        computer_lab: {
-            title: "แบบตรวจประเมินห้องปฏิบัติการคอมพิวเตอร์ (G02)",
-            maxScore: 48,
-            criteria: [
-                { title: "1. สภาพพื้นที่โดยรวม", items: ["1.1 จัดวางเครื่องคอมพิวเตอร์และอุปกรณ์เป็นระเบียบ", "1.2 กำหนดตำแหน่งจัดเก็บชัดเจน", "1.3 พื้นที่ไม่กีดขวางทางสัญจรหรือทางหนีไฟ", "1.4 สะอาด เรียบร้อย พร้อมใช้งาน"], evidence: "หลักฐาน: ผังห้อง / ป้ายบ่งชี้จุดจัดเก็บ" },
-                { title: "2. ความพร้อมใช้งานคอมพิวเตอร์และอุปกรณ์ต่อพ่วง", items: ["2.1 คอมพิวเตอร์ จอ คีย์บอร์ด เมาส์ พร้อมใช้งาน", "2.2 โต๊ะเก้าอี้มั่นคง ปลอดภัย", "2.3 ไม่มีอุปกรณ์ชำรุดที่เสี่ยงต่ออันตราย", "2.4 มีการตรวจสอบบำรุงรักษาสม่ำเสมอ"], evidence: "หลักฐาน: บันทึกตรวจเช็คอุปกรณ์ / ใบแจ้งซ่อม" },
-                { title: "3. การจัดเก็บอุปกรณ์และวัสดุสิ้นเปลือง", items: ["3.1 เก็บสายสัญญาณ อะแดปเตอร์เป็นหมวดหมู่", "3.2 มีป้ายกำกับชัดเจน เบิกใช้งานสะดวก", "3.3 ไม่วางอุปกรณ์กองรวมเสี่ยงเสียหาย", "3.4 มีระบบควบคุมตรวจนับอุปกรณ์"], evidence: "หลักฐาน: บันทึกการเบิกจ่าย / ทะเบียนคุม" },
-                { title: "4. ระบบป้ายกำกับ คู่มือ และข้อปฏิบัติ", items: ["4.1 มีป้ายชื่อห้องชัดเจน", "4.2 มีข้อปฏิบัติการใช้ห้องคอมพิวเตอร์", "4.3 มีป้ายจุดควบคุมระบบ สวิตช์ไฟ", "4.4 ข้อมูลเป็นปัจจุบัน"], evidence: "หลักฐาน: ป้ายข้อปฏิบัติ / คู่มือการใช้งาน" },
-                { title: "5. ความสะอาดและสุขลักษณะ", items: ["5.1 โต๊ะคอมพิวเตอร์ จอภาพ จุดสัมผัสร่วมสะอาด", "5.2 ไม่มีฝุ่นสะสมหรือกลิ่นรบกวน", "5.3 ทำความสะอาดสม่ำเสมอ", "5.4 ดูแลปลอดภัยต่ออุปกรณ์ไฟฟ้า"], evidence: "หลักฐาน: แผนทำความสะอาด / บันทึกตรวจพื้นที่" },
-                { title: "6. สภาพแวดล้อมที่เอื้อต่อการเรียนรู้", items: ["6.1 แสงสว่างเพียงพอเหมาะสมต่อการดูจอคอมฯ", "6.2 ระบบแอร์พร้อมใช้งานและระบายอากาศดี", "6.3 เสียงและความร้อนไม่รบกวนการใช้งาน", "6.4 บรรยากาศน่าใช้งาน"], evidence: "หลักฐาน: บันทึกตรวจระบบปรับอากาศ" },
-                { title: "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", items: ["7.1 ปิดจอ คอมพิวเตอร์ แอร์เมื่อไม่ใช้งาน", "7.2 ตั้งค่าประหยัดพลังงานบนเครื่องคอมฯ", "7.3 ประหยัดกระดาษและวัสดุสิ้นเปลือง", "7.4 ผู้ใช้มีส่วนร่วมประหยัดพลังงาน"], evidence: "หลักฐาน: ป้ายรณรงค์ / การตั้งค่าประหยัดพลังงาน" },
-                { title: "8. การติดตามและสื่อสารข้อมูลการใช้พลังงาน", items: ["8.1 จัดทำสถิติการใช้ไฟฟ้าอย่างเป็นระบบ", "8.2 เปรียบเทียบผลกับค่าเป้าหมายหรือรอบก่อน", "8.3 วิเคราะห์หาสาเหตุเมื่อใช้พลังงานเกิน", "8.4 สื่อสารข้อมูลการประหยัดพลังงาน"], evidence: "หลักฐาน: รายงานสรุปการใช้ไฟฟ้า" },
-                { title: "9. การจัดการของเสียอิเล็กทรอนิกส์ (E-Waste)", items: ["9.1 จุดแยกขยะทั่วไปเหมาะสม", "9.2 คัดแยกขยะอิเล็กทรอนิกส์ออกจากขยะทั่วไป", "9.3 จุดรวบรวมวัสดุสะอาด ปลอดภัย", "9.4 แนวทางส่งต่อหรือกำจัด E-Waste ถูกต้อง"], evidence: "หลักฐาน: จุดแยก E-waste / บันทึกส่งต่อ" },
-                { title: "10. ความปลอดภัยของระบบไฟฟ้าและเครือข่าย", items: ["10.1 จัดระเบียบสายไฟ สาย LAN ปลอดภัย", "10.2 ปลั๊กไฟ รางไฟ ไม่ชำรุด ไม่ขวางทางเดิน", "10.3 ทางออกฉุกเฉินและอุปกรณ์ฉุกเฉินพร้อมใช้", "10.4 แสดงแนวปฏิบัติเมื่อเกิดเหตุฉุกเฉินชัดเจน"], evidence: "หลักฐาน: ภาพระบบสายไฟ / แผนผังหนีไฟ" },
-                { title: "11. การควบคุมการใช้ห้องและวินัยผู้ใช้", items: ["11.1 กำหนดตารางการใช้ห้องชัดเจน", "11.2 ผู้ใช้รับทราบเงื่อนไขการใช้ห้องได้ง่าย", "11.3 กำกับดูแลการใช้ห้องและควบคุมการเข้าถึง", "11.4 ผู้ใช้ปฏิบัติตามระเบียบและช่วยรักษาความสะอาด"], evidence: "หลักฐาน: ตารางการใช้ห้อง / สมุดลงชื่อ" },
-                { title: "12. ผลการประเมินความพึงพอใจ", items: ["12.1 สำรวจความพึงพอใจอย่างน้อยปีละ 1 ครั้ง", "12.2 สรุปผลด้านความสะอาด ความพร้อม ความปลอดภัย", "12.3 นำข้อเสนอแนะมากำหนดแนวทางแก้ไข", "12.4 ปรับปรุงห้องและสื่อสารผลให้ทราบ"], evidence: "หลักฐาน: สรุปผลความพึงพอใจ / ข้อเสนอแนะ" }
-            ]
-        },
-        lab: {
-            title: "แบบตรวจประเมินห้องปฏิบัติการทดลอง (G02)",
-            maxScore: 48,
-            criteria: [
-                { title: "1. สภาพพื้นที่โดยรวมของห้องทดลอง", items: ["1.1 จัดวางโต๊ะ อุปกรณ์ วัสดุทดลองเป็นระเบียบ ปลอดภัย", "1.2 มีผังห้องแสดงจุดจัดเก็บและทางออกฉุกเฉินชัดเจน", "1.3 ระบบไฟฟ้า ท่อน้ำ วาล์วน้ำ อ่างน้ำ ปลอดภัยพร้อมใช้", "1.4 ทางสัญจรไม่ถูกกีดขวาง ไม่มีของไม่เกี่ยวข้อง"], evidence: "หลักฐาน: ผังห้องปฏิบัติการ / บันทึกตรวจความพร้อม" },
-                { title: "2. ความพร้อมใช้งานโต๊ะปฏิบัติการและอุปกรณ์หลัก", items: ["2.1 โต๊ะปฏิบัติการ ชั้นวาง มั่นคง ปลอดภัย", "2.2 เครื่องมือประจำห้องพร้อมใช้งานตามภารกิจ", "2.3 ไม่มีอุปกรณ์ชำรุดที่ก่อให้เกิดอันตราย", "2.4 ตรวจเช็คความพร้อมก่อนเปิดให้บริการ"], evidence: "หลักฐาน: บันทึกเช็คสภาพเครื่องมือ / ใบแจ้งซ่อม" },
-                { title: "3. การจัดเก็บสารเคมี วัสดุทดลอง และอุปกรณ์เฉพาะทาง", items: ["3.1 จัดเก็บสารเคมีแยกตามประเภทและความเสี่ยง", "3.2 ภาชนะมีป้ายกำกับชัดเจน มีทะเบียนสารเคมี", "3.3 จัดเก็บปลอดภัย ไม่เสี่ยงรั่วไหล แตกหัก", "3.4 มีแนวปฏิบัติบำบัดหรือกำจัดของเสียสารเคมี"], evidence: "หลักฐาน: ทะเบียนสารเคมี / บันทึกการเบิกจ่าย" },
-                { title: "4. ระบบป้ายเตือน คู่มือ และเอกสารกำกับการทำงาน", items: ["4.1 ป้ายชื่อห้องชัดเจน", "4.2 มีคู่มือ ขั้นตอนการปฏิบัติงาน (SOP) เข้าถึงง่าย", "4.3 มีสัญลักษณ์เตือนภัยสารเคมี ไฟฟ้า พื้นที่เสี่ยง", "4.4 เอกสารกำกับการใช้เครื่องมือเป็นปัจจุบัน"], evidence: "หลักฐาน: ป้ายเตือนความปลอดภัย / คู่มือ SOP" },
-                { title: "5. ความสะอาด สุขลักษณะ และการควบคุมการปนเปื้อน", items: ["5.1 โต๊ะทดลอง อ่างล้าง จุดสัมผัสสะอาด เรียบร้อย", "5.2 ไม่มีคราบสารเคมีตกค้าง กลิ่นรบกวน", "5.3 ทำความสะอาดสอดคล้องกับลักษณะการทดลอง", "5.4 มีมาตรการควบคุมการปนเปื้อนเหมาะสม"], evidence: "หลักฐาน: แผนทำความสะอาด / มาตรการควบคุมปนเปื้อน" },
-                { title: "6. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", items: ["6.1 ปิดไฟ แอร์ และเครื่องมือเมื่อเลิกใช้งาน", "6.2 ประหยัดน้ำ สารเคมี กระดาษ และวัสดุสิ้นเปลือง", "6.3 ส่งเสริมการใช้ซ้ำตามหลักความปลอดภัย", "6.4 ผู้ใช้มีส่วนร่วมประหยัดพลังงาน"], evidence: "หลักฐาน: ป้ายรณรงค์ / ภาพปิดเครื่องมือ" },
-                { title: "7. การติดตามและสื่อสารข้อมูลการใช้ทรัพยากร", items: ["7.1 รวบรวมสถิติการใช้น้ำ ไฟฟ้า อย่างต่อเนื่อง", "7.2 เปรียบเทียบผลกับเกณฑ์หรือเป้าหมาย", "7.3 วิเคราะห์สาเหตุเมื่อใช้ทรัพยากรเกินเป้า", "7.4 สื่อสารข้อมูลผลการประหยัดพลังงาน"], evidence: "หลักฐาน: สถิติการใช้ทรัพยากรรายเดือน" },
-                { title: "8. การคัดแยกและการจัดการของเสียจากการทดลอง", items: ["8.1 มีภาชนะรองรับของเสียสารเคมีแยกประเภทชัดเจน", "8.2 แสดงข้อมูลชนิด ปริมาณ วันที่จัดเก็บบนถังของเสีย", "8.3 จุดพักของเสียสะอาด ไม่รั่วไหล ปลอดภัย", "8.4 ส่งกำจัดของเสียอันตรายตามมาตรฐาน"], evidence: "หลักฐาน: ป้ายขยะสารเคมี / บันทึกส่งกำจัด" },
-                { title: "9. ความปลอดภัยและอุปกรณ์ป้องกันส่วนบุคคล (PPE)", items: ["9.1 จัดเตรียม PPE (แว่นตา ถุงมือ เสื้อกาวน์) ครบถ้วน", "9.2 อุปกรณ์ PPE สภาพพร้อมใช้ เข้าถึงง่าย", "9.3 มีระเบียบความปลอดภัยและกำกับให้ปฏิบัติตาม", "9.4 มีการประเมินความเสี่ยงและป้องกันอันตราย"], evidence: "หลักฐาน: จุดเก็บ PPE / แบบประเมินความเสี่ยง" },
-                { title: "10. ความพร้อมต่อเหตุฉุกเฉิน", items: ["10.1 ป้ายทางออกฉุกเฉินชัดเจน ทางเดินโล่ง", "10.2 มีฝักบัวฉุกเฉิน อ่างล้างตา ชุด Spill Kit พร้อมใช้", "10.3 แสดงขั้นตอนปฏิบัติเมื่อเกิดสารเคมีหกรั่วไหล", "10.4 ผู้รับผิดชอบและผู้ใช้ผ่านการซักซ้อมเหตุฉุกเฉิน"], evidence: "หลักฐาน: บันทึกตรวจอ่างล้างตา / ชุดซับสารเคมี" },
-                { title: "11. การบำรุงรักษาและการสอบเทียบเครื่องมือ", items: ["11.1 ตรวจสอบสภาพเครื่องมืออย่างสม่ำเสมอ", "11.2 มีแผนบำรุงรักษาและระบบแจ้งซ่อม", "11.3 เครื่องมือวัดผ่านการสอบเทียบตามรอบ", "11.4 มีบันทึกประวัติการบำรุงรักษาและสอบเทียบ"], evidence: "หลักฐาน: ใบรับรองการสอบเทียบ" },
-                { title: "12. ผลการประเมินความพึงพอใจ", items: ["12.1 ประเมินความพึงพอใจอย่างน้อยปีละ 1 ครั้ง", "12.2 สรุปผลด้านความสะอาด พร้อมใช้ ปลอดภัย", "12.3 วิเคราะห์เพื่อปรับปรุงการบริการ", "12.4 แสดงผลการปรับปรุงอย่างเป็นรูปธรรม"], evidence: "หลักฐาน: รายงานสรุปความพึงพอใจ" }
-            ]
-        },
-        workshop: {
-            title: "แบบตรวจประเมินโรงฝึกงาน (G02)",
-            maxScore: 48,
-            criteria: [
-                { title: "1. สภาพพื้นที่โดยรวม", items: ["1.1 เครื่องมือ เครื่องจักรจัดวางเป็นระเบียบ", "1.2 กำหนดพื้นที่งาน จุดเก็บ และทางสัญจรชัดเจน", "1.3 ทางเดิน ทางออกหนีไฟไม่ถูกกีดขวาง", "1.4 สะอาด เรียบร้อย พร้อมใช้งาน"], evidence: "หลักฐาน: ผังโรงฝึกงาน / ภาพสภาพพื้นที่" },
-                { title: "2. ความพร้อมใช้งานเครื่องมือและเครื่องจักร", items: ["2.1 เครื่องจักรพร้อมใช้งาน เหมาะกับภารกิจ", "2.2 ติดตั้งมั่นคง ปลอดภัย มีการ์ดป้องกัน", "2.3 ไม่มีอุปกรณ์ชำรุดที่เสี่ยงต่ออุบัติเหตุ", "2.4 ตรวจเช็คความพร้อมก่อนเปิดใช้งานเสมอ"], evidence: "หลักฐาน: บันทึกตรวจเครื่องจักร / ใบแจ้งซ่อม" },
-                { title: "3. การจัดเก็บเครื่องมือ วัสดุ และอุปกรณ์ฝึกงาน", items: ["3.1 จัดเก็บเครื่องมือแยกตามประเภทการใช้งาน", "3.2 มีป้ายกำกับ ชี้ชัด เบิก-คืนสะดวก", "3.3 ไม่วางกองรวมหรือซ้อนกันเสี่ยงเสียหาย", "3.4 ควบคุมการเบิกจ่ายและตรวจนับเป็นระบบ"], evidence: "หลักฐาน: ป้ายแขวนเครื่องมือ / ทะเบียนเบิกจ่าย" },
-                { title: "4. การกำหนดเขตพื้นที่ปฏิบัติงานและสัญลักษณ์เตือน", items: ["4.1 กำหนดเขตอันตรายและพื้นที่ทำงานชัดเจน", "4.2 ตีเส้นทางเดิน จุดหยุดรอ จุดวางอุปกรณ์ชัดเจน", "4.3 มีป้ายเตือนความปลอดภัยประจำเครื่องจักร", "4.4 ผู้ใช้รับรู้ขอบเขตความปลอดภัย"], evidence: "หลักฐาน: ภาพเส้นตีพื้น / ป้ายเตือนความปลอดภัย" },
-                { title: "5. ความสะอาด สุขลักษณะ และการดูแลพื้นที่", items: ["5.1 พื้น ผนัง เครื่องจักร สะอาด เรียบร้อย", "5.2 ไม่มีคราบน้ำมัน เศษโลหะ/ไม้ กีดขวาง", "5.3 ทำความสะอาดเครื่องมือหลังการใช้งานทุกครั้ง", "5.4 ควบคุมเศษวัสดุจากการปฏิบัติงานต่อเนื่อง"], evidence: "หลักฐาน: แผนทำความสะอาดโรงฝึกงาน" },
-                { title: "6. การใช้พลังงาน ทรัพยากร และติดตามข้อมูล", items: ["6.1 ปิดเครื่องจักร ไฟ แอร์ เมื่อไม่ใช้งาน", "6.2 ใช้วัสดุฝึกอย่างประหยัดและคุ้มค่า", "6.3 จัดทำข้อมูลการใช้ไฟฟ้า/วัสดุฝึกเป็นระบบ", "6.4 วิเคราะห์ผลการใช้และหาแนวทางปรับปรุง"], evidence: "หลักฐาน: สถิติการใช้วัสดุฝึก / ป้ายรณรงค์" },
-                { title: "7. การคัดแยกของเสียและจัดการเศษวัสดุ", items: ["7.1 จุดรับเศษวัสดุฝึกมีป้ายแยกประเภทชัดเจน", "7.2 แยกเศษเหล็ก ไม้ น้ำมันใช้แล้วถูกต้อง", "7.3 พื้นที่เก็บเศษวัสดุเป็นระเบียบ ปลอดภัย", "7.4 แนวทางส่งต่อ ขายรีไซเคิล หรือกำจัดถูกวิธี"], evidence: "หลักฐาน: ถังเก็บเศษโลหะ / บันทึกส่งต่อของเสีย" },
-                { title: "8. ความปลอดภัยในการทำงานและอุปกรณ์ PPE", items: ["8.1 มีอุปกรณ์ PPE (แว่นตา ถุงมือ หมวกนิรภัย) ครบ", "8.2 สภาพ PPE พร้อมใช้ จำนวนเพียงพอ", "8.3 ผู้ฝึกปฏิบัติตามกฎความปลอดภัยเคร่งครัด", "8.4 ไม่มีสภาพเสี่ยงอันตรายจากเครื่องจักร"], evidence: "หลักฐาน: จุดเก็บ PPE / ภาพการแต่งกายขณะฝึกงาน" },
-                { title: "9. ความพร้อมต่อเหตุฉุกเฉิน", items: ["9.1 ทางหนีไฟชัดเจน เข้าถึงง่าย ไม่ถูกขวาง", "9.2 มีถังดับเพลิง กล่องปฐมพยาบาล สวิตช์ Emergency", "9.3 แสดงข้อมูลเบอร์ติดต่อฉุกเฉินชัดเจน", "9.4 ผู้ใช้พื้นที่รู้แนวทางเมื่อเกิดเหตุฉุกเฉิน"], evidence: "หลักฐาน: บันทึกตรวจถังดับเพลิง / สวิตช์ฉุกเฉิน" },
-                { title: "10. การบำรุงรักษาและการสอบเทียบเครื่องจักร", items: ["10.1 ตรวจสอบสภาพเครื่องจักรอย่างสม่ำเสมอ", "10.2 มีแผนบำรุงรักษาเชิงป้องกัน (PM)", "10.3 เครื่องมือวัดผ่านการตรวจสอบความเที่ยงตรง", "10.4 บันทึกประวัติซ่อมบำรุงเป็นระบบ"], evidence: "หลักฐาน: แผน PM / บันทึกประวัติเครื่องจักร" },
-                { title: "11. การควบคุมการเข้าถึงและสภาพแวดล้อม", items: ["11.1 ควบคุมการเข้าออกพื้นที่ฝึกงานตามระเบียบ", "11.2 ผู้ฝึกปฏิบัติดูแลพื้นที่หลังใช้งานเรียบร้อย", "11.3 แสงสว่างและการระบายอากาศเหมาะสม", "11.4 สื่อสารมาตรฐานและปรับปรุงต่อเนื่อง"], evidence: "หลักฐาน: สมุดลงชื่อ / ป้ายมาตรฐานความปลอดภัย" },
-                { title: "12. ผลการประเมินความพึงพอใจ", items: ["12.1 สำรวจความพึงพอใจอย่างน้อยปีละ 1 ครั้ง", "12.2 สรุปผลด้านความสะอาด ปลอดภัย สภาพแวดล้อม", "12.3 วิเคราะห์ข้อเสนอแนะเพื่อปรับปรุง", "12.4 มีผลการพัฒนาโรงฝึกงานเป็นรูปธรรม"], evidence: "หลักฐาน: รายงานสรุปความพึงพอใจ" }
-            ]
-        },
-        specialized_lab: {
-            title: "แบบตรวจประเมินห้องปฏิบัติการเฉพาะวิชาชีพ (G02)",
-            maxScore: 48,
-            criteria: [
-                { title: "1. สภาพพื้นที่โดยรวม", items: ["1.1 จัดวางวัสดุ เครื่องมือเป็นระเบียบตามลักษณะวิชาชีพ", "1.2 กำหนดตำแหน่งจัดเก็บชัดเจน", "1.3 พื้นที่ไม่กีดขวางทางสัญจรหรือทางหนีไฟ", "1.4 สะอาด เรียบร้อย พร้อมใช้งาน"], evidence: "หลักฐาน: ผังห้อง / ป้ายบ่งชี้" },
-                { title: "2. ความพร้อมใช้งานพื้นที่และอุปกรณ์เฉพาะทาง", items: ["2.1 พื้นที่ปฏิบัติการและสถานีงานพร้อมใช้", "2.2 เครื่องมือเฉพาะวิชาชีพครบถ้วน เหมาะสม", "2.3 ไม่มีอุปกรณ์ชำรุดที่กระทบต่อการฝึก", "2.4 ตรวจสอบความพร้อมก่อนเปิดใช้งานสม่ำเสมอ"], evidence: "หลักฐาน: บันทึกตรวจความพร้อม / ทะเบียนครุภัณฑ์" },
-                { title: "3. การจัดเก็บวัสดุ อุปกรณ์ และเครื่องมือเฉพาะทาง", items: ["3.1 จัดเก็บแยกตามลักษณะการใช้งานวิชาชีพ", "3.2 มีป้ายหรือรหัสอ้างอิงชัดเจน หยิบใช้ง่าย", "3.3 ไม่วางกองรวมเสี่ยงต่อความเสียหาย", "3.4 ควบคุมการเบิกจ่ายและตรวจนับเป็นระบบ"], evidence: "หลักฐาน: ทะเบียนเบิกจ่าย / ภาพจุดจัดเก็บ" },
-                { title: "4. ระบบป้ายกำกับ คู่มือ และเอกสารการทำงาน", items: ["4.1 มีป้ายชื่อพื้นที่ชัดเจน", "4.2 มีคู่มือหรือแนวทางใช้งานอุปกรณ์เฉพาะทาง", "4.3 มีป้ายเตือนข้อควรระวังชัดเจน", "4.4 ติดตั้งขั้นตอนการปฏิบัติงาน (Work Instruction)"], evidence: "หลักฐาน: ป้ายขั้นตอนปฏิบัติงาน / คู่มือ" },
-                { title: "5. ความสะอาด สุขลักษณะ และการดูแลพื้นที่", items: ["5.1 พื้น โต๊ะ อุปกรณ์สะอาด เรียบร้อย", "5.2 ไม่มีฝุ่นสะสม กลิ่น หรือสิ่งตกค้าง", "5.3 ทำความสะอาดสอดคล้องกับลักษณะวิชาชีพ", "5.4 มีมาตรการควบคุมความสะอาดหรือการปนเปื้อน"], evidence: "หลักฐาน: แผนทำความสะอาด / บันทึกตรวจสุขอนามัย" },
-                { title: "6. การใช้พลังงาน ทรัพยากร และติดตามข้อมูล", items: ["6.1 ปิดไฟ แอร์ และเครื่องมือเมื่อไม่ใช้งาน", "6.2 ประหยัดน้ำ กระดาษ และวัสดุสิ้นเปลือง", "6.3 จัดทำสถิติการใช้พลังงาน/ทรัพยากร", "6.4 วิเคราะห์และสื่อสารผลการประหยัดพลังงาน"], evidence: "หลักฐาน: สถิติการใช้ทรัพยากร / ป้ายรณรงค์" },
-                { title: "7. การคัดแยกของเสียและการจัดการวัสดุใช้แล้ว", items: ["7.1 มีถังรองรับของเสียเฉพาะวิชาชีพแยกชัดเจน", "7.2 คัดแยกของเสียได้เหมาะสมกับลักษณะงาน", "7.3 จุดพักขยะสะอาด ปลอดภัย ไม่ส่งกลิ่น", "7.4 กำจัดหรือส่งต่อของเสียอย่างถูกวิธี"], evidence: "หลักฐาน: จุดแยกของเสีย / บันทึกการส่งกำจัด" },
-                { title: "8. ความปลอดภัยในการปฏิบัติงานและอุปกรณ์ป้องกัน", items: ["8.1 มีอุปกรณ์ป้องกันความปลอดภัยเฉพาะวิชาชีพ", "8.2 อุปกรณ์ป้องกันสภาพพร้อมใช้ จำนวนพอเพียง", "8.3 ผู้ใช้ปฏิบัติตามมาตรฐานความปลอดภัยเคร่งครัด", "8.4 ไม่มีสภาพเสี่ยงอันตรายจากการฝึกปฏิบัติ"], evidence: "หลักฐาน: จุดเก็บอุปกรณ์ป้องกัน / แบบตรวจเช็ค" },
-                { title: "9. ความพร้อมต่อเหตุฉุกเฉิน", items: ["9.1 ทางออกฉุกเฉินชัดเจน เข้าถึงสะดวก", "9.2 อุปกรณ์ฉุกเฉินพร้อมใช้งาน", "9.3 แสดงข้อมูลแนวปฏิบัติเมื่อเกิดเหตุฉุกเฉิน", "9.4 ผู้ใช้รับรู้ขั้นตอนการอพยพเมื่อเกิดเหตุ"], evidence: "หลักฐาน: แผนผังทางหนีไฟ / บันทึกตรวจอุปกรณ์" },
-                { title: "10. การบำรุงรักษาและการสอบเทียบอุปกรณ์", items: ["10.1 ตรวจสอบสภาพอุปกรณ์สำคัญสม่ำเสมอ", "10.2 มีแผนบำรุงรักษาและระบบแจ้งซ่อม", "10.3 เครื่องมือวัดผ่านการสอบเทียบตามรอบ", "10.4 บันทึกประวัติการบำรุงรักษาเป็นระบบ"], evidence: "หลักฐาน: ใบสอบเทียบ / บันทึกประวัติการซ่อม" },
-                { title: "11. การควบคุมการเข้าถึงและวินัยผู้ใช้พื้นที่", items: ["11.1 กำหนดสิทธิ์การเข้าใช้พื้นที่ชัดเจน", "11.2 กำกับดูแลผู้ใช้ระหว่างการฝึกปฏิบัติ", "11.3 ป้องกันบุคคลภายนอกเข้าพื้นที่ควบคุมโดยพลการ", "11.4 ผู้ใช้ดูแลอุปกรณ์และพื้นที่หลังเลิกใช้งาน"], evidence: "หลักฐาน: ระเบียบการใช้ห้อง / สมุดลงชื่อ" },
-                { title: "12. ผลการประเมินความพึงพอใจ", items: ["12.1 ประเมินความพึงพอใจอย่างน้อยปีละ 1 ครั้ง", "12.2 สรุปผลด้านความสะอาด พร้อมใช้ ปลอดภัย", "12.3 นำข้อเสนอแนะมากำหนดแนวทางแก้ไข", "12.4 แสดงผลการปรับปรุงอย่างเป็นรูปธรรม"], evidence: "หลักฐาน: รายงานสรุปความพึงพอใจ" }
-            ]
-        },
-        library: {
-            title: "แบบตรวจประเมินห้องสมุดและห้องสมุดดิจิทัล (G02)",
-            maxScore: 48,
-            criteria: [
-                { title: "1. สภาพพื้นที่โดยรวมและความเพียงพอของบริการ", items: ["1.1 จัดโซนอ่านหนังสือ ชั้นวาง เคาน์เตอร์เป็นระเบียบ", "1.2 กำหนดตำแหน่งพื้นที่บริการและทางเดินชัดเจน", "1.3 พื้นที่ไม่กีดขวางทางเข้าออกหรือทางหนีไฟ", "1.4 พื้นที่เพียงพอต่อการค้นคว้าและเรียนรู้"], evidence: "หลักฐาน: ผังห้องสมุด / ภาพพื้นที่บริการ" },
-                { title: "2. ความพร้อมใช้งานพื้นที่อ่านหนังสือและบริการ", items: ["2.1 โต๊ะ เก้าอี้ เคาน์เตอร์ อยู่ในสภาพพร้อมใช้", "2.2 สภาพแวดล้อมเอื้อต่อการค้นคว้าด้วยตนเอง", "2.3 ไม่มีเฟอร์นิเจอร์ชำรุดที่เสี่ยงอันตราย", "2.4 ตรวจสภาพความพร้อมสม่ำเสมอ"], evidence: "หลักฐาน: บันทึกตรวจเช็คพื้นที่ / ทะเบียนครุภัณฑ์" },
-                { title: "3. การจัดเก็บหนังสือ เอกสาร และทรัพยากรสารสนเทศ", items: ["3.1 จัดหมวดหมู่หนังสือตามระบบมาตรฐาน", "3.2 มีป้ายหมวดหมู่และเลขเรียกหนังสือชัดเจน", "3.3 จัดวางหนังสือเป็นระเบียบ ค้นหาง่าย", "3.4 ทรัพยากรสารสนเทศเพียงพอและทันสมัย"], evidence: "หลักฐาน: ป้ายหมวดหมู่ / ภาพชั้นหนังสือ" },
-                { title: "4. ระบบห้องสมุดดิจิทัลและการเข้าถึงสารสนเทศ", items: ["4.1 มีระบบค้นหาหนังสือ (OPAC) ใช้งานได้จริง", "4.2 เข้าถึงฐานข้อมูลออนไลน์หรือ e-Books ได้สะดวก", "4.3 มีคอมพิวเตอร์บริการสืบค้นพร้อมใช้", "4.4 อัปเดตและพัฒนาระบบสม่ำเสมอ"], evidence: "หลักฐาน: หน้าจอ OPAC / สถิติการใช้งานฐานข้อมูล" },
-                { title: "5. ระบบป้ายกำกับ คู่มือ และข้อมูลการใช้บริการ", items: ["5.1 มีป้ายชื่อห้องสมุดชัดเจน", "5.2 มีระเบียบข้อปฏิบัติการใช้บริการแสดงชัดเจน", "5.3 มีป้ายบอกจุดสำคัญ (จุดยืม-คืน, จุดค้นหา)", "5.4 ข้อมูลการให้บริการเป็นปัจจุบัน"], evidence: "หลักฐาน: ป้ายข้อปฏิบัติ / บอร์ดประชาสัมพันธ์" },
-                { title: "6. ความสะอาดและสุขลักษณะของห้องสมุด", items: ["6.1 พื้น โต๊ะ ชั้นวางหนังสือสะอาด เรียบร้อย", "6.2 ไม่มีฝุ่นสะสมบนหนังสือหรือกลิ่นอับชื้น", "6.3 ทำความสะอาดสม่ำเสมอ", "6.4 ดูแลหนังสือให้พ้นจากความชื้น ฝุ่น หรือแมลง"], evidence: "หลักฐาน: บันทึกทำความสะอาด / แผนดูแลหนังสือ" },
-                { title: "7. สภาพแวดล้อม การเข้าถึง และสิ่งอำนวยความสะดวก", items: ["7.1 แสงสว่างเพียงพอเหมาะสมต่อการอ่าน", "7.2 อากาศถ่ายเท แอร์เย็นสบายพร้อมใช้งาน", "7.3 บรรยากาศเงียบสงบ ไม่มีเสียงรบกวน", "7.4 สิ่งอำนวยความสะดวกสำหรับผู้พิการตามบริบท"], evidence: "หลักฐาน: ภาพถ่ายบรรยากาศ / ระบบปรับอากาศ" },
-                { title: "8. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", items: ["8.1 ปิดไฟ แอร์ คอมพิวเตอร์ เมื่อไม่มีการใช้งาน", "8.2 ประหยัดกระดาษ น้ำ และวัสดุสำนักงาน", "8.3 ส่งเสริมระบบยืมคืนดิจิทัลลดการใช้กระดาษ", "8.4 ผู้ใช้บริการมีส่วนร่วมประหยัดพลังงาน"], evidence: "หลักฐาน: ป้ายรณรงค์ / ระบบบริการออนไลน์" },
-                { title: "9. การคัดแยกขยะและการจัดการของเสีย", items: ["9.1 จุดทิ้งขยะมีป้ายแยกประเภทชัดเจน", "9.2 คัดแยกขยะทั่วไปและรีไซเคิลถูกต้อง", "9.3 บริเวณจุดทิ้งขยะสะอาด ไม่มีกลิ่นรบกวน", "9.4 ส่งเสริมการลดของเสียและนำกลับมาใช้ใหม่"], evidence: "หลักฐาน: จุดแยกขยะในห้องสมุด" },
-                { title: "10. ความปลอดภัยและความพร้อมต่อเหตุฉุกเฉิน", items: ["10.1 ทางเดินและทางออกไม่มีสิ่งกีดขวาง", "10.2 ชั้นหนังสือและอุปกรณ์ไฟฟ้าปลอดภัย ไม่ล้มเอียง", "10.3 ทางออกฉุกเฉินและถังดับเพลิงพร้อมใช้งาน", "10.4 แผนผังทางหนีไฟแสดงชัดเจน"], evidence: "หลักฐาน: แผนผังทางหนีไฟ / ภาพถังดับเพลิง" },
-                { title: "11. บุคลากรสนับสนุนและการให้บริการ", items: ["11.1 กำหนดหน้าที่บรรณารักษ์/เจ้าหน้าที่ชัดเจน", "11.2 บุคลากรให้คำแนะนำการค้นคว้าได้ดี", "11.3 พัฒนาสมรรถนะบุคลากรอย่างต่อเนื่อง", "11.4 กำกับดูแลความสงบเรียบร้อยตามระเบียบ"], evidence: "หลักฐาน: คู่มือบริการ / บันทึกการอบรมบุคลากร" },
-                { title: "12. การประเมินคุณภาพและการปรับปรุงต่อเนื่อง", items: ["12.1 สำรวจความพึงพอใจของผู้ใช้บริการสม่ำเสมอ", "12.2 รวบรวมและวิเคราะห์ข้อเสนอแนะ", "12.3 นำผลประเมินไปปรับปรุงพื้นที่และบริการ", "12.4 แสดงหลักฐานการพัฒนาคุณภาพบริการต่อเนื่อง"], evidence: "หลักฐาน: สรุปผลความพึงพอใจ / ภาพก่อน-หลังปรับปรุง" }
-            ]
-        },
-        building_safety: {
-            title: "แบบตรวจประเมินอาคารสถานที่และความปลอดภัยอาคาร (G03)",
-            maxScore: 40,
-            criteria: [
-                { title: "1. สภาพอาคารและองค์ประกอบทางกายภาพ", items: ["1.1 ผนัง พื้น ฝ้า บันได ประตู ปลอดภัยมั่นคง", "1.2 ไม่มีรอยแตกร้าว รั่วซึม หลุดล่อน", "1.3 ตรวจสอบสภาพอาคารสม่ำเสมอ", "1.4 ปิดกั้นพื้นที่เสี่ยงและแจ้งซ่อมทันที"], evidence: "หลักฐาน: แบบตรวจสภาพอาคาร / ใบแจ้งซ่อม" },
-                { title: "2. ทางเดิน บันได ทางลาด และเส้นทางสัญจร", items: ["2.1 ทางเดิน บันได พร้อมใช้งาน ปลอดภัย", "2.2 ไม่มีสิ่งกีดขวาง หรือจุดสะดุดลื่น", "2.3 แสงสว่างเพียงพอ มีป้ายเตือนจุดต่างระดับ", "2.4 ทางสัญจรรองรับผู้สูงอายุและผู้พิการ"], evidence: "หลักฐาน: ภาพทางลาด บันได / ป้ายเตือน" },
-                { title: "3. ระบบไฟฟ้า แสงสว่าง และระบบสนับสนุนอาคาร", items: ["3.1 ตู้ควบคุมไฟฟ้า ปลั๊ก สายไฟ ปลอดภัย", "3.2 แสงสว่างเพียงพอในทางเดินและบันได", "3.3 ระบบน้ำประปา ระบายน้ำ พร้อมใช้งาน", "3.4 บำรุงรักษาระบบสนับสนุนอาคารสม่ำเสมอ"], evidence: "หลักฐาน: บันทึกตรวจตู้ไฟ / แผนบำรุงรักษา" },
-                { title: "4. เครื่องดับเพลิงและอุปกรณ์ระงับเหตุเบื้องต้น", items: ["4.1 ติดตั้งถังดับเพลิงเหมาะสมกับความเสี่ยง", "4.2 ตำแหน่งมองเห็นชัด ไม่ถูกกีดขวาง", "4.3 กระจายครอบคลุมพื้นที่อย่างเหมาะสม", "4.4 ตรวจสอบสภาพถังดับเพลิงทุกเดือน"], evidence: "หลักฐาน: สติ๊กเกอร์ตรวจถังดับเพลิง / แผนผังติดตั้ง" },
-                { title: "5. ทางหนีไฟ ป้ายอพยพ แผนผังหนีไฟ และจุดรวมพล", items: ["5.1 ทางหนีไฟไม่ถูกปิดล็อคหรือกีดขวาง", "5.2 มีป้ายทางออกฉุกเฉินและจุดรวมพลชัดเจน", "5.3 แผนผังอพยพเป็นปัจจุบัน มองเห็นง่าย", "5.4 ตรวจสอบเส้นทางอพยพเป็นประจำ"], evidence: "หลักฐาน: ภาพทางหนีไฟ / ผังอพยพ / จุดรวมพล" },
-                { title: "6. ลิฟต์ โถงลิฟต์ และสิ่งอำนวยความสะดวก", items: ["6.1 ลิฟต์สะอาด ปลอดภัย พร้อมใช้งาน", "6.2 มีป้ายห้ามใช้ลิฟต์ขณะเพลิงไหม้ชัดเจน", "6.3 มีระบบแจ้งเหตุฉุกเฉินในลิฟต์", "6.4 มีเอกสารรับรองการตรวจลิฟต์ตามกฎหมาย"], evidence: "หลักฐาน: ใบรับรองการตรวจลิฟต์ / ป้ายกำกับ" },
-                { title: "7. การเฝ้าระวังและควบคุมพื้นที่เสี่ยง", items: ["7.1 ระบุจุดเสี่ยง จุดอับสายตาชัดเจน", "7.2 ติดตั้งกล้องวงจรปิด/ไฟส่องสว่างเหมาะสม", "7.3 กำหนดผู้รับผิดชอบและเบอร์แจ้งเหตุ", "7.4 แก้ไขปรับปรุงจุดเสี่ยงต่อเนื่อง"], evidence: "หลักฐาน: แผนผังจุดเสี่ยง / กล้องวงจรปิด" },
-                { title: "8. การรับมือสถานการณ์ฉุกเฉินและ BCM", items: ["8.1 ระบุความเสี่ยงภัย (ไฟไหม้ น้ำท่วม ไฟดับ)", "8.2 มีแผนเผชิญเหตุและแนวทางดำเนินงานต่อเนื่อง", "8.3 ฝึกซ้อมหนีไฟอย่างน้อยปีละ 1 ครั้ง", "8.4 สรุปบทเรียนและปรับปรุงแผน"], evidence: "หลักฐาน: รายงานการซ้อมดับเพลิงและอพยพหนีไฟ" },
-                { title: "9. การฝึกอบรมและการสื่อสารความปลอดภัย", items: ["9.1 สื่อสารข้อปฏิบัติความปลอดภัยให้บุคลากรทราบ", "9.2 อบรมดับเพลิงขั้นต้นตามเกณฑ์กฎหมาย (≥40%)", "9.3 แสดงเบอร์โทรฉุกเฉินและผู้ประสานงาน", "9.4 ประเมินผลความเข้าใจของบุคลากร"], evidence: "หลักฐาน: รายชื่อผู้ผ่านการอบรม / ป้ายเบอร์ฉุกเฉิน" },
-                { title: "10. การบำรุงรักษา การแจ้งซ่อม และปรับปรุงต่อเนื่อง", items: ["10.1 มีช่องทางแจ้งซ่อมอาคารที่ชัดเจน", "10.2 บันทึกและติดตามสถานะงานซ่อมเป็นระบบ", "10.3 ตรวจสอบงานหลังการซ่อมแซม", "10.4 นำผลตรวจและข้อร้องเรียนมาปรับปรุงจริง"], evidence: "หลักฐาน: ระบบแจ้งซ่อม / ภาพ Before-After" }
-            ]
-        },
-        landscape: {
-            title: "แบบตรวจประเมินภูมิทัศน์และพื้นที่ส่วนกลาง (G03)",
-            maxScore: 40,
-            criteria: [
-                { title: "1. สภาพพื้นที่โดยรวม", items: ["1.1 สะอาด เป็นระเบียบ พร้อมใช้งาน", "1.2 ไม่มีสิ่งของวางกีดขวางแนวสัญจรส่วนกลาง", "1.3 จัดสรรพื้นที่เหมาะสมกับการใช้งาน", "1.4 กำหนดผู้รับผิดชอบดูแลชัดเจน"], evidence: "หลักฐาน: ภาพถ่ายพื้นที่ส่วนกลาง / คำสั่งมอบหมาย" },
-                { title: "2. การจัดสภาพแวดล้อมและภูมิทัศน์", items: ["2.1 บริเวณโดยรอบสวยงาม ไม่รกรุงรัง", "2.2 ดูแลตัดแต่งต้นไม้ สนามหญ้าเหมาะสม", "2.3 ไม่มีกิ่งไม้แห้งหรือวัชพืชรกสะสม", "2.4 ปรับปรุงพื้นที่สีเขียวให้น่าอยู่"], evidence: "หลักฐาน: แผนดูแลต้นไม้ / ภาพภูมิทัศน์" },
-                { title: "3. ทางเดิน ทางเชื่อม และเส้นทางสัญจร", items: ["3.1 ทางเดินไม่ชำรุด แตกร้าว หรือทรุดตัว", "3.2 ไม่มีจุดสะดุดลื่นหรือพื้นต่างระดับอันตราย", "3.3 มีป้ายบอกทางและเครื่องหมายเตือนชัดเจน", "3.4 แสงสว่างเพียงพอ ปลอดภัยต่อทุกคน"], evidence: "หลักฐาน: ภาพทางเดิน / ป้ายบอกทาง" },
-                { title: "4. พื้นที่จอดรถ จุดพักคอย และพื้นที่ใช้ร่วม", items: ["4.1 ลานจอดรถและจุดพักคอยเป็นระเบียบ", "4.2 ตีเส้นจราจรและป้ายแบ่งช่องจอดชัดเจน", "4.3 ปลอดภัยต่อการสัญจร ไม่มีสิ่งกีดขวาง", "4.4 สะอาด แสงสว่างเพียงพอ"], evidence: "หลักฐาน: ภาพเส้นจราจร / ช่องจอดรถ" },
-                { title: "5. ห้องน้ำหรือพื้นที่สุขลักษณะ", items: ["5.1 ห้องน้ำสะอาด พร้อมใช้งาน", "5.2 สุขภัณฑ์ ก๊อกน้ำ ไม่ชำรุดเสียหาย", "5.3 ไม่มีน้ำขัง กลิ่นเหม็น หรือคราบสกปรก", "5.4 กำหนดรอบการทำความสะอาดชัดเจน"], evidence: "หลักฐาน: ตารางตรวจเช็คการทำความสะอาดห้องน้ำ" },
-                { title: "6. ระบบป้ายบ่งชี้ ป้ายเตือน และข้อมูลกำกับ", items: ["6.1 ป้ายชื่ออาคาร/จุดสำคัญชัดเจน", "6.2 มีป้ายเตือน ป้ายจราจร ในจุดจำเป็น", "6.3 ป้ายสะอาด ชัดเจน อ่านง่าย", "6.4 ข้อมูลบนป้ายถูกต้องและเป็นปัจจุบัน"], evidence: "หลักฐาน: ภาพป้ายบอกทางและป้ายเตือน" },
-                { title: "7. ความสะอาด สุขลักษณะ และจุดสัมผัสร่วม", items: ["7.1 ม้านั่ง ราวจับ จุดพักคอยสะอาด", "7.2 ไม่มีคราบสกปรก ฝุ่น หรือขยะสะสม", "7.3 ทำความสะอาดอย่างสม่ำเสมอ", "7.4 ดูแลสุขอนามัยพื้นที่ส่วนกลางอย่างดี"], evidence: "หลักฐาน: บันทึกการทำความสะอาดส่วนกลาง" },
-                { title: "8. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", items: ["8.1 ปิดไฟส่วนกลางและปั๊มน้ำเมื่อเลิกใช้", "8.2 ใช้น้ำรดน้ำต้นไม้อย่างประหยัด/ใช้ระบบตั้งเวลา", "8.3 ส่งเสริมการลดใช้และใช้วัสดุคุ้มค่า", "8.4 ผู้ใช้พื้นที่มีส่วนร่วมประหยัดทรัพยากร"], evidence: "หลักฐาน: ป้ายรณรงค์ / ระบบรดน้ำต้นไม้" },
-                { title: "9. การคัดแยกขยะและการจัดการของเสีย", items: ["9.1 มีถังขยะแยกประเภทในจุดพักคอย", "9.2 แยกขยะทั่วไป รีไซเคิล และเศษอาหารได้ดี", "9.3 จุดทิ้งขยะสะอาด ไม่มีกลิ่นและขยะล้น", "9.4 การส่งต่อขยะรีไซเคิลและกำจัดถูกวิธี"], evidence: "หลักฐาน: จุดตั้งถังขยะส่วนกลาง / การคัดแยก" },
-                { title: "10. การสื่อสารมาตรฐานและการปรับปรุงต่อเนื่อง", items: ["10.1 สื่อสารระเบียบการใช้พื้นที่ส่วนกลางชัดเจน", "10.2 มีผู้ตรวจติดตามสภาพพื้นที่สม่ำเสมอ", "10.3 ตรวจประเมินพื้นที่เป็นระยะ", "10.4 นำข้อร้องเรียนมาปรับปรุงภูมิทัศน์จริง"], evidence: "หลักฐาน: ภาพ Before-After / บันทึกตรวจพื้นที่" }
-            ]
-        },
-        canteen: {
-            title: "แบบตรวจประเมินโรงอาหารและซุ้มอาหาร (G03)",
-            maxScore: 40,
-            criteria: [
-                { title: "1. สภาพพื้นที่โดยรวมของโรงอาหาร", items: ["1.1 สะอาด เป็นระเบียบ พร้อมใช้งาน", "1.2 ทางเดิน ทางเข้าออก และจุดสั่งอาหารไม่ติดขัด", "1.3 จัดสัดส่วนร้านค้า ที่นั่ง ล้างจาน เหมาะสม", "1.4 มีผู้กำกับดูแลโรงอาหารชัดเจน"], evidence: "หลักฐาน: ผังโรงอาหาร / ภาพถ่ายบรรยากาศ" },
-                { title: "2. สุขลักษณะของร้านค้าและผู้ประกอบการ", items: ["2.1 ร้านค้าสะอาดทั้งบริเวณปรุงและจำหน่าย", "2.2 ผู้ขายแต่งกายสะอาด สวมหมวก/ผ้ากันเปื้อน", "2.3 เก็บวัตถุดิบ ภาชนะ ปลอดภัย ถูกสุขอนามัย", "2.4 สื่อสารเกณฑ์สุขาภิบาลอาหารให้ผู้ค้าทราบ"], evidence: "หลักฐาน: บันทึกตรวจสุขาภิบาลร้านค้า" },
-                { title: "3. พื้นที่นั่งรับประทานอาหารและสิ่งอำนวยความสะดวก", items: ["3.1 โต๊ะเก้าอี้สะอาด แข็งแรง พร้อมใช้", "3.2 จัดวางโต๊ะไม่แออัด ทางเดินสะดวก", "3.3 มีจุดล้างมือ สบู่ หรือเจลแอลกอฮอล์", "3.4 ดูแลพื้นที่รับประทานอาหารให้สะอาดเสมอ"], evidence: "หลักฐาน: ภาพโต๊ะเก้าอี้ / จุดล้างมือ" },
-                { title: "4. ระบบไฟฟ้า ก๊าซหุงต้ม แสงสว่าง และการระบายอากาศ", items: ["4.1 ปลั๊กไฟ สายไฟ จุดต่อพ่วงปลอดภัย", "4.2 ถังก๊าซหุงต้มติดตั้งและจัดวางปลอดภัย", "4.3 มีเครื่องดูดควัน อากาศถ่ายเท ไม่เหม็นอับ", "4.4 ตรวจสอบระบบแก๊สและไฟฟ้าสม่ำเสมอ"], evidence: "หลักฐาน: จุดติดตั้งถังก๊าซ / เครื่องดูดควัน" },
-                { title: "5. ความสะอาดและการควบคุมปัจจัยเสี่ยงด้านสุขภาพ", items: ["5.1 พื้น โต๊ะ จุดล้างจาน สะอาดหมดจด", "5.2 ไม่มีเศษอาหาร คราบมัน หรือสัตว์พาหะนำโรค", "5.3 เช็ดทำความสะอาดโต๊ะหลังผู้ใช้ลุกทันที", "5.4 ล้างทำความสะอาดพื้นโรงอาหารเป็นประจำ"], evidence: "หลักฐาน: บันทึกทำความสะอาด / การกำจัดสัตว์พาหะ" },
-                { title: "6. การจัดการขยะ เศษอาหาร น้ำเสีย และถังดักไขมัน", items: ["6.1 มีจุดทิ้งเศษอาหารและแยกขยะชัดเจน", "6.2 แยกขยะทั่วไป รีไซเคิล เศษอาหารเป็นสัดส่วน", "6.3 บริเวณทิ้งขยะสะอาด ไม่มีน้ำขยะหกเลอะเทอะ", "6.4 ล้างและดักไขมันในบ่อดักสม่ำเสมอ ไม่ปล่อยลงท่อ"], evidence: "หลักฐาน: ภาพถังดักไขมัน / จุดเทเศษอาหาร" },
-                { title: "7. ความปลอดภัยของพื้นที่ จุดเสี่ยง และการสัญจร", items: ["7.1 พื้นไม่ลื่น ไม่มีน้ำขัง ป้องกันการหกล้ม", "7.2 จัดระเบียบทางเดินและแถวซื้ออาหาร", "7.3 แสงสว่างเพียงพอทั่วบริเวณ", "7.4 มีช่องทางแจ้งเหตุฉุกเฉิน"], evidence: "หลักฐาน: ป้ายเตือนพื้นลื่น / ภาพทางเดิน" },
-                { title: "8. อัคคีภัย อุปกรณ์ฉุกเฉิน และการอพยพ", items: ["8.1 ติดตั้งถังดับเพลิงประจำจุดประกอบอาหาร", "8.2 ถังดับเพลิงและทางหนีไฟไม่ถูกบัง", "8.3 มีป้ายทางออกฉุกเฉินชัดเจน", "8.4 ตรวจเช็คถังดับเพลิงและอบรมคนขายของ"], evidence: "หลักฐาน: สติ๊กเกอร์ตรวจถังดับเพลิง / แผนผังหนีไฟ" },
-                { title: "9. การใช้พลังงาน น้ำ และทรัพยากรอย่างคุ้มค่า", items: ["9.1 มาตรการประหยัดไฟและน้ำในโรงอาหาร", "9.2 รณรงค์ปิดก๊อกน้ำและปิดพัดลมเมื่อไม่ใช้", "9.3 ลดการใช้โฟมและถุงพลาสติกแบบใช้ครั้งเดียว", "9.4 สื่อสารรณรงค์ Green Canteen"], evidence: "หลักฐาน: ป้ายรณรงค์งดใช้โฟม / มาตรการประหยัดน้ำ" },
-                { title: "10. การสื่อสารมาตรฐาน การแจ้งซ่อม และปรับปรุงต่อเนื่อง", items: ["10.1 ติดป้ายกฎระเบียบการใช้บริการโรงอาหาร", "10.2 มีช่องทางรับเรื่องร้องเรียนจากผู้บริโภค", "10.3 บันทึกและติดตามการซ่อมแซมจุดชำรุด", "10.4 นำผลประเมินมาปรับปรุงคุณภาพร้านค้า"], evidence: "หลักฐาน: บอร์ดข้อร้องเรียน / ภาพปรับปรุงร้านค้า" }
-            ]
-        },
-        meeting_room: {
-            title: "แบบตรวจประเมินห้องประชุมหรือหอประชุม (G03)",
-            maxScore: 40,
-            criteria: [
-                { title: "1. สภาพห้องประชุมหรือหอประชุมโดยรวม", items: ["1.1 สะอาด เป็นระเบียบ พร้อมใช้งานตลอดเวลา", "1.2 จัดห้องเหมาะสมกับรูปแบบกิจกรรม", "1.3 ไม่มีสิ่งของกีดขวางทางเดินและประตู", "1.4 มีผู้ดูแลรับผิดชอบห้องชัดเจน"], evidence: "หลักฐาน: ผังห้องประชุม / รายชื่อผู้ดูแลห้อง" },
-                { title: "2. พัสดุ ครุภัณฑ์ และอุปกรณ์ประจำห้อง", items: ["2.1 ครุภัณฑ์ โต๊ะ เก้าอี้ ครบตามจำนวน", "2.2 มีรหัสครุภัณฑ์หรือป้ายทรัพย์สินชัดเจน", "2.3 ตรวจสอบสภาพครุภัณฑ์อย่างเหมาะสม", "2.4 ลงบันทึกครุภัณฑ์ชำรุดเพื่อรอซ่อม"], evidence: "หลักฐาน: ทะเบียนครุภัณฑ์ประจำห้อง / ใบแจ้งซ่อม" },
-                { title: "3. ระบบโสตทัศนูปกรณ์ (Audio-Visual System)", items: ["3.1 เครื่องเสียง ไมค์ ลำโพง จอภาพ พร้อมใช้งาน", "3.2 จัดเก็บสายสัญญาณ รีโมต อุปกรณ์เป็นระเบียบ", "3.3 มีคู่มือหรือช่างคุมระบบเสียงคอยดูแล", "3.4 ตรวจสอบและบำรุงรักษาเครื่องเสียงสม่ำเสมอ"], evidence: "หลักฐาน: ตารางตรวจอุปกรณ์โสตฯ / คู่มือใช้งาน" },
-                { title: "4. ระบบไฟฟ้า แสงสว่าง และระบบปรับอากาศ", items: ["4.1 สวิตช์ ปลั๊กไฟ สายไฟ ปลอดภัย", "4.2 แสงสว่างและอุณหภูมิห้องพอเหมาะกับการประชุม", "4.3 ไม่มีสายไฟพาดพื้นกีดขวางเสี่ยงสะดุด", "4.4 ล้างและบำรุงรักษาเครื่องปรับอากาศตามรอบ"], evidence: "หลักฐาน: บันทึกล้างแอร์ / ภาพจุดต่อพ่วงไฟ" },
-                { title: "5. ความสะอาด สุขลักษณะ และจุดสัมผัสร่วม", items: ["5.1 โต๊ะ เก้าอี้ เวที โพเดียม ไมโครโฟน สะอาด", "5.2 ไม่มีฝุ่นสะสม กลิ่นอับ หรือขยะตกค้าง", "5.3 ทำความสะอาดก่อนและหลังเสร็จสิ้นการประชุมทุกครั้ง", "5.4 จัดตั้งถังขยะอย่างถูกสุขลักษณะ"], evidence: "หลักฐาน: บันทึกทำความสะอาดห้องประชุม" },
-                { title: "6. ความปลอดภัยในการจัดวางและการใช้พื้นที่", items: ["6.1 จัดวางโต๊ะ เวที มั่นคง ปลอดภัย ไม่โยกคลอน", "6.2 ทางเดิน ทางเข้าออก กว้างขวาง ไม่อึดอัด", "6.3 ไม่มีขอบคมหรือจุดสะดุดที่เสี่ยงอันตราย", "6.4 จัดเก็บเก้าอี้เสริมเข้าที่เรียบร้อย"], evidence: "หลักฐาน: ภาพถ่ายการจัดห้อง / ทางเดิน" },
-                { title: "7. ป้ายบ่งชี้ ป้ายข้อปฏิบัติ และข้อมูลติดต่อ", items: ["7.1 ป้ายชื่อห้องประชุมชัดเจน", "7.2 มีข้อปฏิบัติในการใช้ห้องประชุมแสดงชัดเจน", "7.3 แสดงเบอร์ติดต่อเจ้าหน้าที่ควบคุมโสตฯ ชัดเจน", "7.4 ป้ายสะอาด ชัดเจน เป็นปัจจุบัน"], evidence: "หลักฐาน: ป้ายชื่อห้อง / ป้ายข้อปฏิบัติ" },
-                { title: "8. อัคคีภัย ทางออกฉุกเฉิน และการอพยพ", items: ["8.1 มีถังดับเพลิงพร้อมใช้งานในตำแหน่งที่เห็นชัด", "8.2 ประตูหนีไฟเปิดออกได้ง่าย ไม่ถูกล็อคปิดตาย", "8.3 มีไฟฉุกเฉินและป้ายบอกทางหนีไฟ", "8.4 ผู้ดูแลห้องทราบแนวทางการอพยพผู้เข้าร่วมประชุม"], evidence: "หลักฐาน: ป้ายทางออกฉุกเฉิน / ไฟฉุกเฉิน" },
-                { title: "9. การใช้พลังงาน ทรัพยากร และขยะจากการประชุม", items: ["9.1 ปิดไฟ แอร์ โปรเจกเตอร์ทันทีหลังเสร็จประชุม", "9.2 ส่งเสริมการประชุมลดกระดาษ (Paperless Meeting)", "9.3 เสิร์ฟอาหารว่างหรือน้ำดื่มโดยลดขยะพลาสติก", "9.4 คัดแยกขยะกล่องอาหารว่างและขวดน้ำหลังประชุม"], evidence: "หลักฐาน: ป้าย Paperless Meeting / จุดคัดแยกขยะ" },
-                { title: "10. การบำรุงรักษา การแจ้งซ่อม และปรับปรุงต่อเนื่อง", items: ["10.1 มีช่องทางแจ้งซ่อมอุปกรณ์ที่ชำรุดทันที", "10.2 มีบันทึกประวัติการซ่อมแซมโสตทัศนูปกรณ์", "10.3 ทดสอบระบบหลังการซ่อมก่อนนำมาใช้จริง", "10.4 นำข้อคิดเห็นจากผู้จัดงานมาปรับปรุงห้อง"], evidence: "หลักฐาน: ใบแจ้งซ่อม / บันทึกประวัติเครื่องเสียง" }
+                { title: "ข้อที่ 1 สภาพพื้นที่โดยรวมและเส้นทางสัญจร (สะสาง/สะดวก)", items: ["จัดวางโต๊ะ เก้าอี้ สื่อการเรียนรู้อย่างเป็นระเบียบ", "ทางสัญจรและทางออกฉุกเฉินไม่มีสิ่งกีดขวาง", "สภาพห้องเรียนพร้อมรองรับการจัดการเรียนการสอน"] },
+                { title: "ข้อที่ 2 ความพร้อมของโต๊ะ เก้าอี้ และอุปกรณ์ประจำห้อง (สะดวก/ปลอดภัย)", items: ["โต๊ะเก้าอี้นักศึกษาและโพเดียมผู้สอนมั่นคง สะอาด ปลอดภัย", "กระดาน จอรับภาพ และไมโครโฟนพร้อมใช้งาน", "ไม่มีครุภัณฑ์ชำรุดที่อาจก่อให้เกิดอันตราย"] },
+                { title: "ข้อที่ 3 การจัดเก็บอุปกรณ์และสื่อการศึกษา (สะสาง/สะดวก)", items: ["จัดเก็บอุปกรณ์โสตทัศนูปกรณ์เป็นหมวดหมู่", "มีป้ายระบุจุดจัดเก็บชัดเจน เบิกใช้และเก็บคืนง่าย", "ดูแลรักษาความพร้อมของอุปกรณ์สม่ำเสมอ"] },
+                { title: "ข้อที่ 4 ระบบป้ายกำกับ คู่มือ และข้อปฏิบัติ (สะดวก)", items: ["ป้ายชื่อห้องและระเบียบการใช้ห้องเรียนชัดเจน", "มีป้ายกำกับสวิตช์ไฟและเครื่องปรับอากาศ", "ข้อมูลและข้อปฏิบัติเป็นปัจจุบัน เข้าใจง่าย"] },
+                { title: "ข้อที่ 5 ความสะอาดและสุขอนามัยภายในห้องเรียน (สะอาด/สุขลักษณะ)", items: ["พื้น ผนัง กระดาน หน้าต่าง สะอาดปราศจากฝุ่น", "ไม่มีคราบสกปรก ขยะตกค้าง หรือกลิ่นรบกวน", "จุดสัมผัสร่วมได้รับการทำความสะอาดตามรอบ"] },
+                { title: "ข้อที่ 6 สภาพแวดล้อมที่เอื้อต่อการเรียนรู้ (สุขลักษณะ)", items: ["แสงสว่างเพียงพอเหมาะสมต่อการอ่านและการมองเห็น", "ระบบปรับอากาศและพัดลมระบายอากาศทำงานมีประสิทธิภาพ", "ปราศจากเสียงและมลภาวะรบกวนการเรียนการสอน"] },
+                { title: "ข้อที่ 7 การใช้พลังงานและทรัพยากรอย่างรู้คุณค่า (สิ่งแวดล้อม)", items: ["ปิดระบบไฟ เครื่องปรับอากาศ และโปรเจกเตอร์หลังเลิกชั้นเรียน", "รณรงค์การเรียนการสอนแบบลดการใช้กระดาษ (Paperless)", "นักศึกษาและผู้สอนมีส่วนร่วมในการประหยัดพลังงาน"] },
+                { title: "ข้อที่ 8 การติดตามข้อมูลการใช้พลังงาน (สิ่งแวดล้อม)", items: ["รวบรวมสถิติการใช้ไฟฟ้าประจำอาคารเรียน", "กำหนดมาตรการควบคุมการเปิด-ปิดระบบตามตารางสอน", "สื่อสารข้อมูลมาตรการประหยัดพลังงานให้ผู้ใช้ห้องทราบ"] },
+                { title: "ข้อที่ 9 การจัดการขยะและของเสีย (สิ่งแวดล้อม/สุขลักษณะ)", items: ["จัดตั้งจุดคัดแยกขยะชัดเจนหน้าห้องเรียนหรือในอาคาร", "ผู้ใช้ห้องคัดแยกขยะถูกต้องตามประเภท", "ตรวจสอบไม่พบเศษอาหารหรือขยะตกค้างหลังเลิกใช้งาน"] },
+                { title: "ข้อที่ 10 ความปลอดภัยและความพร้อมรองรับเหตุฉุกเฉิน (ปลอดภัย)", items: ["ติดตั้งแผนผังหนีไฟและป้ายทางออกฉุกเฉินมองเห็นชัดเจน", "อุปกรณ์ดับเพลิงเบื้องต้นพร้อมใช้งานและเข้าถึงได้ทันที", "ระบบสายไฟและเต้ารับไฟฟ้าปลอดภัย ไม่ชำรุด"] },
+                { title: "ข้อที่ 11 การบริหารจัดการและระบบแจ้งซ่อมบำรุง (สร้างสรรค์)", items: ["มีตารางการใช้ห้องเรียนและระบุผู้ดูแลรับผิดชอบชัดเจน", "มีระบบแจ้งซ่อมแซมครุภัณฑ์และอาคารสถานที่ที่รวดเร็ว", "นำข้อเสนอแนะจากการประเมินรอบก่อนมาปรับปรุง"] },
+                { title: "ข้อที่ 12 การประเมินความพึงพอใจและพัฒนาคุณภาพ (สร้างนิสัย)", items: ["มีการสำรวจความคิดเห็นของผู้เรียนและผู้สอนต่อสภาพห้อง", "นำผลการประเมินไปกำหนดแผนพัฒนาปรับปรุง", "รักษามาตรฐานความสะอาดและความพร้อมใช้อย่างต่อเนื่อง"] }
             ]
         }
     };
-
-    function getTemplateKeyByCategory(categoryName) {
-        if (!categoryName) return 'office';
-        const cat = categoryName.toLowerCase();
-        if (cat.includes('เรียน') || cat.includes('classroom')) return 'classroom';
-        if (cat.includes('คอมพิวเตอร์') || cat.includes('computer')) return 'computer_lab';
-        if (cat.includes('ทดลอง') || cat.includes('วิทยาศาสตร์') || cat.includes('lab') || cat.includes('เคมี')) return 'lab';
-        if (cat.includes('ฝึกงาน') || cat.includes('workshop')) return 'workshop';
-        if (cat.includes('วิชาชีพ') || cat.includes('เฉพาะทาง')) return 'specialized_lab';
-        if (cat.includes('สมุด') || cat.includes('library')) return 'library';
-        if (cat.includes('ความปลอดภัย') || cat.includes('อาคารสถานที่') || cat.includes('building')) return 'building_safety';
-        if (cat.includes('ภูมิทัศน์') || cat.includes('ส่วนกลาง') || cat.includes('landscape')) return 'landscape';
-        if (cat.includes('อาหาร') || cat.includes('canteen') || cat.includes('ซุ้ม')) return 'canteen';
-        if (cat.includes('ประชุม') || cat.includes('meeting') || cat.includes('หอประชุม')) return 'meeting_room';
-        return 'office';
-    }
 
     window.onload = function() {
         const token = localStorage.getItem('authToken');
@@ -552,7 +305,7 @@
             return;
         }
         const user = JSON.parse(userStr);
-        document.getElementById('assessorName').innerText = user.fullName || user.firstName || user.username;
+        document.getElementById('assessorName').innerText = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
 
         document.getElementById('evidenceFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -573,25 +326,15 @@
     async function loadAreas() {
         try {
             const token = localStorage.getItem('authToken');
-            if (!token) {
-                alert('กรุณาเข้าสู่ระบบก่อนทำรายการ');
-                window.location.href = 'index.html';
-                return;
-            }
-
             let res = await fetch(`${API_URL}/areas`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-
             if (!res.ok) {
                 res = await fetch(`${API_URL}/area`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
             }
-
-            if (!res.ok) {
-                throw new Error(`Server returned status: ${res.status}`);
-            }
+            if (!res.ok) throw new Error("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
 
             const data = await res.json();
             allAreasData = data;
@@ -599,30 +342,25 @@
 
             const userStr = localStorage.getItem('userData');
             const user = userStr ? JSON.parse(userStr) : null;
-            
-            if (user && user.role && user.role.includes('Assessor')) {
-                if (user.assignedArea) {
-                    const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
-                    const filtered = data.filter(area => area._id === assignedId);
-                    if (filtered.length > 0) {
-                        areasData = filtered;
-                    }
-                }
+            if (user && user.role && user.role.includes('Assessor') && user.assignedArea) {
+                const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
+                const filtered = data.filter(area => area._id === assignedId);
+                if (filtered.length > 0) areasData = filtered;
             }
-            
+
             const select = document.getElementById('areaSelect');
-            select.innerHTML = '<option value="">-- เลือกพื้นที่ประเมิน --</option>';
+            select.innerHTML = '<option value="">-- โปรดระบุสถานที่ที่รับผิดชอบตรวจ --</option>';
             areasData.forEach(area => {
                 select.innerHTML += `<option value="${area._id}">${area.areaName} (${area.category || 'ทั่วไป'})</option>`;
             });
-            
+
             if (areasData.length === 1) {
                 select.value = areasData[0]._id;
                 onAreaChanged();
             }
         } catch (err) {
-            console.error("Error loading areas:", err);
-            alert("เชื่อมต่อฐานข้อมูลพื้นที่ไม่ได้ กรุณาลองใหม่อีกครั้ง");
+            console.error(err);
+            alert("ไม่สามารถดึงข้อมูลทะเบียนสถานที่ได้ กรุณาติดต่อเลขานุการระบบ");
         }
     }
 
@@ -631,37 +369,35 @@
         const ownerNameDisplay = document.getElementById('ownerNameDisplay');
         const areaCategoryDisplay = document.getElementById('areaCategoryDisplay');
         const formTitleDisplay = document.getElementById('formTitleDisplay');
-        
+
         if (!selectedAreaId) {
             ownerNameDisplay.innerText = "-";
             areaCategoryDisplay.innerText = "-";
-            formTitleDisplay.innerText = "-";
-            document.getElementById('evaluationItems').innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 20px;">กรุณาเลือกพื้นที่ประเมินด้านบนก่อน</td></tr>';
+            document.getElementById('evaluationItems').innerHTML = '<tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจประเมินด้านบน</td></tr>';
             document.getElementById('maxScoreDisplay').innerText = "0";
             return;
         }
-        
-        const selectedArea = allAreasData.find(area => area._id === selectedAreaId);
+
+        const selectedArea = allAreasData.find(a => a._id === selectedAreaId);
         if (selectedArea) {
             if (selectedArea.owner) {
                 const fName = selectedArea.owner.firstName || "";
                 const lName = selectedArea.owner.lastName || "";
-                ownerNameDisplay.innerText = (fName || lName) ? `${fName} ${lName}`.trim() : (selectedArea.owner.username || "ไม่มีข้อมูล");
+                ownerNameDisplay.innerText = (fName || lName) ? `${fName} ${lName}`.trim() : selectedArea.owner.username;
             } else {
-                ownerNameDisplay.innerText = "ยังไม่ได้กำหนด";
+                ownerNameDisplay.innerText = "ยังไม่ได้ระบุผู้รับผิดชอบ";
             }
-            
+
             const category = selectedArea.category || "สำนักงาน";
             areaCategoryDisplay.innerText = category;
-            
-            const templateKey = getTemplateKeyByCategory(category);
+
+            const templateKey = category.includes('เรียน') ? 'classroom' : 'office';
             const template = FORM_TEMPLATES[templateKey];
-            
+
             formTitleDisplay.innerText = template.title;
-            document.getElementById('tableHeaderTitle').innerText = `${template.title} (คะแนนเต็ม ${template.maxScore})`;
             currentMaxScore = template.maxScore;
             document.getElementById('maxScoreDisplay').innerText = currentMaxScore;
-            
+
             renderFormItems(template.criteria);
             calculateTotal();
         }
@@ -670,17 +406,15 @@
     function renderFormItems(criteria) {
         const tbody = document.getElementById('evaluationItems');
         tbody.innerHTML = '';
-        
         criteria.forEach((c) => {
-            const subItemsHtml = c.items.map(item => `<div style="color:var(--text-muted); margin-top:2px;">• ${item}</div>`).join('');
+            const subItemsHtml = c.items.map(item => `<div>• ${item}</div>`).join('');
             tbody.innerHTML += `
                 <tr>
                     <td>
-                        <b style="color:var(--text-main); font-size:1.02em;">${c.title}</b>
-                        <div style="font-size: 0.88em; margin: 4px 0 6px 0;">${subItemsHtml}</div>
-                        <div style="font-size: 0.82em; color: var(--primary); font-style: italic;">${c.evidence}</div>
+                        <b style="font-size: 0.98em;">${c.title}</b>
+                        <div style="font-size: 0.88em; color: var(--gov-muted); margin-top: 4px;">${subItemsHtml}</div>
                     </td>
-                    <td style="text-align: center; vertical-align: middle;">
+                    <td class="score-cell">
                         <input type="number" class="score-input score" min="0" max="4" value="0" 
                                onchange="calculateTotal()" oninput="if(value > 4) value = 4; if(value < 0) value = 0; calculateTotal();">
                     </td>
@@ -692,50 +426,47 @@
     function calculateTotal() {
         const scores = document.querySelectorAll('.score');
         let total = 0;
-        scores.forEach(input => {
-            total += parseFloat(input.value) || 0;
-        });
-        
+        scores.forEach(input => { total += parseFloat(input.value) || 0; });
+
         total = Math.min(total, currentMaxScore);
         const percent = currentMaxScore > 0 ? ((total / currentMaxScore) * 100) : 0;
-        
+
         document.getElementById('totalScore').innerText = total;
         document.getElementById('percentage').innerText = percent.toFixed(2);
-        
+
         const statusEl = document.getElementById('evalStatus');
         if (percent >= 80) {
-            statusEl.innerText = "ผ่านเกณฑ์รับรอง (≥ 80%)";
-            statusEl.style.color = "var(--primary)";
+            statusEl.innerText = "ผ่านเกณฑ์มาตรฐาน (ระดับดีเยี่ยม)";
+            statusEl.style.color = "var(--gov-primary)";
         } else if (percent >= 60) {
-            statusEl.innerText = "ควรปรับปรุง (60–79%)";
-            statusEl.style.color = "var(--warning)";
+            statusEl.innerText = "ควรปรับปรุงแก้ไข (ส่งคืนผู้รับผิดชอบ)";
+            statusEl.style.color = "#b45309";
         } else {
-            statusEl.innerText = "ต้องปรับปรุงเร่งด่วน (< 60%)";
-            statusEl.style.color = "var(--danger)";
+            statusEl.innerText = "ไม่ผ่านเกณฑ์มาตรฐาน (ต้องปรับปรุงเร่งด่วน)";
+            statusEl.style.color = "#b91c1c";
         }
     }
 
     async function submitAssessment() {
         const areaId = document.getElementById('areaSelect').value;
         if (!areaId) {
-            alert('กรุณาเลือกพื้นที่ก่อนทำการบันทึก');
+            alert('กรุณาระบุสถานที่รับการตรวจประเมินก่อนลงนามบันทึก');
             return;
         }
-        
+
         const roundSelect = document.getElementById('roundSelect').value;
-        const token = localStorage.getItem('authToken'); 
-        
+        const token = localStorage.getItem('authToken');
         const scoresInputs = document.querySelectorAll('.score');
         const scores = Array.from(scoresInputs).map((input, index) => ({
             sectionNumber: index + 1,
             score: parseFloat(input.value) || 0
         }));
-        
+
         const totalScore = parseFloat(document.getElementById('totalScore').innerText);
         const percentage = parseFloat(document.getElementById('percentage').innerText);
         const assessorComment = document.getElementById('assessorComment').value.trim();
-        
-        if (!confirm(`ยืนยันการบันทึกผลการประเมินอย่างเป็นทางการ?\nคะแนนรวม: ${totalScore} / ${currentMaxScore} (${percentage.toFixed(2)}%)`)) return;
+
+        if (!confirm(`ยืนยันการลงนามบันทึกผลการตรวจประเมินมาตรฐาน?\nคะแนนรวม: ${totalScore} / ${currentMaxScore} (${percentage.toFixed(2)}%)`)) return;
 
         const payload = {
             area: areaId,
@@ -746,7 +477,7 @@
             evidencePhoto: evidencePhotoBase64,
             assessorComment: assessorComment
         };
-        
+
         try {
             const res = await fetch(`${API_URL}/assessment`, {
                 method: 'POST',
@@ -758,19 +489,18 @@
             });
             const data = await res.json();
             if (res.ok) {
-                alert('บันทึกผลการตรวจประเมินสำเร็จเรียบร้อยแล้ว');
+                alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบสารสนเทศเรียบร้อยแล้ว');
                 window.location.reload();
             } else {
-                alert('ไม่สำเร็จ: ' + (data.message || ''));
+                alert('ไม่สามารถบันทึกได้: ' + (data.message || ''));
             }
         } catch (err) {
-            console.error("Error submitting assessment:", err);
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบสารสนเทศได้');
         }
     }
 
     function logout() {
-        localStorage.clear(); 
+        localStorage.clear();
         window.location.href = 'index.html';
     }
 </script>

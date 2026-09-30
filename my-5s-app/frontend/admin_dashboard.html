@@ -3,126 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบริหารจัดการและประเมินผล Green 7S Plus - ผู้ดูแลระบบ</title>
+    <title>ระบบบริหารและสารสนเทศกลาง - งานเลขานุการคณะกรรมการ 7ส.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1b5e20;
-            --primary-light: #2e7d32;
-            --primary-surface: #e8f5e9;
-            --secondary: #0d47a1;
-            --secondary-surface: #e3f2fd;
-            --warning: #b76e00;
-            --warning-surface: #fff8e1;
-            --danger: #c62828;
-            --danger-surface: #ffebee;
-            --bg-page: #f8fafc;
-            --surface-card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #475569;
-            --border: #e2e8f0;
-            --border-focus: #1b5e20;
-            --radius-md: 10px;
-            --radius-lg: 14px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.12);
+            --gov-primary: #1b5e20;
+            --gov-primary-dark: #0f3d13;
+            --gov-gold: #b38600;
+            --gov-bg: #f8fafc;
+            --gov-card: #ffffff;
+            --gov-text: #0f172a;
+            --gov-muted: #475569;
+            --gov-border: #cbd5e1;
         }
 
         * { box-sizing: border-box; }
         body {
-            font-family: 'Sarabun', 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg-page);
-            color: var(--text-main);
+            font-family: 'Sarabun', -apple-system, sans-serif;
+            background-color: var(--gov-bg);
+            color: var(--gov-text);
             margin: 0;
-            padding-bottom: 60px;
+            padding-bottom: 70px;
         }
 
-        .header-bar {
-            background: linear-gradient(135deg, #1b5e20 0%, #144618 100%);
+        .gov-header {
+            background: linear-gradient(135deg, var(--gov-primary-dark) 0%, var(--gov-primary) 100%);
             color: white;
-            padding: 0 28px;
-            height: 72px;
+            padding: 0 30px;
+            height: 75px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            border-bottom: 3px solid var(--gov-gold);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
         }
-        .brand-section {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .brand-logo-badge {
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-        }
-        .brand-title h1 {
-            font-size: 1.15em;
-            margin: 0;
-            font-weight: 700;
-        }
-        .brand-title p {
-            font-size: 0.78em;
-            margin: 0;
-            opacity: 0.85;
-        }
+        .gov-title-box { display: flex; align-items: center; gap: 14px; }
+        .gov-emblem { font-size: 26px; }
+        .gov-title h1 { margin: 0; font-size: 1.15em; font-weight: 700; }
+        .gov-title p { margin: 0; font-size: 0.8em; opacity: 0.9; }
 
-        .user-nav {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .user-chip {
-            background: rgba(255, 255, 255, 0.12);
+        .gov-user-panel { display: flex; align-items: center; gap: 12px; }
+        .gov-user-tag {
+            background: rgba(255, 255, 255, 0.15);
             padding: 6px 14px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 4px;
             font-size: 0.9em;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .user-avatar-dot {
-            width: 8px;
-            height: 8px;
-            background: #4ade80;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #4ade80;
+            border: 1px solid rgba(255,255,255,0.25);
         }
 
         .dropdown { position: relative; display: inline-block; }
-        .btn-header-action {
+        .btn-gov-menu {
             background: #ffffff;
-            color: var(--primary);
+            color: var(--gov-primary-dark);
             border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
+            padding: 8px 16px;
+            border-radius: 4px;
             font-weight: 600;
             font-size: 0.88em;
             cursor: pointer;
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-        .btn-header-action:hover {
-            background: #f1f5f9;
-            transform: translateY(-1px);
         }
         .dropdown-menu {
             display: none;
@@ -130,186 +70,84 @@
             right: 0;
             top: 45px;
             background: #ffffff;
-            min-width: 220px;
-            box-shadow: var(--shadow-lg);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
+            min-width: 240px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            border: 1px solid var(--gov-border);
             z-index: 1001;
-            overflow: hidden;
-            animation: fadeIn 0.15s ease-out;
         }
         .dropdown-menu a {
-            color: var(--text-main);
-            padding: 12px 18px;
+            color: var(--gov-text);
+            padding: 12px 16px;
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            display: block;
             font-size: 0.9em;
-            font-weight: 500;
-            cursor: pointer;
             border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
         }
         .dropdown-menu a:hover { background-color: #f8fafc; }
-        .dropdown-menu a.logout { color: var(--danger); font-weight: 600; }
-        .dropdown-menu a.logout:hover { background-color: var(--danger-surface); }
         .show-dropdown { display: block !important; }
 
-        .container {
-            max-width: 1240px;
-            margin: 28px auto;
-            padding: 0 20px;
-        }
+        .container { max-width: 1240px; margin: 25px auto; padding: 0 20px; }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         .stat-card {
-            background: var(--surface-card);
-            padding: 24px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.2s ease;
+            background: var(--gov-card);
+            padding: 22px;
+            border-radius: 6px;
+            border: 1px solid var(--gov-border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--gov-primary);
         }
-        .stat-card:hover { transform: translateY(-2px); }
-        .stat-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--primary);
-        }
-        .stat-card.warning::before { background: var(--warning); }
-        .stat-card.info::before { background: var(--secondary); }
-        .stat-label {
-            font-size: 0.9em;
-            font-weight: 500;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-        .stat-value {
-            font-size: 2.3em;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
-            color: var(--text-main);
-        }
-        .stat-card.warning .stat-value { color: var(--warning); }
-        .stat-card.info .stat-value { color: var(--secondary); }
+        .stat-label { font-size: 0.9em; font-weight: 500; color: var(--gov-muted); }
+        .stat-value { font-size: 2.2em; font-weight: 700; color: var(--gov-text); }
 
-        .panel {
-            background: var(--surface-card);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            padding: 26px;
-            margin-bottom: 26px;
+        .doc-panel {
+            background: var(--gov-card);
+            border-radius: 6px;
+            border: 1px solid var(--gov-border);
+            padding: 24px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 16px;
-            margin-bottom: 20px;
+        .doc-panel-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
         }
-        .panel-title {
-            font-size: 1.15em;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 0;
-        }
-        .sub-header {
-            font-size: 0.98em;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin: 20px 0 12px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .doc-panel-header h2 { margin: 0; font-size: 1.15em; font-weight: 700; }
 
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-        }
-        table {
+        .gov-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.92em;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .gov-table th, .gov-table td {
+            border: 1px solid var(--gov-border);
+            padding: 11px 14px;
             text-align: left;
         }
-        th {
-            background-color: #f8fafc;
-            color: var(--text-muted);
-            font-weight: 600;
-            padding: 14px 18px;
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-            font-size: 0.78em;
-            letter-spacing: 0.5px;
-        }
-        td {
-            padding: 15px 18px;
-            border-bottom: 1px solid #f1f5f9;
-            color: var(--text-main);
-            vertical-align: middle;
-        }
-        tr:last-child td { border-bottom: none; }
-        tbody tr:hover { background-color: #fafbfc; }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.82em;
-            font-weight: 600;
-        }
-        .badge::before {
-            content: "";
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-        .badge-success { background: var(--primary-surface); color: var(--primary); }
-        .badge-success::before { background: var(--primary); }
-        .badge-warning { background: var(--warning-surface); color: var(--warning); }
-        .badge-warning::before { background: var(--warning); }
-        .badge-info { background: var(--secondary-surface); color: var(--secondary); }
-        .badge-info::before { background: var(--secondary); }
+        .gov-table th { background-color: #f1f5f9; font-weight: 700; }
 
         .btn-table {
             border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
+            padding: 5px 10px;
+            border-radius: 4px;
             font-weight: 600;
             font-size: 0.85em;
             cursor: pointer;
-            transition: all 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
         }
-        .btn-table:hover { transform: translateY(-1px); }
         .btn-view { background: #e0f2fe; color: #0369a1; }
-        .btn-approve { background: var(--primary-surface); color: var(--primary); margin-left: 4px; }
-        .btn-reject { background: var(--danger-surface); color: var(--danger); margin-left: 4px; }
-        .btn-edit { background: var(--warning-surface); color: var(--warning); }
-        .btn-delete { background: var(--danger-surface); color: var(--danger); margin-left: 4px; }
+        .btn-approve { background: #dcfce7; color: #15803d; margin-left: 4px; }
+        .btn-reject { background: #fee2e2; color: #b91c1c; margin-left: 4px; }
 
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -319,148 +157,51 @@
             width: 100%;
             height: 100%;
             background-color: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
             align-items: center;
             justify-content: center;
         }
         .modal-content {
             background-color: #ffffff;
-            border-radius: var(--radius-lg);
+            border-radius: 6px;
             width: 90%;
-            max-width: 680px;
-            box-shadow: var(--shadow-lg);
+            max-width: 720px;
             max-height: 90vh;
             overflow-y: auto;
-            position: relative;
             padding: 28px;
-            border: 1px solid var(--border);
-            animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes modalScale {
-            from { opacity: 0; transform: scale(0.96); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 16px;
-            margin-bottom: 20px;
-        }
-        .modal-header h3 {
-            margin: 0;
-            font-size: 1.25em;
-            color: var(--text-main);
-            font-weight: 700;
-        }
-        .close-btn {
-            background: #f1f5f9;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.9em;
-            margin-bottom: 6px;
-            color: var(--text-main);
+            border: 1px solid var(--gov-border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         .form-control {
             width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 8px 12px;
+            border: 1px solid var(--gov-border);
+            border-radius: 4px;
             font-family: inherit;
             font-size: 0.95em;
-            color: var(--text-main);
-            background: #ffffff;
-        }
-        .form-control:focus {
-            outline: none;
-            border-color: var(--border-focus);
-            box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
-        }
-        .form-grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-
-        .btn-submit-form {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.95em;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .evidence-card {
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-top: 14px;
-            border: 1px solid var(--border);
-        }
-        .evidence-assessor {
-            background: var(--warning-surface);
-            border-color: #ffe0b2;
-            border-left: 4px solid var(--warning);
-        }
-        .evidence-owner {
-            background: var(--primary-surface);
-            border-color: #c8e6c9;
-            border-left: 4px solid var(--primary);
-        }
-        .evidence-img {
-            max-width: 100%;
-            max-height: 240px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            margin-top: 8px;
-            box-shadow: var(--shadow-sm);
         }
     </style>
 </head>
 <body>
 
-<header class="header-bar">
-    <div class="brand-section">
-        <div class="brand-logo-badge">🏛️</div>
-        <div class="brand-title">
-            <h1>ระบบบริหารและติดตามการประเมิน 7ส. ออนไลน์ (Green 7S Plus)</h1>
-            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย • หน่วยงานส่วนกลาง</p>
+<header class="gov-header">
+    <div class="gov-title-box">
+        <div class="gov-emblem">🏛️</div>
+        <div class="gov-title">
+            <h1>ระบบบริหารจัดการและทะเบียนกลาง มาตรฐาน 7ส. และสิ่งแวดล้อม</h1>
+            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย • งานเลขานุการคณะกรรมการฯ</p>
         </div>
     </div>
-    <div class="user-nav">
-        <div class="user-chip">
-            <span class="user-avatar-dot"></span>
-            <span id="adminName">ผู้ดูแลระบบ</span>
+    <div class="gov-user-panel">
+        <div class="gov-user-tag">
+            <span>นายทะเบียน/เลขานุการ: </span>
+            <strong id="adminName">ผู้ดูแลระบบงานกลาง</strong>
         </div>
         <div class="dropdown">
-            <button onclick="toggleDropdown()" class="btn-header-action">⚙️ แผงควบคุมระบบ ▼</button>
+            <button onclick="toggleDropdown()" class="btn-gov-menu">⚙️ เมนูงานบริหารระบบ ▼</button>
             <div id="settingsDropdown" class="dropdown-menu">
-                <a onclick="openUserModal()">👥 จัดการบุคลากร/ผู้ใช้งาน</a>
-                <a onclick="openSettingsModal()">✉️ ตั้งค่าระบบแจ้งเตือน Email</a>
-                <a onclick="logout()" class="logout">🚪 ออกจากระบบส่วนกลาง</a>
+                <a onclick="openUserModal()">👥 บัญชีทะเบียนบุคลากรและสิทธิ์การตรวจ</a>
+                <a onclick="openSettingsModal()">✉️ การตั้งค่าระบบสื่อสารทางจดหมายอิเล็กทรอนิกส์</a>
+                <a onclick="logout()" style="color:#b91c1c; font-weight:600;">🚪 ออกจากระบบงานกลาง</a>
             </div>
         </div>
     </div>
@@ -469,231 +210,185 @@
 <main class="container">
     <section class="stats-grid">
         <div class="stat-card">
-            <div class="stat-label">บันทึกการประเมินทั้งหมด (รอบปัจจุบัน)</div>
+            <div class="stat-label">บันทึกผลการประเมินทั้งหมด (รอบปัจจุบัน)</div>
             <div class="stat-value" id="statTotal">0</div>
         </div>
-        <div class="stat-card warning">
-            <div class="stat-label">รายการที่ต้องปรับปรุง / รอตรวจสอบ</div>
-            <div class="stat-value" id="statPending">0</div>
+        <div class="stat-card" style="border-left-color: #ea580c;">
+            <div class="stat-label">รายการที่ต้องส่งกลับเพื่อปรับปรุงแก้ไข</div>
+            <div class="stat-value" id="statPending" style="color: #ea580c;">0</div>
         </div>
-        <div class="stat-card info">
-            <div class="stat-label">คะแนนมาตรฐานเฉลี่ยทุกพื้นที่</div>
-            <div class="stat-value" id="statAverage">0.0%</div>
-        </div>
-    </section>
-
-    <section class="panel">
-        <div class="panel-header">
-            <h2 class="panel-title">⏳ รายการผลการประเมินที่รอดำเนินการ (Action Required)</h2>
-        </div>
-        
-        <div class="sub-header" style="color: var(--secondary);">
-            <span>🔷 1. รายการผ่านเกณฑ์การประเมิน (รออนุมัติรับรอง)</span>
-        </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>วันที่บันทึก</th><th>พื้นที่ตรวจประเมิน</th><th>กรรมการผู้ตรวจ</th><th>ผลคะแนน</th><th>การดำเนินการ</th></tr>
-                </thead>
-                <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูล...</td></tr></tbody>
-            </table>
-        </div>
-
-        <div class="sub-header" style="color: var(--warning); margin-top: 26px;">
-            <span>🔶 2. รายการส่งมอบงานแก้ไขพื้นที่ (รอตรวจสอบหลักฐาน)</span>
-        </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>วันที่ส่งมอบงาน</th><th>พื้นที่ตรวจประเมิน</th><th>กรรมการผู้ตรวจ</th><th>ผลคะแนน</th><th>การดำเนินการ</th></tr>
-                </thead>
-                <tbody id="tablePendingReview"><tr><td colspan="5" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูล...</td></tr></tbody>
-            </table>
+        <div class="stat-card" style="border-left-color: #0284c7;">
+            <div class="stat-label">คะแนนเฉลี่ยร้อยละความสอดคล้องทุกสถานที่</div>
+            <div class="stat-value" id="statAverage" style="color: #0284c7;">0.0%</div>
         </div>
     </section>
 
-    <section class="panel">
-        <div class="panel-header">
-            <h2 class="panel-title">📜 ประวัติผลการประเมินที่ได้รับรองเสร็จสิ้น (Approved Records)</h2>
+    <section class="doc-panel">
+        <div class="doc-panel-header">
+            <h2>⏳ วาระงานที่รอดำเนินการพิจารณา (Action Required)</h2>
         </div>
 
-        <div class="sub-header" style="color: var(--primary);">
-            <span>✅ 1. รับรองผลผ่านเกณฑ์โดยตรง</span>
-        </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>วันที่อนุมัติ</th><th>พื้นที่ตรวจประเมิน</th><th>กรรมการผู้ตรวจ</th><th>ผลคะแนน</th><th>สถานะทางระบบ</th><th>รายละเอียด</th></tr>
-                </thead>
-                <tbody id="tableHistoryDirectPass"><tr><td colspan="6" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูล...</td></tr></tbody>
-            </table>
-        </div>
+        <h4 style="color: #0369a1; margin: 15px 0 6px 0;">1. รายการผ่านเกณฑ์มาตรฐาน (รอการรับรองผลอย่างเป็นทางการ)</h4>
+        <table class="gov-table">
+            <thead>
+                <tr><th>วันที่มีการตรวจ</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+            </thead>
+            <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr></tbody>
+        </table>
 
-        <div class="sub-header" style="color: #6a1b9a; margin-top: 26px;">
-            <span>🔄 2. รับรองผลหลังจากการแก้ไขปรับปรุง</span>
+        <h4 style="color: #ea580c; margin: 25px 0 6px 0;">2. รายการส่งมอบรายงานปรับปรุงสถานที่ (รอการตรวจรับงาน)</h4>
+        <table class="gov-table">
+            <thead>
+                <tr><th>วันที่ส่งรายงาน</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+            </thead>
+            <tbody id="tablePendingReview"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr></tbody>
+        </table>
+    </section>
+
+    <section class="doc-panel">
+        <div class="doc-panel-header">
+            <h2 style="color: var(--gov-primary);">📜 ทะเบียนประวัติผลการประเมินที่ได้รับรองเสร็จสิ้น</h2>
         </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>วันที่อนุมัติ</th><th>พื้นที่ตรวจประเมิน</th><th>กรรมการผู้ตรวจ</th><th>ผลคะแนน</th><th>สถานะทางระบบ</th><th>รายละเอียด</th></tr>
-                </thead>
-                <tbody id="tableHistoryCorrectedPass"><tr><td colspan="6" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูล...</td></tr></tbody>
-            </table>
-        </div>
+        <h4 style="color: var(--gov-primary); margin: 15px 0 6px 0;">1. รับรองผลการประเมินผ่านเกณฑ์โดยตรง</h4>
+        <table class="gov-table">
+            <thead>
+                <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
+            </thead>
+            <tbody id="tableHistoryDirectPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
+        </table>
+
+        <h4 style="color: #7e22ce; margin: 25px 0 6px 0;">2. รับรองผลหลังได้รับการปรับปรุงแก้ไขแล้ว</h4>
+        <table class="gov-table">
+            <thead>
+                <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
+            </thead>
+            <tbody id="tableHistoryCorrectedPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
+        </table>
     </section>
 </main>
 
+<!-- หน้าต่างดูบันทึกและพิจารณาอนุมัติ -->
 <div id="detailsModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3>🔎 รายละเอียดผลการประเมินและภาพถ่ายหลักฐาน</h3>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0;">บันทึกรายงานผลการตรวจประเมินมาตรฐาน</h3>
+            <button onclick="closeModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
         <div id="modalBody"></div>
     </div>
 </div>
 
+<!-- หน้าต่างทะเบียนบุคลากร -->
 <div id="userModal" class="modal">
-    <div class="modal-content" style="max-width: 880px;">
-        <div class="modal-header">
-            <h3>👥 ทะเบียนบุคลากรและจัดการผู้ใช้งาน (User Management)</h3>
-            <button class="close-btn" onclick="closeUserModal()">&times;</button>
+    <div class="modal-content" style="max-width: 860px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0;">👥 ทะเบียนบุคลากรและสิทธิ์การตรวจประเมิน</h3>
+            <button onclick="closeUserModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
 
-        <div style="background: #f8fafc; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 22px;">
-            <h4 style="margin: 0 0 14px 0; color: var(--secondary); font-size: 1.05em;">➕ ลงทะเบียนบัญชีผู้ใช้งานใหม่</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
-                <input type="text" id="newUsername" placeholder="Username" class="form-control">
-                <input type="password" id="newPassword" placeholder="Password (เริ่มต้น 123456)" class="form-control">
-                <input type="email" id="newEmail" placeholder="อีเมลองค์กร" class="form-control">
+        <div style="background: #f8fafc; padding: 16px; border: 1px solid var(--gov-border); border-radius: 4px; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: var(--gov-primary-dark);">➕ เพิ่มข้อมูลบุคลากรในทะเบียน</h4>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+                <input type="text" id="newUsername" placeholder="ชื่อบัญชี (Username)" class="form-control">
+                <input type="password" id="newPassword" placeholder="รหัสผ่าน (เริ่มต้น 123456)" class="form-control">
+                <input type="email" id="newEmail" placeholder="จดหมายอิเล็กทรอนิกส์ (@rmutsv.ac.th)" class="form-control">
                 <input type="text" id="newFirstName" placeholder="ชื่อจริง" class="form-control">
                 <input type="text" id="newLastName" placeholder="นามสกุล" class="form-control">
                 <select id="newRole" class="form-control">
-                    <option value="Internal Assessor">ผู้ประเมินภายใน (Internal Assessor)</option>
-                    <option value="External Assessor">ผู้ประเมินภายนอก (External Assessor)</option>
-                    <option value="Area Owner">ผู้รับผิดชอบพื้นที่ (Area Owner)</option>
+                    <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
+                    <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
+                    <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบสถานที่</option>
                 </select>
                 <select id="newAssignedArea" class="form-control">
-                    <option value="">-- เลือกพื้นที่รับผิดชอบ --</option>
+                    <option value="">-- โปรดระบุสถานที่รับผิดชอบ --</option>
                 </select>
             </div>
-            <button onclick="createUser()" class="btn-submit-form" style="background: var(--secondary); width: auto; margin-top: 14px; padding: 10px 24px;">➕ บันทึกข้อมูลบุคลากร</button>
+            <button onclick="createUser()" class="btn-table" style="background: var(--gov-primary); color:white; margin-top:12px; padding:8px 20px;">
+                บันทึกเข้าทะเบียน
+            </button>
         </div>
 
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr><th>Username</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์การใช้งาน</th><th>พื้นที่ที่รับผิดชอบ</th><th>การจัดการ</th></tr>
-                </thead>
-                <tbody id="userTableBody"></tbody>
-            </table>
-        </div>
+        <table class="gov-table">
+            <thead>
+                <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>สถานที่รับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+        </table>
     </div>
 </div>
 
+<!-- หน้าต่างปรับปรุงข้อมูลและกำหนดรหัสผ่านใหม่ -->
 <div id="editUserModal" class="modal">
     <div class="modal-content" style="max-width: 520px;">
-        <div class="modal-header">
-            <h3>✏️ ปรับปรุงข้อมูลและกำหนดรหัสผ่านใหม่</h3>
-            <button class="close-btn" onclick="closeEditModal()">&times;</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0;">ปรับปรุงข้อมูลทะเบียนและกำหนดรหัสผ่านใหม่</h3>
+            <button onclick="closeEditModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
-
-        <div class="form-group">
-            <label>Username ทางระบบ:</label>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">ชื่อบัญชีระบบ:</label>
             <input type="text" id="editUsername" class="form-control">
         </div>
-        <div class="form-group">
-            <label>อีเมลติดต่อ:</label>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">จดหมายอิเล็กทรอนิกส์:</label>
             <input type="email" id="editEmail" class="form-control">
         </div>
-        <div class="form-grid-2">
-            <div class="form-group">
-                <label>ชื่อจริง:</label>
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <div style="flex:1;">
+                <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">ชื่อจริง:</label>
                 <input type="text" id="editFirstName" class="form-control">
             </div>
-            <div class="form-group">
-                <label>นามสกุล:</label>
+            <div style="flex:1;">
+                <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">นามสกุล:</label>
                 <input type="text" id="editLastName" class="form-control">
             </div>
         </div>
-        <div class="form-group">
-            <label>สิทธิ์การใช้งาน (Role):</label>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">สิทธิ์หน้าที่:</label>
             <select id="editRole" class="form-control">
-                <option value="Internal Assessor">ผู้ประเมินภายใน (Internal Assessor)</option>
-                <option value="External Assessor">ผู้ประเมินภายนอก (External Assessor)</option>
-                <option value="Area Owner">ผู้รับผิดชอบพื้นที่ (Area Owner)</option>
+                <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
+                <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
+                <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบสถานที่</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>พื้นที่รับผิดชอบ:</label>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">สถานที่รับผิดชอบ:</label>
             <select id="editAssignedArea" class="form-control">
-                <option value="">-- เลือกพื้นที่รับผิดชอบ --</option>
+                <option value="">-- โปรดระบุสถานที่รับผิดชอบ --</option>
             </select>
         </div>
-        <div style="background: #fff1f2; padding: 14px; border-radius: var(--radius-md); border-left: 4px solid var(--danger); margin: 16px 0;">
-            <label style="color: var(--danger); font-weight: 700; font-size: 0.9em;">🔑 กำหนดรหัสผ่านใหม่ (Admin กำหนดโดยตรง):</label>
-            <input type="password" id="editPassword" placeholder="พิมพ์รหัสใหม่ (เว้นว่างไว้ถ้าคงรหัสเดิม)" class="form-control" style="margin-top: 6px;">
+        <div style="background:#fff1f2; padding:12px; border-radius:4px; border-left:4px solid #b91c1c; margin-bottom:15px;">
+            <label style="color:#b91c1c; font-weight:700; font-size:0.9em;">🔑 กำหนดรหัสผ่านใหม่ (โดยนายทะเบียน):</label>
+            <input type="password" id="editPassword" placeholder="ระบุรหัสผ่านใหม่ (เว้นว่างไว้หากคงรหัสเดิม)" class="form-control" style="margin-top:6px;">
         </div>
-        <button onclick="submitEditUser()" class="btn-submit-form" style="background: #e65100;">💾 บันทึกการปรับปรุงข้อมูล</button>
+        <button onclick="submitEditUser()" class="btn-table" style="background:#ea580c; color:white; width:100%; padding:10px;">
+            บันทึกการปรับปรุงข้อมูลทะเบียน
+        </button>
     </div>
 </div>
 
+<!-- หน้าต่างตั้งค่าจดหมายอิเล็กทรอนิกส์ -->
 <div id="settingsModal" class="modal">
-    <div class="modal-content" style="max-width: 520px;">
-        <div class="modal-header">
-            <h3>⚙️ กำหนดค่าระบบแจ้งเตือนทางอีเมล (SMTP)</h3>
-            <button class="close-btn" onclick="closeSettingsModal()">&times;</button>
+    <div class="modal-content" style="max-width: 500px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0;">การตั้งค่าระบบแจ้งเตือนทางจดหมายอิเล็กทรอนิกส์</h3>
+            <button onclick="closeSettingsModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
-
-        <div style="background: var(--secondary-surface); padding: 14px; border-radius: var(--radius-md); border-left: 4px solid var(--secondary); margin-bottom: 16px;">
-            <p style="margin: 0; font-size: 0.88em; color: var(--text-muted); line-height: 1.5;">
-                ระบบจะใช้อีเมลนี้เป็นช่องทางอัตโนมัติในการส่งข้อความแจ้งเตือนถึงผู้รับผิดชอบพื้นที่ (Area Owner) เมื่อผลการประเมินไม่ผ่านเกณฑ์มาตรฐาน
-            </p>
+        <p style="font-size:0.88em; color:var(--gov-muted);">ระบบจะใช้บัญชีนี้เป็นศูนย์กลางในการส่งบันทึกข้อความแจ้งเตือนอัตโนมัติถึงหัวหน้างาน/ผู้รับผิดชอบสถานที่</p>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">บัญชีผู้ส่งของหน่วยงาน (Gmail):</label>
+            <input type="email" id="settingAdminEmail" class="form-control" placeholder="เช่น 7s.office@rmutsv.ac.th">
         </div>
-
-        <div class="form-group">
-            <label>📧 อีเมลผู้ส่งส่วนกลาง (Gmail):</label>
-            <input type="email" id="settingAdminEmail" placeholder="เช่น admin.7s@rmutsv.ac.th" class="form-control">
+        <div style="margin-bottom:15px;">
+            <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">รหัสผ่านแอปพลิเคชัน (App Password 16 หลัก):</label>
+            <input type="password" id="settingAppPassword" class="form-control" placeholder="รหัสผ่านความปลอดภัย 16 หลัก">
         </div>
-        <div class="form-group">
-            <label>🔑 รหัสผ่านแอปพลิเคชัน (App Password 16 หลัก):</label>
-            <input type="password" id="settingAppPassword" placeholder="รหัสความปลอดภัย 16 ตัวอักษร" class="form-control">
-        </div>
-        <button onclick="saveSettings()" class="btn-submit-form">💾 บันทึกค่าคอนฟิกูเรชัน</button>
+        <button onclick="saveSettings()" class="btn-table" style="background:var(--gov-primary); color:white; width:100%; padding:10px;">
+            บันทึกการตั้งค่าระบบ
+        </button>
     </div>
 </div>
 
 <script>
-    const CATEGORY_CRITERIA_TITLES = {
-        office: ["1. สภาพพื้นที่โดยรวม", "2. โต๊ะทำงาน ลิ้นชัก และเก้าอี้ปฏิบัติงาน", "3. คอมพิวเตอร์และอุปกรณ์ต่อพ่วง", "4. ตู้เก็บเอกสารและชั้นวางของ", "5. ระบบเอกสารและการจัดเก็บข้อมูล", "6. อุปกรณ์สำนักงานส่วนกลาง", "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "8. การแสดงข้อมูลสถิติการใช้พลังงาน", "9. การคัดแยกขยะและการจัดการของเสีย", "10. สุขลักษณะและบรรยากาศการทำงาน", "11. จุดรับรองแขกหรือพื้นที่ใช้งานร่วม", "12. พฤติกรรม วินัย และการปรับปรุงต่อเนื่อง"],
-        classroom: ["1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานโต๊ะ เก้าอี้ และอุปกรณ์ประจำห้อง", "3. การจัดเก็บวัสดุ อุปกรณ์ และสื่อการเรียนรู้", "4. ระบบป้าย คู่มือ และข้อมูลกำกับการใช้ห้อง", "5. ความสะอาดและสุขลักษณะของห้องเรียน", "6. สภาพแวดล้อมที่เอื้อต่อการเรียนรู้", "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "8. การติดตามข้อมูลการใช้พลังงานและทรัพยากร", "9. การจัดการของเสียและการตรวจเช็คความสะอาด", "10. ความปลอดภัยและความพร้อมต่อเหตุฉุกเฉิน", "11. การบริหารจัดการและการปรับปรุงต่อเนื่อง", "12. ผลการประเมินความพึงพอใจของผู้ใช้ห้องเรียน"],
-        computer_lab: ["1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานคอมพิวเตอร์และอุปกรณ์ต่อพ่วง", "3. การจัดเก็บอุปกรณ์และวัสดุสิ้นเปลือง", "4. ระบบป้ายกำกับ คู่มือ และข้อปฏิบัติ", "5. ความสะอาดและสุขลักษณะ", "6. สภาพแวดล้อมที่เอื้อต่อการเรียนรู้", "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "8. การติดตามและสื่อสารข้อมูลการใช้พลังงาน", "9. การจัดการของเสียอิเล็กทรอนิกส์ (E-Waste)", "10. ความปลอดภัยของระบบไฟฟ้าและเครือข่าย", "11. การควบคุมการใช้ห้องและวินัยผู้ใช้", "12. ผลการประเมินความพึงพอใจ"],
-        lab: ["1. สภาพพื้นที่โดยรวมของห้องทดลอง", "2. ความพร้อมใช้งานโต๊ะปฏิบัติการและอุปกรณ์หลัก", "3. การจัดเก็บสารเคมี วัสดุทดลอง และอุปกรณ์เฉพาะทาง", "4. ระบบป้ายเตือน คู่มือ และเอกสารกำกับการทำงาน", "5. ความสะอาด สุขลักษณะ และการควบคุมการปนเปื้อน", "6. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "7. การติดตามและสื่อสารข้อมูลการใช้ทรัพยากร", "8. การคัดแยกและการจัดการของเสียจากการทดลอง", "9. ความปลอดภัยและอุปกรณ์ป้องกันส่วนบุคคล (PPE)", "10. ความพร้อมต่อเหตุฉุกเฉิน", "11. การบำรุงรักษาและการสอบเทียบเครื่องมือ", "12. ผลการประเมินความพึงพอใจ"],
-        workshop: ["1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานเครื่องมือและเครื่องจักร", "3. การจัดเก็บเครื่องมือ วัสดุ และอุปกรณ์ฝึกงาน", "4. การกำหนดเขตพื้นที่ปฏิบัติงานและสัญลักษณ์เตือน", "5. ความสะอาด สุขลักษณะ และการดูแลพื้นที่", "6. การใช้พลังงาน ทรัพยากร และติดตามข้อมูล", "7. การคัดแยกของเสียและจัดการเศษวัสดุ", "8. ความปลอดภัยในการทำงานและอุปกรณ์ PPE", "9. ความพร้อมต่อเหตุฉุกเฉิน", "10. การบำรุงรักษาและการสอบเทียบเครื่องจักร", "11. การควบคุมการเข้าถึงและสภาพแวดล้อม", "12. ผลการประเมินความพึงพอใจ"],
-        specialized_lab: ["1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานพื้นที่และอุปกรณ์เฉพาะทาง", "3. การจัดเก็บวัสดุ อุปกรณ์ และเครื่องมือเฉพาะทาง", "4. ระบบป้ายกำกับ คู่มือ และเอกสารการทำงาน", "5. ความสะอาด สุขลักษณะ และการดูแลพื้นที่", "6. การใช้พลังงาน ทรัพยากร และติดตามข้อมูล", "7. การคัดแยกของเสียและการจัดการวัสดุใช้แล้ว", "8. ความปลอดภัยในการปฏิบัติงานและอุปกรณ์ป้องกัน", "9. ความพร้อมต่อเหตุฉุกเฉิน", "10. การบำรุงรักษาและการสอบเทียบอุปกรณ์", "11. การควบคุมการเข้าถึงและวินัยผู้ใช้พื้นที่", "12. ผลการประเมินความพึงพอใจ"],
-        library: ["1. สภาพพื้นที่โดยรวมและความเพียงพอของบริการ", "2. ความพร้อมใช้งานพื้นที่อ่านหนังสือและบริการ", "3. การจัดเก็บหนังสือ เอกสาร และทรัพยากรสารสนเทศ", "4. ระบบห้องสมุดดิจิทัลและการเข้าถึงสารสนเทศ", "5. ระบบป้ายกำกับ คู่มือ และข้อมูลการใช้บริการ", "6. ความสะอาดและสุขลักษณะของห้องสมุด", "7. สภาพแวดล้อม การเข้าถึง และสิ่งอำนวยความสะดวก", "8. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "9. การคัดแยกขยะและการจัดการของเสีย", "10. ความปลอดภัยและความพร้อมต่อเหตุฉุกเฉิน", "11. บุคลากรสนับสนุนและการให้บริการ", "12. การประเมินคุณภาพและการปรับปรุงต่อเนื่อง"],
-        building_safety: ["1. สภาพอาคารและองค์ประกอบทางกายภาพ", "2. ทางเดิน บันได ทางลาด และเส้นทางสัญจร", "3. ระบบไฟฟ้า แสงสว่าง และระบบสนับสนุนอาคาร", "4. เครื่องดับเพลิงและอุปกรณ์ระงับเหตุเบื้องต้น", "5. ทางหนีไฟ ป้ายอพยพ แผนผังหนีไฟ และจุดรวมพล", "6. ลิฟต์ โถงลิฟต์ และสิ่งอำนวยความสะดวก", "7. การเฝ้าระวังและควบคุมพื้นที่เสี่ยง", "8. การรับมือสถานการณ์ฉุกเฉินและ BCM", "9. การฝึกอบรมและการสื่อสารความปลอดภัย", "10. การบำรุงรักษา การแจ้งซ่อม และปรับปรุงต่อเนื่อง"],
-        landscape: ["1. สภาพพื้นที่โดยรวม", "2. การจัดสภาพแวดล้อมและภูมิทัศน์", "3. ทางเดิน ทางเชื่อม และเส้นทางสัญจร", "4. พื้นที่จอดรถ จุดพักคอย และพื้นที่ใช้ร่วม", "5. ห้องน้ำหรือพื้นที่สุขลักษณะ", "6. ระบบป้ายบ่งชี้ ป้ายเตือน และข้อมูลกำกับ", "7. ความสะอาด สุขลักษณะ และจุดสัมผัสร่วม", "8. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "9. การคัดแยกขยะและการจัดการของเสีย", "10. การสื่อสารมาตรฐานและการปรับปรุงต่อเนื่อง"],
-        canteen: ["1. สภาพพื้นที่โดยรวมของโรงอาหาร", "2. สุขลักษณะของร้านค้าและผู้ประกอบการ", "3. พื้นที่นั่งรับประทานอาหารและสิ่งอำนวยความสะดวก", "4. ระบบไฟฟ้า ก๊าซหุงต้ม แสงสว่าง และการระบายอากาศ", "5. ความสะอาดและการควบคุมปัจจัยเสี่ยงด้านสุขภาพ", "6. การจัดการขยะ เศษอาหาร น้ำเสีย และถังดักไขมัน", "7. ความปลอดภัยของพื้นที่ จุดเสี่ยง และการสัญจร", "8. อัคคีภัย อุปกรณ์ฉุกเฉิน และการอพยพ", "9. การใช้พลังงาน น้ำ และทรัพยากรอย่างคุ้มค่า", "10. การสื่อสารมาตรฐาน การแจ้งซ่อม และปรับปรุงต่อเนื่อง"],
-        meeting_room: ["1. สภาพห้องประชุมหรือหอประชุมโดยรวม", "2. พัสดุ ครุภัณฑ์ และอุปกรณ์ประจำห้อง", "3. ระบบโสตทัศนูปกรณ์", "4. ระบบไฟฟ้า แสงสว่าง และระบบปรับอากาศ", "5. ความสะอาด สุขลักษณะ และจุดสัมผัสร่วม", "6. ความปลอดภัยในการจัดวางและการใช้พื้นที่", "7. ป้ายบ่งชี้ ป้ายข้อปฏิบัติ และข้อมูลติดต่อ", "8. อัคคีภัย ทางออกฉุกเฉิน และการอพยพ", "9. การใช้พลังงาน ทรัพยากร และขยะจากการประชุม", "10. การบำรุงรักษา การแจ้งซ่อม และปรับปรุงต่อเนื่อง"]
-    };
-
-    function getCategoryKey(catName) {
-        if (!catName) return 'office';
-        const c = catName.toLowerCase();
-        if (c.includes('เรียน') || c.includes('classroom')) return 'classroom';
-        if (c.includes('คอมพิวเตอร์') || c.includes('computer')) return 'computer_lab';
-        if (c.includes('ทดลอง') || c.includes('วิทยาศาสตร์') || c.includes('lab') || c.includes('เคมี')) return 'lab';
-        if (c.includes('ฝึกงาน') || c.includes('workshop')) return 'workshop';
-        if (c.includes('วิชาชีพ') || c.includes('เฉพาะทาง')) return 'specialized_lab';
-        if (c.includes('สมุด') || c.includes('library')) return 'library';
-        if (c.includes('ความปลอดภัย') || c.includes('อาคารสถานที่') || c.includes('building')) return 'building_safety';
-        if (c.includes('ภูมิทัศน์') || c.includes('ส่วนกลาง') || c.includes('landscape')) return 'landscape';
-        if (c.includes('อาหาร') || c.includes('canteen') || c.includes('ซุ้ม')) return 'canteen';
-        if (c.includes('ประชุม') || c.includes('meeting') || c.includes('หอประชุม')) return 'meeting_room';
-        return 'office';
-    }
-
     window.onload = function() {
         const token = localStorage.getItem('authToken');
         const userStr = localStorage.getItem('userData');
@@ -701,52 +396,38 @@
             window.location.href = 'index.html';
             return;
         }
-
         const user = JSON.parse(userStr);
         if (user.role !== 'Admin') {
-            alert('คุณไม่มีสิทธิ์เข้าถึงส่วนงานผู้ดูแลระบบส่วนกลาง');
+            alert('สงวนสิทธิ์สำหรับงานเลขานุการและนายทะเบียนกลางเท่านั้น');
             window.location.href = 'index.html';
             return;
         }
-
         document.getElementById('adminName').innerText = user.fullName || user.firstName || user.username;
         loadAdminData();
     };
 
-    window.onclick = function(event) {
-        if (!event.target.matches('.btn-header-action')) {
-            const dropdown = document.getElementById("settingsDropdown");
-            if (dropdown && dropdown.classList.contains('show-dropdown')) {
-                dropdown.classList.remove('show-dropdown');
-            }
-        }
-        if (event.target == document.getElementById('detailsModal')) closeModal();
-        if (event.target == document.getElementById('userModal')) closeUserModal();
-        if (event.target == document.getElementById('settingsModal')) closeSettingsModal();
-        if (event.target == document.getElementById('editUserModal')) closeEditModal();
-    };
+    function toggleDropdown() {
+        document.getElementById("settingsDropdown").classList.toggle("show-dropdown");
+    }
 
     async function loadAdminData() {
         const token = localStorage.getItem('authToken');
         try {
-            const response = await fetch('https://my-7s-app.onrender.com/api/assessment', {
+            const res = await fetch('https://my-7s-app.onrender.com/api/assessment', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const data = await response.json();
-
+            const data = await res.json();
             document.getElementById('statTotal').innerText = data.length;
+
             if (data.length > 0) {
                 let pendingCount = 0;
                 let totalScore = 0;
                 data.forEach(item => {
-                    if (item.status === 'Needs Improvement' || item.status === 'Corrected') {
-                        pendingCount++;
-                    }
+                    if (item.status === 'Needs Improvement' || item.status === 'Corrected') pendingCount++;
                     totalScore += Number(item.percentage) || 0;
                 });
                 document.getElementById('statPending').innerText = pendingCount;
-                const avg = (totalScore / data.length).toFixed(1);
-                document.getElementById('statAverage').innerText = `${avg}%`;
+                document.getElementById('statAverage').innerText = `${(totalScore / data.length).toFixed(1)}%`;
             }
 
             const tbPendingPass = document.getElementById('tablePendingPass');
@@ -761,110 +442,59 @@
 
             data.forEach(item => {
                 const date = new Date(item.createdAt).toLocaleDateString('th-TH');
-                const location = item.area ? `${item.area.areaName}` : 'ไม่ระบุ';
+                const location = item.area ? item.area.areaName : 'ไม่ระบุ';
                 const assessor = item.assessor ? `${item.assessor.firstName || ''} ${item.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
 
-                const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">🔎 รายละเอียด</button>`;
-                const btnApprove = `<button onclick="approveCorrection('${item._id}')" class="btn-table btn-approve">✔ อนุมัติ</button>`;
-                const btnReject = `<button onclick="rejectCorrection('${item._id}')" class="btn-table btn-reject">✖ ตีกลับ</button>`;
+                const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">ดูบันทึกตรวจ</button>`;
+                const btnApprove = `<button onclick="approveCorrection('${item._id}')" class="btn-table btn-approve">รับรองผล</button>`;
+                const btnReject = `<button onclick="rejectCorrection('${item._id}')" class="btn-table btn-reject">ส่งกลับแก้ไข</button>`;
 
                 if (item.status === 'Passed') {
-                    tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><strong style="color:var(--primary); font-family:Inter;">${item.percentage}%</strong></td><td>${btnView} ${btnApprove}</td></tr>`;
+                    tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove}</td></tr>`;
                 } else if (item.status === 'Corrected') {
                     const submitDate = item.correctionData?.submittedAt ? new Date(item.correctionData.submittedAt).toLocaleDateString('th-TH') : date;
-                    tbPendingReview.innerHTML += `<tr><td>${submitDate}</td><td><b>${location}</b></td><td>${assessor}</td><td><strong style="color:var(--warning); font-family:Inter;">${item.percentage}%</strong></td><td>${btnView} ${btnApprove} ${btnReject}</td></tr>`;
+                    tbPendingReview.innerHTML += `<tr><td>${submitDate}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject}</td></tr>`;
                 } else if (item.status === 'Approved') {
-                    const statusTag = `<span class="badge badge-success">รับรองผลแล้ว</span>`;
-                    const historyRow = `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><strong style="font-family:Inter;">${item.percentage}%</strong></td><td>${statusTag}</td><td>${btnView}</td></tr>`;
+                    const row = `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td>${item.percentage}%</td><td><span style="color:#15803d; font-weight:600;">ผ่านการรับรองแล้ว</span></td><td>${btnView}</td></tr>`;
                     if (item.correctionData && item.correctionData.submittedAt) {
-                        tbHistoryCorrected.innerHTML += historyRow;
+                        tbHistoryCorrected.innerHTML += row;
                     } else {
-                        tbHistoryDirect.innerHTML += historyRow;
+                        tbHistoryDirect.innerHTML += row;
                     }
                 }
             });
 
-            if (!tbPendingPass.innerHTML) tbPendingPass.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">ไม่มีรายการรอดำเนินการ</td></tr>';
-            if (!tbPendingReview.innerHTML) tbPendingReview.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">ไม่มีรายการรอตรวจสอบ</td></tr>';
-            if (!tbHistoryDirect.innerHTML) tbHistoryDirect.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">ไม่มีข้อมูล</td></tr>';
-            if (!tbHistoryCorrected.innerHTML) tbHistoryCorrected.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">ไม่มีข้อมูล</td></tr>';
+            if (!tbPendingPass.innerHTML) tbPendingPass.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr>';
+            if (!tbPendingReview.innerHTML) tbPendingReview.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr>';
+            if (!tbHistoryDirect.innerHTML) tbHistoryDirect.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr>';
+            if (!tbHistoryCorrected.innerHTML) tbHistoryCorrected.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr>';
 
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    }
-
-    async function rejectCorrection(id) {
-        const reason = prompt("กรุณาระบุข้อเสนอแนะในการตีกลับ (ส่งกลับให้อาจารย์ประจำห้องแก้ไขใหม่):");
-        if (reason === null || reason.trim() === "") {
-            alert('⚠️ จำเป็นต้องระบุเหตุผลเพื่อเป็นแนวทางปรับปรุง');
-            return;
-        }
-
-        const token = localStorage.getItem('authToken');
-        try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${id}/reject`, {
-                method: 'PATCH',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
-                },
-                body: JSON.stringify({ reason: reason })
-            });
-
-            if (res.ok) {
-                alert('ส่งเรื่องกลับให้ปรับปรุงเรียบร้อยแล้ว');
-                loadAdminData();
-            }
-        } catch (error) {
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+        } catch (err) {
+            console.error(err);
         }
     }
 
     async function viewDetails(id) {
         const token = localStorage.getItem('authToken');
         const modalBody = document.getElementById('modalBody');
-        const modal = document.getElementById('detailsModal');
-
-        modalBody.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:30px;">กำลังรวบรวมข้อมูลเอกสารประเมิน...</p>';
-        modal.style.display = 'flex';
+        modalBody.innerHTML = '<p style="text-align:center;">กำลังเรียกข้อมูลสารสนเทศ...</p>';
+        document.getElementById('detailsModal').style.display = 'flex';
 
         try {
             const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            const location = data.area ? `${data.area.areaName} (${data.area.category || 'ทั่วไป'})` : 'ไม่ระบุ';
+            const location = data.area ? data.area.areaName : 'ไม่ระบุ';
             const assessor = data.assessor ? `${data.assessor.firstName || ''} ${data.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
-            const round = data.assessmentRound || 'ไม่ระบุ';
-
-            const catKey = getCategoryKey(data.area ? data.area.category : '');
-            const criteriaTitles = CATEGORY_CRITERIA_TITLES[catKey] || CATEGORY_CRITERIA_TITLES.office;
-            const maxScore = criteriaTitles.length * 4;
-
-            let scoresList = '<div style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); background: #fafbfc;">';
-            scoresList += '<table style="font-size: 0.88em;">';
-            data.scores.forEach(s => {
-                const titleText = criteriaTitles[s.sectionNumber - 1] || `เกณฑ์ข้อที่ ${s.sectionNumber}`;
-                const isLow = s.score < 3;
-                const scoreColor = isLow ? 'var(--danger)' : 'var(--primary)';
-                const rowBg = isLow ? '#fff1f2' : 'transparent';
-                scoresList += `
-                    <tr style="background: ${rowBg};">
-                        <td style="padding: 8px 14px;">${titleText}</td>
-                        <td style="padding: 8px 14px; width: 90px; text-align: right; font-weight: 700; color: ${scoreColor}; font-family: Inter;">${s.score} / 4</td>
-                    </tr>
-                `;
-            });
-            scoresList += '</table></div>';
 
             let assessorEvidenceHTML = '';
             if (data.evidencePhoto || data.assessorComment) {
                 assessorEvidenceHTML = `
-                    <div class="evidence-card evidence-assessor">
-                        <h4 style="margin: 0 0 6px 0; color: #b45309; font-size: 0.95em;">📸 บันทึกข้อเสนอแนะและรูปถ่ายจุดที่ไม่ผ่าน (จากกรรมการผู้ตรวจ)</h4>
-                        ${data.assessorComment ? `<p style="margin: 6px 0; font-size: 0.9em; color: #78350f;"><strong>ข้อคิดเห็น:</strong> ${data.assessorComment}</p>` : ''}
-                        ${data.evidencePhoto ? `<img src="${data.evidencePhoto}" class="evidence-img">` : ''}
+                    <div style="background:#fff7ed; border-left:4px solid #ea580c; padding:12px; border-radius:4px; margin-top:14px;">
+                        <h4 style="margin:0 0 6px 0; color:#9a3412;">📸 ข้อเสนอแนะและภาพถ่ายข้อบกพร่อง (จากคณะกรรมการผู้ตรวจ)</h4>
+                        ${data.assessorComment ? `<p style="margin:4px 0;">ข้อคิดเห็น: ${data.assessorComment}</p>` : ''}
+                        ${data.evidencePhoto ? `<img src="${data.evidencePhoto}" style="max-width:100%; max-height:220px; border-radius:4px;">` : ''}
                     </div>
                 `;
             }
@@ -872,34 +502,32 @@
             let feedbackHTML = '';
             if (data.correctionData && data.correctionData.detail) {
                 feedbackHTML = `
-                    <div class="evidence-card evidence-owner">
-                        <h4 style="margin: 0 0 6px 0; color: var(--primary); font-size: 0.95em;">🛠 รายงานการปรับปรุงและรูปถ่ายผลงาน (จากผู้รับผิดชอบพื้นที่)</h4>
-                        <p style="margin: 0; font-size: 0.9em; color: var(--text-main);"><strong>การดำเนินการ:</strong> ${data.correctionData.detail}</p>
-                        <p style="margin: 6px 0 0 0; font-size: 0.8em; color: var(--text-muted);">ส่งมอบงานเมื่อ: ${new Date(data.correctionData.submittedAt).toLocaleString('th-TH')}</p>
-                        ${data.correctionData.photoUrl ? `<img src="${data.correctionData.photoUrl}" class="evidence-img">` : ''}
+                    <div style="background:#f0fdf4; border-left:4px solid var(--gov-primary); padding:12px; border-radius:4px; margin-top:14px;">
+                        <h4 style="margin:0 0 6px 0; color:var(--gov-primary-dark);">🛠 รายงานผลการปรับปรุง (จากผู้รับผิดชอบสถานที่)</h4>
+                        <p style="margin:0;">การดำเนินงาน: ${data.correctionData.detail}</p>
+                        <p style="margin:4px 0 0 0; font-size:0.8em; color:var(--gov-muted);">ส่งเมื่อ: ${new Date(data.correctionData.submittedAt).toLocaleString('th-TH')}</p>
+                        ${data.correctionData.photoUrl ? `<img src="${data.correctionData.photoUrl}" style="max-width:100%; max-height:220px; border-radius:4px; margin-top:6px;">` : ''}
                     </div>
                 `;
             }
 
             modalBody.innerHTML = `
-                <div style="background: #f8fafc; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.92em; line-height: 1.7;">
+                <div style="background:#f8fafc; padding:14px; border:1px solid var(--gov-border); border-radius:4px; font-size:0.92em; line-height:1.7;">
                     <div><strong>สถานที่รับการตรวจ:</strong> ${location}</div>
-                    <div><strong>รอบการประเมิน:</strong> ${round}</div>
-                    <div><strong>กรรมการผู้ตรวจประเมิน:</strong> ${assessor}</div>
-                    <div><strong>คะแนนรวมที่ได้:</strong> <span style="color:var(--primary); font-weight:700; font-family:Inter;">${data.totalScore || 0} / ${maxScore}</span> คะแนน (${data.percentage}%)</div>
+                    <div><strong>รอบการประเมิน:</strong> ${data.assessmentRound || '-'}</div>
+                    <div><strong>คณะกรรมการผู้ตรวจ:</strong> ${assessor}</div>
+                    <div><strong>ผลการประเมิน:</strong> ร้อยละ ${data.percentage}% (${data.totalScore || 0} คะแนน)</div>
                 </div>
                 ${assessorEvidenceHTML}
                 ${feedbackHTML}
-                <h4 style="margin: 18px 0 8px 0; font-size: 0.95em; color: var(--text-main);">📊 สรุปผลคะแนนจำแนกตามเกณฑ์มาตรฐาน</h4>
-                ${scoresList}
             `;
-        } catch (error) {
-            modalBody.innerHTML = '<p style="color:var(--danger); text-align:center;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
+        } catch (err) {
+            modalBody.innerHTML = '<p style="color:#b91c1c; text-align:center;">ไม่สามารถเรียกข้อมูลได้</p>';
         }
     }
 
     async function approveCorrection(id) {
-        if (!confirm('ยืนยันการรับรองผลการประเมินว่าพื้นที่นี้ผ่านเกณฑ์มาตรฐานอย่างเป็นทางการ?')) return;
+        if (!confirm('ยืนยันการรับรองผลการประเมินมาตรฐานสถานที่อย่างเป็นทางการ?')) return;
         const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${id}/approve`, {
@@ -907,15 +535,41 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                alert('รับรองผลการประเมินสำเร็จ สถานะเปลี่ยนเป็น "อนุมัติแล้ว"');
+                alert('รับรองผลการประเมินมาตรฐานเรียบร้อยแล้ว');
                 loadAdminData();
             }
-        } catch (error) {
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+        } catch (err) {
+            alert('ระบบขัดข้อง');
+        }
+    }
+
+    async function rejectCorrection(id) {
+        const reason = prompt("โปรดระบุข้อสั่งการ/เหตุผลที่ส่งกลับเพื่อปรับปรุงแก้ไข:");
+        if (!reason || !reason.trim()) return;
+        const token = localStorage.getItem('authToken');
+        try {
+            const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${id}/reject`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ reason: reason })
+            });
+            if (res.ok) {
+                alert('ส่งเรื่องกลับให้ปรับปรุงแก้ไขเรียบร้อยแล้ว');
+                loadAdminData();
+            }
+        } catch (err) {
+            alert('ระบบขัดข้อง');
         }
     }
 
     function closeModal() { document.getElementById('detailsModal').style.display = 'none'; }
+    function openUserModal() {
+        document.getElementById('userModal').style.display = 'flex';
+        document.getElementById('settingsDropdown').classList.remove('show-dropdown');
+        loadUsers();
+        loadAreasForSelect();
+    }
+    function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
     let allUsersData = [];
     let editUserId = '';
@@ -928,29 +582,87 @@
             });
             const users = await res.json();
             allUsersData = users;
-
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = '';
             users.forEach(u => {
-                const roleBadge = u.role.includes('Assessor') 
-                    ? `<span class="badge badge-success">${u.role}</span>`
-                    : `<span class="badge badge-info">${u.role}</span>`;
                 const areaDisplay = u.assignedArea ? (u.assignedArea.areaName || u.assignedArea) : '-';
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${u.username}</strong></td>
+                        <td><b>${u.username}</b></td>
                         <td>${u.firstName || ''} ${u.lastName || ''}</td>
-                        <td>${roleBadge}</td>
+                        <td>${u.role}</td>
                         <td>${areaDisplay}</td>
                         <td>
-                            <button onclick="openEditModal('${u._id}')" class="btn-table btn-edit">✏️ ปรับปรุง/รหัส</button>
-                            <button onclick="deleteUser('${u._id}', '${u.username}')" class="btn-table btn-delete">🗑️ ลบ</button>
+                            <button onclick="openEditModal('${u._id}')" class="btn-table" style="background:#fed7aa; color:#9a3412;">ปรับปรุง/รหัส</button>
+                            <button onclick="deleteUser('${u._id}', '${u.username}')" class="btn-table" style="background:#fee2e2; color:#b91c1c; margin-left:4px;">ลบ</button>
                         </td>
                     </tr>
                 `;
             });
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function loadAreasForSelect() {
+        try {
+            const token = localStorage.getItem('authToken');
+            let res = await fetch('https://my-7s-app.onrender.com/api/areas', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) res = await fetch('https://my-7s-app.onrender.com/api/area', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+                const areas = await res.json();
+                let optionsHtml = '<option value="">-- โปรดระบุสถานที่รับผิดชอบ --</option>';
+                areas.forEach(a => { optionsHtml += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`; });
+                document.getElementById('newAssignedArea').innerHTML = optionsHtml;
+                document.getElementById('editAssignedArea').innerHTML = optionsHtml;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function openEditModal(id) {
+        const user = allUsersData.find(u => u._id === id);
+        if (!user) return;
+        editUserId = id;
+        document.getElementById('editUsername').value = user.username;
+        document.getElementById('editEmail').value = user.email || '';
+        document.getElementById('editFirstName').value = user.firstName || '';
+        document.getElementById('editLastName').value = user.lastName || '';
+        document.getElementById('editRole').value = user.role;
+        document.getElementById('editPassword').value = '';
+        const currentAreaId = user.assignedArea ? (user.assignedArea._id || user.assignedArea) : "";
+        document.getElementById('editAssignedArea').value = currentAreaId;
+        document.getElementById('editUserModal').style.display = 'flex';
+    }
+    function closeEditModal() { document.getElementById('editUserModal').style.display = 'none'; }
+
+    async function submitEditUser() {
+        const username = document.getElementById('editUsername').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
+        const firstName = document.getElementById('editFirstName').value.trim();
+        const lastName = document.getElementById('editLastName').value.trim();
+        const role = document.getElementById('editRole').value;
+        const password = document.getElementById('editPassword').value.trim();
+        const assignedArea = document.getElementById('editAssignedArea').value;
+
+        const token = localStorage.getItem('authToken');
+        try {
+            const res = await fetch(`https://my-7s-app.onrender.com/api/user/${editUserId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    username, email, firstName, lastName, role, assignedArea,
+                    ...(password && { password })
+                })
+            });
+            if (res.ok) {
+                alert('ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
+                closeEditModal();
+                loadUsers();
+            }
+        } catch (err) {
+            alert('ระบบขัดข้อง');
         }
     }
 
@@ -964,7 +676,7 @@
         const assignedArea = document.getElementById('newAssignedArea').value;
 
         if (!username || !email || !firstName) {
-            alert('กรุณากรอกข้อมูล Username, อีเมล และชื่อจริง ให้ครบถ้วน');
+            alert('โปรดกรอกข้อมูลสำคัญให้ครบถ้วน');
             return;
         }
 
@@ -972,167 +684,29 @@
         try {
             const res = await fetch('https://my-7s-app.onrender.com/api/user', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ 
-                    username, 
-                    password: password || '123456', 
-                    email, 
-                    firstName, 
-                    lastName, 
-                    role, 
-                    assignedArea 
-                })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ username, password: password || '123456', email, firstName, lastName, role, assignedArea })
             });
-            const data = await res.json();
             if (res.ok) {
-                alert('บันทึกข้อมูลบุคลากรเข้าสู่ระบบสำเร็จ');
-                document.getElementById('newUsername').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('newEmail').value = '';
-                document.getElementById('newFirstName').value = '';
-                document.getElementById('newLastName').value = '';
+                alert('ลงทะเบียนบุคลากรใหม่สำเร็จ');
                 loadUsers();
-            } else {
-                alert('ไม่สำเร็จ: ' + (data.message || ''));
             }
-        } catch (error) {
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+        } catch (err) {
+            alert('ระบบขัดข้อง');
         }
     }
 
     async function deleteUser(id, username) {
-        if (!confirm(`ยืนยันการลบบัญชีผู้ใช้งาน: ${username} ออกจากระบบถาวรหรือไม่?`)) return;
+        if (!confirm(`ยืนยันการลบบัญชีผู้ใช้: ${username} ออกจากทะเบียนถาวร?`)) return;
         const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`https://my-7s-app.onrender.com/api/user/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
-                alert('ลบผู้ใช้งานสำเร็จ');
-                loadUsers();
-            }
-        } catch (error) {
-            alert('ไม่สามารถลบข้อมูลได้');
-        }
-    }
-
-    function logout() {
-        localStorage.clear();
-        window.location.href = 'index.html';
-    }
-
-    function toggleDropdown() {
-        document.getElementById("settingsDropdown").classList.toggle("show-dropdown");
-    }
-
-    function openUserModal() {
-        document.getElementById('userModal').style.display = 'flex';
-        document.getElementById('settingsDropdown').classList.remove('show-dropdown');
-        loadUsers();
-        loadAreasForSelect();
-    }
-
-    function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
-
-    async function loadAreasForSelect() {
-        try {
-            const token = localStorage.getItem('authToken');
-            let res = await fetch('https://my-7s-app.onrender.com/api/areas', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) {
-                res = await fetch('https://my-7s-app.onrender.com/api/area', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-            }
-
-            if (res.ok) {
-                const areas = await res.json();
-                let optionsHtml = '<option value="">-- เลือกพื้นที่รับผิดชอบ --</option>';
-                areas.forEach(a => {
-                    optionsHtml += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`;
-                });
-
-                const newAreaSelect = document.getElementById('newAssignedArea');
-                const editAreaSelect = document.getElementById('editAssignedArea');
-
-                if (newAreaSelect) newAreaSelect.innerHTML = optionsHtml;
-                if (editAreaSelect) editAreaSelect.innerHTML = optionsHtml;
-            }
-        } catch (error) {
-            console.error("โหลดข้อมูลพื้นที่ล้มเหลว:", error);
-        }
-    }
-
-    function openEditModal(id) {
-        const user = allUsersData.find(u => u._id === id);
-        if (!user) return;
-
-        editUserId = id;
-        document.getElementById('editUsername').value = user.username;
-        document.getElementById('editEmail').value = user.email || '';
-        document.getElementById('editFirstName').value = user.firstName || '';
-        document.getElementById('editLastName').value = user.lastName || '';
-        document.getElementById('editRole').value = user.role;
-        document.getElementById('editPassword').value = '';
-
-        const newAssignedArea = document.getElementById('newAssignedArea');
-        const editAssignedArea = document.getElementById('editAssignedArea');
-        if (newAssignedArea && editAssignedArea && newAssignedArea.children.length > 1) {
-            editAssignedArea.innerHTML = newAssignedArea.innerHTML;
-        }
-
-        const currentAreaId = user.assignedArea ? (user.assignedArea._id || user.assignedArea) : "";
-        editAssignedArea.value = currentAreaId;
-
-        document.getElementById('editUserModal').style.display = 'flex';
-    }
-
-    function closeEditModal() { document.getElementById('editUserModal').style.display = 'none'; }
-
-    async function submitEditUser() {
-        const username = document.getElementById('editUsername').value.trim();
-        const email = document.getElementById('editEmail').value.trim();
-        const firstName = document.getElementById('editFirstName').value.trim();
-        const lastName = document.getElementById('editLastName').value.trim();
-        const role = document.getElementById('editRole').value;
-        const password = document.getElementById('editPassword').value.trim();
-        const assignedArea = document.getElementById('editAssignedArea').value;
-
-        if (!username || !firstName || !email) {
-            alert('กรุณากรอกข้อมูลสำคัญให้ครบถ้วน');
-            return;
-        }
-
-        const token = localStorage.getItem('authToken');
-        try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/user/${editUserId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    username, email, firstName, lastName, role, assignedArea,
-                    ...(password && { password })
-                })
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                alert('อัปเดตข้อมูลและรหัสผ่านสำเร็จเรียบร้อย');
-                closeEditModal();
-                loadUsers();
-            } else {
-                alert('ไม่สำเร็จ: ' + (data.message || ''));
-            }
-        } catch (error) {
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            if (res.ok) loadUsers();
+        } catch (err) {
+            alert('ระบบขัดข้อง');
         }
     }
 
@@ -1141,7 +715,6 @@
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
         loadSettings();
     }
-
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
 
     async function loadSettings() {
@@ -1150,35 +723,32 @@
             const data = await res.json();
             document.getElementById('settingAdminEmail').value = data.adminEmail || '';
             document.getElementById('settingAppPassword').value = '';
-        } catch (error) {
-            console.error("Error loading settings:", error);
+        } catch (err) {
+            console.error(err);
         }
     }
 
     async function saveSettings() {
         const adminEmail = document.getElementById('settingAdminEmail').value.trim();
         const appPassword = document.getElementById('settingAppPassword').value.trim();
-
-        if (!adminEmail) {
-            alert('กรุณาระบุอีเมลองค์กร');
-            return;
-        }
-
         try {
             const res = await fetch('https://my-7s-app.onrender.com/api/systemConfig', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ adminEmail, appPassword })
             });
-
-            const data = await res.json();
             if (res.ok) {
-                alert('บันทึกการตั้งค่าการแจ้งเตือนสำเร็จ');
+                alert('บันทึกการตั้งค่าระบบเรียบร้อยแล้ว');
                 closeSettingsModal();
             }
-        } catch (error) {
-            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+        } catch (err) {
+            alert('ระบบขัดข้อง');
         }
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'index.html';
     }
 </script>
 </body>
