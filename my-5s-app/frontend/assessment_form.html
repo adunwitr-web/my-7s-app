@@ -220,35 +220,19 @@
         }
         .summary-num { font-size: 1.9em; font-weight: 700; color: var(--gov-primary); }
 
-        .signature-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 1px dashed var(--gov-border);
-            text-align: center;
-        }
-        .sign-line {
-            margin-top: 40px;
-            border-bottom: 1px dotted #64748b;
-            width: 70%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
         .btn-submit-doc {
             background: var(--gov-primary);
             color: white;
             border: none;
-            padding: 13px 28px;
-            font-size: 1.05em;
+            padding: 15px 28px;
+            font-size: 1.1em;
             font-weight: 600;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             width: 100%;
             margin-top: 24px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s;
         }
         .btn-submit-doc:hover { background: var(--gov-primary-dark); }
     </style>
@@ -347,25 +331,7 @@
             <textarea id="assessorComment" placeholder="ระบุข้อเสนอแนะ เช่น จุดที่ต้องจัดเก็บให้เป็นระเบียบ สิ่งที่ต้องทำความสะอาด หรือจุดเสี่ยงความปลอดภัย..." class="form-control" style="height: 85px;"></textarea>
         </div>
 
-        <!-- ส่วนลงนามท้ายเอกสารตามแบบราชการ -->
-        <div class="signature-grid">
-            <div>
-                <div class="sign-line"></div>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em;">
-                    ( <span id="signOwnerNameDisplay">....................................................</span> )<br>
-                    <b>หัวหน้างาน/ผู้รับผิดชอบสถานที่</b>
-                </p>
-            </div>
-            <div>
-                <div class="sign-line"></div>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em;">
-                    ( <span id="signAssessorNameDisplay">....................................................</span> )<br>
-                    <b>คณะกรรมการผู้ตรวจประเมิน</b>
-                </p>
-            </div>
-        </div>
-
-        <button onclick="submitAssessment()" class="btn-submit-doc">💾 ลงนามและบันทึกผลการตรวจประเมินอย่างเป็นทางการ</button>
+        <button onclick="submitAssessment()" class="btn-submit-doc">💾 บันทึกผลการตรวจประเมินอย่างเป็นทางการ</button>
     </div>
 </main>
 
@@ -576,7 +542,6 @@
         const user = JSON.parse(userStr);
         const name = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
         document.getElementById('assessorName').innerText = name;
-        document.getElementById('signAssessorNameDisplay').innerText = name;
 
         document.getElementById('evidenceFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -642,20 +607,18 @@
             document.getElementById('totalScore').innerText = "0";
             document.getElementById('percentage').innerText = "0.00";
             document.getElementById('evalStatus').innerText = "-";
-            document.getElementById('signOwnerNameDisplay').innerText = "....................................................";
             return;
         }
 
         const selectedArea = allAreasData.find(a => a._id === selectedAreaId);
         if (selectedArea) {
-            let ownerName = "....................................................";
+            let ownerName = "ยังไม่ได้ระบุผู้รับผิดชอบ";
             if (selectedArea.owner) {
                 const fName = selectedArea.owner.firstName || "";
                 const lName = selectedArea.owner.lastName || "";
-                ownerName = (fName || lName) ? `${fName} ${lName}`.trim() : (selectedArea.owner.username || "....................................................");
+                ownerName = (fName || lName) ? `${fName} ${lName}`.trim() : (selectedArea.owner.username || "ยังไม่ได้ระบุผู้รับผิดชอบ");
             }
             ownerNameDisplay.innerText = ownerName;
-            document.getElementById('signOwnerNameDisplay').innerText = ownerName;
 
             const category = selectedArea.category || "สำนักงาน";
             areaCategoryDisplay.innerText = category;
@@ -797,7 +760,7 @@
         const percentage = parseFloat(document.getElementById('percentage').innerText);
         const assessorComment = document.getElementById('assessorComment').value.trim();
 
-        if (!confirm(`ยืนยันการลงนามบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${currentMaxScore} (${percentage.toFixed(2)}%)`)) return;
+        if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${currentMaxScore} (${percentage.toFixed(2)}%)`)) return;
 
         const payload = {
             area: areaId,
