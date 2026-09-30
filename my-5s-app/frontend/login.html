@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ระบบประเมิน 5ส.</title>
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --secondary-color: #E8F5E9;
+            --text-color: #333;
+            --border-color: #ccc;
+            --error-color: #D32F2F;
+        }
+
+        body {
+            font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .login-header p {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(46, 125, 50, 0.3);
+        }
+
+        .btn-login {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #1B5E20;
+        }
+
+        /* ส่วนแสดงข้อความแจ้งเตือน Error */
+        #errorMessage {
+            color: var(--error-color);
+            background-color: #FFEBEE;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🌱 ระบบประเมิน 7ส.</h1>
+            <p>กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+        </div>
+
+        <!-- ส่วนแสดง Error -->
+        <div id="errorMessage">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">👤 ชื่อผู้ใช้ (Username)</label>
+                <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้งาน" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔑 รหัสผ่าน (Password)</label>
+                <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">เข้าสู่ระบบ</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const usernameInput = document.getElementById('username').value.trim();
+            const passwordInput = document.getElementById('password').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            const loginBtn = document.getElementById('loginBtn');
+
+            loginBtn.innerText = "กำลังตรวจสอบ...";
+            loginBtn.disabled = true;
+            errorMessage.style.display = 'none';
+
+            try {
+                // ✅ แก้ไข URL ให้ตรงกับ Backend Route (/api/auth/login)
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: usernameInput,
+                        password: passwordInput
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+
+                    const role = data.user.role;
+
+                    if (role === 'Admin') {
+                        window.location.href = 'admin_dashboard.html';
+                    }
+                    else if (role === 'Internal Assessor' || role === 'External Assessor') {
+                        window.location.href = 'assessment_form.html';
+                    }
+                    else if (role === 'Area Owner') {
+                        window.location.href = 'owner_dashboard.html';
+                    }
+                    else {
+                        window.location.href = 'index.html';
+                    }
+
+                } else {
+                    // ✅ เปลี่ยนการดึงค่าเป็น data.message ให้ตรงกับ Backend
+                    errorMessage.innerText = data.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
+                    errorMessage.style.display = 'block';
+                    loginBtn.innerText = "เข้าสู่ระบบ";
+                    loginBtn.disabled = false;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.innerText = 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่';
+                errorMessage.style.display = 'block';
+                loginBtn.innerText = "เข้าสู่ระบบ";
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+
+</html>
