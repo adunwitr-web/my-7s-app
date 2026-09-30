@@ -238,7 +238,7 @@
             const container = document.getElementById('tasksContainer');
             
             try {
-                const res = await fetch('http://localhost:3000/api/assessment/pending', {
+                const res = await fetch('https://my-7s-app.onrender.com/api/assessment/pending', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
