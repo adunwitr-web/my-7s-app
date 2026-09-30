@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบบริหารจัดการและประเมินผล Green 7S Plus - ผู้ดูแลระบบ</title>
-    <!-- Google Fonts: Inter & Sarabun -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -39,10 +38,8 @@
             color: var(--text-main);
             margin: 0;
             padding-bottom: 60px;
-            -webkit-font-smoothing: antialiased;
         }
 
-        /* Top Government/Corporate Navigation */
         .header-bar {
             background: linear-gradient(135deg, #1b5e20 0%, #144618 100%);
             color: white;
@@ -77,13 +74,11 @@
             font-size: 1.15em;
             margin: 0;
             font-weight: 700;
-            letter-spacing: -0.2px;
         }
         .brand-title p {
             font-size: 0.78em;
             margin: 0;
             opacity: 0.85;
-            font-weight: 400;
         }
 
         .user-nav {
@@ -109,7 +104,6 @@
             box-shadow: 0 0 8px #4ade80;
         }
 
-        /* Action Menu Dropdown */
         .dropdown { position: relative; display: inline-block; }
         .btn-header-action {
             background: #ffffff;
@@ -154,7 +148,6 @@
             font-size: 0.9em;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.15s;
             border-bottom: 1px solid #f1f5f9;
         }
         .dropdown-menu a:hover { background-color: #f8fafc; }
@@ -162,14 +155,12 @@
         .dropdown-menu a.logout:hover { background-color: var(--danger-surface); }
         .show-dropdown { display: block !important; }
 
-        /* Container & Grid */
         .container {
             max-width: 1240px;
             margin: 28px auto;
             padding: 0 20px;
         }
 
-        /* Stat Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -184,12 +175,9 @@
             border: 1px solid var(--border);
             position: relative;
             overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease;
         }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
+        .stat-card:hover { transform: translateY(-2px); }
         .stat-card::before {
             content: "";
             position: absolute;
@@ -212,12 +200,10 @@
             font-weight: 700;
             font-family: 'Inter', sans-serif;
             color: var(--text-main);
-            letter-spacing: -0.5px;
         }
         .stat-card.warning .stat-value { color: var(--warning); }
         .stat-card.info .stat-value { color: var(--secondary); }
 
-        /* Content Panel Section */
         .panel {
             background: var(--surface-card);
             border-radius: var(--radius-lg);
@@ -253,7 +239,6 @@
             gap: 6px;
         }
 
-        /* Modern Corporate Table */
         .table-wrapper {
             overflow-x: auto;
             border-radius: var(--radius-md);
@@ -284,7 +269,6 @@
         tr:last-child td { border-bottom: none; }
         tbody tr:hover { background-color: #fafbfc; }
 
-        /* Badges */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -307,7 +291,6 @@
         .badge-info { background: var(--secondary-surface); color: var(--secondary); }
         .badge-info::before { background: var(--secondary); }
 
-        /* Action Buttons */
         .btn-table {
             border: none;
             padding: 6px 12px;
@@ -322,15 +305,11 @@
         }
         .btn-table:hover { transform: translateY(-1px); }
         .btn-view { background: #e0f2fe; color: #0369a1; }
-        .btn-view:hover { background: #bae6fd; }
         .btn-approve { background: var(--primary-surface); color: var(--primary); margin-left: 4px; }
-        .btn-approve:hover { background: #c8e6c9; }
         .btn-reject { background: var(--danger-surface); color: var(--danger); margin-left: 4px; }
-        .btn-reject:hover { background: #ffcdd2; }
         .btn-edit { background: var(--warning-surface); color: var(--warning); }
         .btn-delete { background: var(--danger-surface); color: var(--danger); margin-left: 4px; }
 
-        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -391,14 +370,9 @@
             font-size: 18px;
             color: var(--text-muted);
             cursor: pointer;
-            transition: background 0.15s;
         }
-        .close-btn:hover { background: #e2e8f0; color: var(--text-main); }
 
-        /* Form elements inside modal */
-        .form-group {
-            margin-bottom: 16px;
-        }
+        .form-group { margin-bottom: 16px; }
         .form-group label {
             display: block;
             font-weight: 600;
@@ -415,7 +389,6 @@
             font-size: 0.95em;
             color: var(--text-main);
             background: #ffffff;
-            transition: border-color 0.15s, box-shadow 0.15s;
         }
         .form-control:focus {
             outline: none;
@@ -438,12 +411,9 @@
             font-size: 0.95em;
             cursor: pointer;
             width: 100%;
-            transition: background 0.2s;
             margin-top: 10px;
         }
-        .btn-submit-form:hover { background: var(--primary-light); }
 
-        /* Image comparison cards in modal */
         .evidence-card {
             border-radius: var(--radius-md);
             padding: 16px;
@@ -472,7 +442,6 @@
 </head>
 <body>
 
-<!-- Header Navigation Bar -->
 <header class="header-bar">
     <div class="brand-section">
         <div class="brand-logo-badge">🏛️</div>
@@ -498,7 +467,6 @@
 </header>
 
 <main class="container">
-    <!-- Key Performance Indicators (Cards) -->
     <section class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">บันทึกการประเมินทั้งหมด (รอบปัจจุบัน)</div>
@@ -514,7 +482,6 @@
         </div>
     </section>
 
-    <!-- Zone 1: Pending & Review Action Panel -->
     <section class="panel">
         <div class="panel-header">
             <h2 class="panel-title">⏳ รายการผลการประเมินที่รอดำเนินการ (Action Required)</h2>
@@ -528,7 +495,7 @@
                 <thead>
                     <tr><th>วันที่บันทึก</th><th>พื้นที่ตรวจประเมิน</th><th>กรรมการผู้ตรวจ</th><th>ผลคะแนน</th><th>การดำเนินการ</th></tr>
                 </thead>
-                <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูลจากฐานข้อมูล...</td></tr></tbody>
+                <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูล...</td></tr></tbody>
             </table>
         </div>
 
@@ -540,12 +507,11 @@
                 <thead>
                     <tr><th>วันที่ส่งมอบงาน</th><th>พื้นที่ตรวจประเมิน</th><th>กรรมการผู้ตรวจ</th><th>ผลคะแนน</th><th>การดำเนินการ</th></tr>
                 </thead>
-                <tbody id="tablePendingReview"><tr><td colspan="5" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูลจากฐานข้อมูล...</td></tr></tbody>
+                <tbody id="tablePendingReview"><tr><td colspan="5" style="text-align: center; color: var(--text-muted);">กำลังโหลดข้อมูล...</td></tr></tbody>
             </table>
         </div>
     </section>
 
-    <!-- Zone 2: Historical Approved Panel -->
     <section class="panel">
         <div class="panel-header">
             <h2 class="panel-title">📜 ประวัติผลการประเมินที่ได้รับรองเสร็จสิ้น (Approved Records)</h2>
@@ -577,7 +543,6 @@
     </section>
 </main>
 
-<!-- Details & Evidence Modal -->
 <div id="detailsModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -588,7 +553,6 @@
     </div>
 </div>
 
-<!-- User Management Modal -->
 <div id="userModal" class="modal">
     <div class="modal-content" style="max-width: 880px;">
         <div class="modal-header">
@@ -627,7 +591,6 @@
     </div>
 </div>
 
-<!-- Edit User & Reset Password Modal -->
 <div id="editUserModal" class="modal">
     <div class="modal-content" style="max-width: 520px;">
         <div class="modal-header">
@@ -664,7 +627,7 @@
         <div class="form-group">
             <label>พื้นที่รับผิดชอบ:</label>
             <select id="editAssignedArea" class="form-control">
-                <option value="">-- กำลังโหลดข้อมูล... --</option>
+                <option value="">-- เลือกพื้นที่รับผิดชอบ --</option>
             </select>
         </div>
         <div style="background: #fff1f2; padding: 14px; border-radius: var(--radius-md); border-left: 4px solid var(--danger); margin: 16px 0;">
@@ -675,7 +638,6 @@
     </div>
 </div>
 
-<!-- System Email Config Modal -->
 <div id="settingsModal" class="modal">
     <div class="modal-content" style="max-width: 520px;">
         <div class="modal-header">
@@ -911,7 +873,7 @@
             if (data.correctionData && data.correctionData.detail) {
                 feedbackHTML = `
                     <div class="evidence-card evidence-owner">
-                        <h4 style="margin: 0 0 6px 0; color: var(--primary); font-size: 0.95em;">🛠️️ รายงานการปรับปรุงและรูปถ่ายผลงาน (จากผู้รับผิดชอบพื้นที่)</h4>
+                        <h4 style="margin: 0 0 6px 0; color: var(--primary); font-size: 0.95em;">🛠 รายงานการปรับปรุงและรูปถ่ายผลงาน (จากผู้รับผิดชอบพื้นที่)</h4>
                         <p style="margin: 0; font-size: 0.9em; color: var(--text-main);"><strong>การดำเนินการ:</strong> ${data.correctionData.detail}</p>
                         <p style="margin: 6px 0 0 0; font-size: 0.8em; color: var(--text-muted);">ส่งมอบงานเมื่อ: ${new Date(data.correctionData.submittedAt).toLocaleString('th-TH')}</p>
                         ${data.correctionData.photoUrl ? `<img src="${data.correctionData.photoUrl}" class="evidence-img">` : ''}
@@ -1076,15 +1038,13 @@
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    // โหลดรายชื่อพื้นที่เข้ามาใส่ทั้งในช่อง "เพิ่มผู้ใช้" และ "แก้ไขผู้ใช้"
     async function loadAreasForSelect() {
         try {
             const token = localStorage.getItem('authToken');
-            // เช็คเส้น API ให้ตรง (รองรับทั้ง /api/areas และ /api/area)
             let res = await fetch('https://my-7s-app.onrender.com/api/areas', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
+
             if (!res.ok) {
                 res = await fetch('https://my-7s-app.onrender.com/api/area', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -1093,21 +1053,16 @@
 
             if (res.ok) {
                 const areas = await res.json();
-                
-                // สร้างตัวเลือกสำหรับ Dropdown
                 let optionsHtml = '<option value="">-- เลือกพื้นที่รับผิดชอบ --</option>';
                 areas.forEach(a => {
                     optionsHtml += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`;
                 });
 
-                // ใส่ข้อมูลลงทั้ง 2 Dropdown (ฟอร์มเพิ่มใหม่ และ ฟอร์มแก้ไข)
                 const newAreaSelect = document.getElementById('newAssignedArea');
                 const editAreaSelect = document.getElementById('editAssignedArea');
-                
+
                 if (newAreaSelect) newAreaSelect.innerHTML = optionsHtml;
                 if (editAreaSelect) editAreaSelect.innerHTML = optionsHtml;
-            } else {
-                console.error("โหลดข้อมูลพื้นที่ไม่สำเร็จ สถานะ:", res.status);
             }
         } catch (error) {
             console.error("โหลดข้อมูลพื้นที่ล้มเหลว:", error);
@@ -1126,14 +1081,12 @@
         document.getElementById('editRole').value = user.role;
         document.getElementById('editPassword').value = '';
 
-        // คัดลอกตัวเลือกทั้งหมดจาก Dropdown ฝั่งเพิ่มผู้ใช้มาใส่ฝั่งแก้ไข
         const newAssignedArea = document.getElementById('newAssignedArea');
         const editAssignedArea = document.getElementById('editAssignedArea');
-        if (newAssignedArea && editAssignedArea) {
+        if (newAssignedArea && editAssignedArea && newAssignedArea.children.length > 1) {
             editAssignedArea.innerHTML = newAssignedArea.innerHTML;
         }
 
-        // กำหนดค่าพื้นที่เดิมของผู้ใช้คนนี้
         const currentAreaId = user.assignedArea ? (user.assignedArea._id || user.assignedArea) : "";
         editAssignedArea.value = currentAreaId;
 

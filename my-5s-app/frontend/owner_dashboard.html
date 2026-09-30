@@ -214,7 +214,6 @@
             transform: translateY(-1px);
         }
 
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -299,7 +298,29 @@
 </header>
 
 <main class="container">
-    <!-- Tasks to fix Panel -->
+    <!-- 🟢 1. Alertbox สำหรับแจ้งเตือนด่วน -->
+    <div id="urgentAlertBox" style="display: none; background: #fff1f2; border: 1px solid #fecdd3; border-left: 6px solid #e11d48; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.08);">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 15px;">
+            <div style="display: flex; gap: 14px;">
+                <div style="font-size: 28px; line-height: 1;">⚠️</div>
+                <div>
+                    <h3 style="margin: 0 0 6px 0; color: #9f1239; font-size: 1.15em; font-weight: 700;">
+                        แจ้งเตือน: มีพื้นที่ประเมินไม่ผ่านเกณฑ์มาตรฐาน Green 7S Plus
+                    </h3>
+                    <p id="alertAreaDetails" style="margin: 0 0 8px 0; font-size: 0.92em; color: #4c0519; line-height: 1.5;">
+                        <!-- ข้อความจะถูกนำมาใส่ด้วย JavaScript -->
+                    </p>
+                    <div id="alertAssessorComment" style="font-size: 0.88em; color: #881337; font-style: italic; background: rgba(255,255,255,0.7); padding: 8px 12px; border-radius: 6px; border: 1px solid #ffe4e6; display: inline-block;">
+                    </div>
+                </div>
+            </div>
+            <button id="btnOpenFixFromAlert" style="background: #e11d48; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9em; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(225, 29, 72, 0.25);">
+                🛠️ ดูจุดบกพร่อง & ส่งงานแก้ไข
+            </button>
+        </div>
+    </div>
+
+    <!-- 🟢 2. ตารางเดิม (Tasks to fix Panel) -->
     <section class="panel" style="border-top: 4px solid var(--warning);">
         <div class="panel-header">
             <h2 class="panel-title" style="color: var(--warning);">⚠️ รายการพื้นที่ที่ต้องดำเนินการปรับปรุงแก้ไข (Needs Improvement)</h2>
@@ -403,6 +424,7 @@
 
             let hasPending = false;
             let hasHistory = false;
+            let firstUnresolvedTask = null;
 
             data.forEach(item => {
                 const date = new Date(item.createdAt).toLocaleDateString('th-TH');
@@ -410,6 +432,11 @@
 
                 if (item.status === 'Needs Improvement' || item.status === 'Corrected') {
                     hasPending = true;
+
+                    if (item.status === 'Needs Improvement' && !firstUnresolvedTask) {
+                        firstUnresolvedTask = item;
+                    }
+
                     const statusBadge = item.status === 'Needs Improvement' 
                         ? `<span class="badge badge-warning">รอการแก้ไข</span>`
                         : `<span class="badge badge-info">รอ Admin ตรวจรับงาน</span>`;
@@ -439,6 +466,31 @@
                     `;
                 }
             });
+
+            // ควบคุมการแสดงผล Urgent Alertbox
+            const alertBox = document.getElementById('urgentAlertBox');
+            if (firstUnresolvedTask) {
+                const areaName = firstUnresolvedTask.area ? firstUnresolvedTask.area.areaName : 'พื้นที่ของคุณ';
+                document.getElementById('alertAreaDetails').innerHTML = `
+                    พื้นที่ <b>"${areaName}"</b> ได้คะแนนรวม <b style="color:#e11d48;">${firstUnresolvedTask.percentage}%</b> (ต่ำกว่าเกณฑ์ 80%) กรุณาตรวจสอบหลักฐานและดำเนินการปรับปรุงพื้นที่
+                `;
+                
+                const commentBox = document.getElementById('alertAssessorComment');
+                if (firstUnresolvedTask.assessorComment) {
+                    commentBox.style.display = 'inline-block';
+                    commentBox.innerHTML = `💬 <b>ข้อเสนอแนะจากกรรมการ:</b> "${firstUnresolvedTask.assessorComment}"`;
+                } else {
+                    commentBox.style.display = 'none';
+                }
+
+                document.getElementById('btnOpenFixFromAlert').onclick = function() {
+                    openCorrectionModal(firstUnresolvedTask._id);
+                };
+
+                alertBox.style.display = 'block';
+            } else {
+                alertBox.style.display = 'none';
+            }
 
             if (!hasPending) tbPending.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">ไม่มีรายการที่ต้องปรับปรุงแก้ไขในขณะนี้</td></tr>';
             if (!hasHistory) tbHistory.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">ยังไม่มีประวัติการประเมินที่ผ่านเกณฑ์</td></tr>';

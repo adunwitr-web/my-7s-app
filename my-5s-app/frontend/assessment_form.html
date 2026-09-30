@@ -142,7 +142,6 @@
             box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
         }
 
-        /* Criteria Table */
         .table-wrapper {
             overflow-x: auto;
             border-radius: var(--radius-md);
@@ -238,7 +237,6 @@
 </header>
 
 <main class="container">
-    <!-- Area Selection Panel -->
     <section class="panel">
         <div class="panel-header">
             <h2 class="panel-title">🏢 ข้อมูลพื้นที่ตรวจประเมิน</h2>
@@ -268,7 +266,6 @@
         </div>
     </section>
 
-    <!-- Evaluation Criteria Table -->
     <section class="panel">
         <div class="panel-header">
             <h2 class="panel-title" id="tableHeaderTitle">📊 ตารางเกณฑ์การประเมินมาตรฐาน</h2>
@@ -291,7 +288,6 @@
             </table>
         </div>
 
-        <!-- Summary -->
         <div class="summary-card">
             <div>
                 <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 4px;">คะแนนรวมที่ได้</div>
@@ -308,7 +304,6 @@
         </div>
     </section>
 
-    <!-- Evidence & Comments Panel -->
     <section class="panel" style="border-top: 4px solid var(--warning);">
         <div class="panel-header">
             <h2 class="panel-title" style="color: var(--warning);">📷 ภาพถ่ายหลักฐานจุดที่ต้องปรับปรุง / ข้อเสนอแนะ</h2>
@@ -577,20 +572,41 @@
 
     async function loadAreas() {
         try {
-            const res = await fetch(`${API_URL}/area`);
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('กรุณาเข้าสู่ระบบก่อนทำรายการ');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            let res = await fetch(`${API_URL}/areas`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                res = await fetch(`${API_URL}/area`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            }
+
+            if (!res.ok) {
+                throw new Error(`Server returned status: ${res.status}`);
+            }
+
             const data = await res.json();
-            const userStr = localStorage.getItem('userData');
-            const user = JSON.parse(userStr);
             allAreasData = data;
             let areasData = data;
+
+            const userStr = localStorage.getItem('userData');
+            const user = userStr ? JSON.parse(userStr) : null;
             
-            if (user.role && user.role.includes('Assessor')) {
-                if (!user.assignedArea) {
-                    alert('⚠️ บัญชีนี้ยังไม่ได้รับมอบหมายพื้นที่รับผิดชอบ');
-                    areasData = [];
-                } else {
+            if (user && user.role && user.role.includes('Assessor')) {
+                if (user.assignedArea) {
                     const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
-                    areasData = data.filter(area => area._id === assignedId);
+                    const filtered = data.filter(area => area._id === assignedId);
+                    if (filtered.length > 0) {
+                        areasData = filtered;
+                    }
                 }
             }
             
@@ -606,7 +622,7 @@
             }
         } catch (err) {
             console.error("Error loading areas:", err);
-            alert("เชื่อมต่อฐานข้อมูลพื้นที่ไม่ได้");
+            alert("เชื่อมต่อฐานข้อมูลพื้นที่ไม่ได้ กรุณาลองใหม่อีกครั้ง");
         }
     }
 
