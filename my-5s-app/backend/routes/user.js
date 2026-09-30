@@ -8,7 +8,7 @@ const Area = require('../models/Area');
 // 1. ดึงรายชื่อผู้ใช้งานทั้งหมด (ไม่รวม Admin)
 router.get('/', verifyToken, async (req, res) => {
     try {
-        const users = await User.find({ role: { $ne: 'Admin' } }).select('-password');
+        const users = await User.find({ role: { $ne: 'Admin' } }).select('-password').populate('assignedArea');
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้' });
@@ -25,17 +25,17 @@ router.post('/', verifyToken, async (req, res) => {
             return res.status(400).json({ message: 'Username นี้ถูกใช้งานแล้ว' });
         }
 
-        // 🟢 แปลงร่างรหัสผ่านให้เป็นรหัสลับก่อน!
+        // แปลงรหัสผ่านเป็นรหัสลับ
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password || '123456', salt);
 
-        // 🟢 ตอนบันทึก ให้เอา hashedPassword ไปใส่แทน password ปกติ
         const newUser = new User({ 
             username, 
-            password: hashedPassword, // 👈 เปลี่ยนมาใช้รหัสที่เข้ารหัสแล้ว
+            password: hashedPassword,
             email, 
             firstName, 
             lastName, 
+            fullName: `${firstName || ''} ${lastName || ''}`.trim(),
             role,
             assignedArea
         });
@@ -51,6 +51,7 @@ router.post('/', verifyToken, async (req, res) => {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการสร้างผู้ใช้งาน' });
     }
 });
+
 // 3. ลบผู้ใช้งาน
 router.delete('/:id', verifyToken, async (req, res) => {
     try {
@@ -61,11 +62,12 @@ router.delete('/:id', verifyToken, async (req, res) => {
     }
 });
 
+// 4. แก้ไขข้อมูลผู้ใช้ / รีเซ็ตรหัสผ่าน (Admin ใช้งาน)
 router.patch('/:id', verifyToken, async (req, res) => {
     try {
         const { username, email, firstName, lastName, role, password, assignedArea } = req.body;
         
-        // 1. เช็กว่า Username ใหม่ที่ส่งมา ไปซ้ำกับคนอื่นในระบบหรือไม่ (ยกเว้นตัวเอง)
+        // 1. เช็กว่า Username ใหม่ ซ้ำกับคนอื่นหรือไม่
         if (username) {
             const existingUser = await User.findOne({ username: username, _id: { $ne: req.params.id } });
             if (existingUser) {
@@ -73,24 +75,30 @@ router.patch('/:id', verifyToken, async (req, res) => {
             }
         }
 
-        // 2. รวบรวมข้อมูลที่จะอัปเดต
-        let updateData = { username, email, firstName, lastName, role, assignedArea };
+        // 2. กรองเฉพาะฟิลด์ที่มีค่าส่งมา ไม่ให้ทับค่าว่าง
+        let updateData = {};
+        if (username) updateData.username = username;
+        if (email) updateData.email = email;
+        if (firstName) updateData.firstName = firstName;
+        if (lastName) updateData.lastName = lastName;
+        if (firstName || lastName) updateData.fullName = `${firstName || ''} ${lastName || ''}`.trim();
+        if (role) updateData.role = role;
+        if (assignedArea !== undefined) updateData.assignedArea = assignedArea;
 
-        // 3. เข้ารหัสรหัสผ่าน (ถ้ามีการกรอกมาใหม่)
+        // 3. ถ้าส่ง password มาด้วย ให้แฮชใหม่
         if (password && password.trim() !== '') {
-            const bcrypt = require('bcrypt'); // เรียกใช้ bcrypt ตรงนี้เลยเผื่อลืมใส่ไว้ด้านบน
             const salt = await bcrypt.genSalt(10);
             updateData.password = await bcrypt.hash(password, salt);
         }
 
-        // 4. บันทึกลงฐานข้อมูล
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        // 4. อัปเดตลงฐานข้อมูล
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
         
         if (!updatedUser) {
             return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
         }
 
-        res.json({ success: true, message: 'อัปเดตข้อมูลสำเร็จ' });
+        res.json({ success: true, message: 'อัปเดตข้อมูลและรหัสผ่านสำเร็จ' });
     } catch (error) {
         console.error('Error updating user:', error);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล' });
