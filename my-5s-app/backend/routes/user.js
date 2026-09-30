@@ -8,7 +8,9 @@ const Area = require('../models/Area');
 // 1. ดึงรายชื่อผู้ใช้งานทั้งหมด (ไม่รวม Admin)
 router.get('/', verifyToken, async (req, res) => {
     try {
-        const users = await User.find({ role: { $ne: 'Admin' } }).select('-password').populate('assignedArea');
+        const users = await User.find({ role: { $ne: 'Admin' } })
+            .select('-password')
+            .populate('assignedArea');
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้' });
@@ -25,7 +27,7 @@ router.post('/', verifyToken, async (req, res) => {
             return res.status(400).json({ message: 'Username นี้ถูกใช้งานแล้ว' });
         }
 
-        // แปลงรหัสผ่านเป็นรหัสลับ
+        // แปลงรหัสผ่านเป็นรหัสลับ (ค่าเริ่มต้น 123456)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password || '123456', salt);
 
@@ -37,17 +39,18 @@ router.post('/', verifyToken, async (req, res) => {
             lastName, 
             fullName: `${firstName || ''} ${lastName || ''}`.trim(),
             role,
-            assignedArea
+            assignedArea: assignedArea || null
         });
         await newUser.save();
 
+        // ถ้าเป็น Area Owner ให้ผูกชื่อลงตาราง Area ด้วย
         if (role === 'Area Owner' && assignedArea) {
             await Area.findByIdAndUpdate(assignedArea, { owner: newUser._id });
         }
         
         res.json({ success: true, message: 'สร้างผู้ใช้งานสำเร็จ' });
     } catch (error) {
-        console.log("💥 โค้ด Error คือ:", error.message);
+        console.error("💥 Error สร้างผู้ใช้งาน:", error.message);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการสร้างผู้ใช้งาน' });
     }
 });
@@ -56,6 +59,8 @@ router.post('/', verifyToken, async (req, res) => {
 router.delete('/:id', verifyToken, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
+        // เคลียร์ owner ในห้องที่เคยดูแลออกด้วย
+        await Area.updateMany({ owner: req.params.id }, { $unset: { owner: 1 } });
         res.json({ success: true, message: 'ลบผู้ใช้งานสำเร็จ' });
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบข้อมูล' });
@@ -83,7 +88,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
         if (lastName) updateData.lastName = lastName;
         if (firstName || lastName) updateData.fullName = `${firstName || ''} ${lastName || ''}`.trim();
         if (role) updateData.role = role;
-        if (assignedArea !== undefined) updateData.assignedArea = assignedArea;
+        if (assignedArea !== undefined) updateData.assignedArea = assignedArea ? assignedArea : null;
 
         // 3. ถ้าส่ง password มาด้วย ให้แฮชใหม่
         if (password && password.trim() !== '') {
@@ -96,6 +101,14 @@ router.patch('/:id', verifyToken, async (req, res) => {
         
         if (!updatedUser) {
             return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
+        }
+
+        // 5. ถ้าบทบาทเป็น Area Owner และมีการเปลี่ยนพื้นที่รับผิดชอบ ให้ย้ายห้องในตาราง Area ด้วย
+        if (updatedUser.role === 'Area Owner' && assignedArea) {
+            // ลบชื่อออกจากห้องเก่าก่อน
+            await Area.updateMany({ owner: updatedUser._id, _id: { $ne: assignedArea } }, {$unset: { owner: 1 } });
+            // ผูกกับห้องใหม่
+            await Area.findByIdAndUpdate(assignedArea, { owner: updatedUser._id });
         }
 
         res.json({ success: true, message: 'อัปเดตข้อมูลและรหัสผ่านสำเร็จ' });

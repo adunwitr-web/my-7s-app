@@ -3,107 +3,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบประเมิน Green 7S Plus</title>
+    <title>แบบประเมิน Green 7S Plus - คณะกรรมการผู้ตรวจประเมิน</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; padding: 0; background: #f4f6f9; margin: 0; }
-        .navbar { 
-            background: #2E7D32; 
-            color: white; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            margin-bottom: 25px; 
+        :root {
+            --primary: #1b5e20;
+            --primary-light: #2e7d32;
+            --primary-surface: #e8f5e9;
+            --secondary: #0d47a1;
+            --secondary-surface: #e3f2fd;
+            --warning: #b76e00;
+            --warning-surface: #fff8e1;
+            --danger: #c62828;
+            --danger-surface: #ffebee;
+            --bg-page: #f8fafc;
+            --surface-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
         }
-        .navbar h2 { margin: 0; font-size: 22px; color: white; }
-        .user-info { display: flex; align-items: center; }
-        .container { max-width: 960px; margin: auto; padding: 0 15px 50px 15px; }
-        .card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        h2, h3 { color: #1e4620; margin-top: 0; }
-        select, input[type="number"], button { padding: 10px; font-size: 15px; border-radius: 5px; border: 1px solid #ccc; }
-        select { width: 100%; max-width: 450px; margin-top: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #e0e0e0; padding: 12px; text-align: left; vertical-align: top; }
-        th { background-color: #2E7D32; color: white; }
-        .score-input { width: 70px; text-align: center; font-size: 16px; font-weight: bold; }
-        .sub-criteria { font-size: 13px; color: #444; margin-top: 6px; line-height: 1.5; }
-        .evidence-text { font-size: 12px; color: #2e7d32; margin-top: 5px; font-style: italic; }
-        .btn-submit { background: #2E7D32; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-submit:hover { background: #1b5e20; }
-        .btn-logout { background: #D32F2F; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-logout:hover { background: #B71C1C; }
-        .badge-category { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 70px;
+        }
+
+        .header-bar {
+            background: linear-gradient(135deg, #1b5e20 0%, #144618 100%);
+            color: white;
+            padding: 0 28px;
+            height: 72px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .brand-section { display: flex; align-items: center; gap: 14px; }
+        .brand-logo-badge {
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .brand-title h1 { font-size: 1.15em; margin: 0; font-weight: 700; }
+        .brand-title p { font-size: 0.78em; margin: 0; opacity: 0.85; }
+
+        .user-nav { display: flex; align-items: center; gap: 12px; }
+        .user-chip {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 6px 14px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .user-avatar-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #4ade80;
+        }
+        .btn-logout {
+            background: #ffffff;
+            color: var(--danger);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: var(--danger-surface); }
+
+        .container {
+            max-width: 980px;
+            margin: 28px auto;
+            padding: 0 20px;
+        }
+
+        .panel {
+            background: var(--surface-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            padding: 26px;
+            margin-bottom: 22px;
+        }
+        .panel-header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+        .panel-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95em;
+            background: #ffffff;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
+        }
+
+        /* Criteria Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92em;
+            text-align: left;
+        }
+        th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8em;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+
+        .score-input {
+            width: 65px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            padding: 8px;
+            color: var(--primary);
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .summary-value {
+            font-size: 2em;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            color: var(--primary);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary) 0%, #2e7d32 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1.05em;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.2);
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+        .btn-submit:hover { opacity: 0.95; transform: translateY(-1px); }
     </style>
 </head>
 <body>
-<div class="navbar">
-    <h2>📝 ระบบประเมิน Green 7S Plus</h2>
-    <div class="user-info">
-        <span id="assessorName" style="margin-right: 15px; font-weight: bold;">ผู้ประเมิน</span>
-        <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
-    </div>
-</div>
 
-<div class="container">
-    <div class="card">
-        <h2>📋 ข้อมูลพื้นที่การประเมิน</h2>
-        <label for="areaSelect"><b>เลือกพื้นที่ประเมิน:</b></label><br>
-        <select id="areaSelect" onchange="onAreaChanged()">
-            <option value="">-- กำลังโหลดข้อมูลพื้นที่... --</option>
-        </select>
-
-        <div style="margin-top: 15px;">
-            <label for="roundSelect"><b>รอบการประเมิน:</b></label><br>
-            <select id="roundSelect">
-                <option value="">-- โปรดเลือกรอบการประเมิน --</option>
-                <option value="ประเมินตนเอง ครั้งที่ 1">ประเมินตนเอง ครั้งที่ 1</option>
-                <option value="ประเมินตนเอง ครั้งที่ 2">ประเมินตนเอง ครั้งที่ 2</option>
-                <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 1">ประเมินภายในระดับหน่วยงาน ครั้งที่ 1</option>
-                <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 2">ประเมินภายในระดับหน่วยงาน ครั้งที่ 2</option>
-                <option value="ประเมินโดยมหาวิทยาลัย">ประเมินโดยมหาวิทยาลัย (คณะกรรมการแต่งตั้ง)</option>
-            </select>
-        </div>
-        
-        <div style="background: #f8faf8; padding: 15px; border-radius: 6px; margin-top: 15px; border-left: 5px solid #2E7D32; line-height: 1.8;">
-            <b>ผู้รับผิดชอบพื้นที่ (Area Owner):</b> <span id="ownerNameDisplay" style="color: #2E7D32; font-weight: bold;">-</span><br>
-            <b>หมวดหมู่พื้นที่:</b> <span id="areaCategoryDisplay" class="badge-category">-</span><br>
-            <b>แบบฟอร์มที่ใช้:</b> <span id="formTitleDisplay" style="font-weight: bold; color: #1e4620;">-</span>
+<header class="header-bar">
+    <div class="brand-section">
+        <div class="brand-logo-badge">📋</div>
+        <div class="brand-title">
+            <h1>ระบบประเมิน 7ส. ออนไลน์ (Green 7S Plus)</h1>
+            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
         </div>
     </div>
-
-    <div class="card">
-        <h3 id="tableHeaderTitle">ตารางคะแนนประเมิน</h3>
-        <p style="font-size: 13px; color: #666; margin: 0 0 10px 0;">
-            * เกณฑ์คะแนน (0 - 4): 4 = ครบถ้วน 4 ข้อ, 3 = ทำได้ 3 ข้อ, 2 = ทำได้ 2 ข้อ, 1 = ทำได้ 1 ข้อ, 0 = ไม่ผ่านเกณฑ์
-        </p>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 75%;">รายละเอียด / เกณฑ์การประเมิน</th>
-                    <th style="width: 25%; text-align: center;">คะแนน (0 - 4)</th>
-                </tr>
-            </thead>
-            <tbody id="evaluationItems">
-                <tr><td colspan="2" style="text-align: center; color: #888;">กรุณาเลือกพื้นที่ประเมินด้านบนก่อน</td></tr>
-            </tbody>
-        </table>
-
-        <div style="margin-top: 20px; font-size: 18px; line-height: 1.7;">
-            <div><b>คะแนนรวม:</b> <span id="totalScore" style="color: #2E7D32; font-size: 24px; font-weight: bold;">0</span> / <span id="maxScoreDisplay">0</span> คะแนน</div>
-            <div><b>คิดเป็น:</b> <span id="percentage" style="color: #2E7D32; font-size: 24px; font-weight: bold;">0.00</span> %</div>
-            <div><b>สรุปผลการประเมิน:</b> <span id="evalStatus" style="font-size: 18px; font-weight: bold; color: #666;">-</span></div>
+    <div class="user-nav">
+        <div class="user-chip">
+            <span class="user-avatar-dot"></span>
+            <span id="assessorName">กรรมการผู้ประเมิน</span>
         </div>
-        
-        <br>
-        <button class="btn-submit" onclick="submitAssessment()">💾 บันทึกผลการประเมิน</button>
+        <button class="btn-logout" onclick="logout()">🚪 ออกจากระบบ</button>
     </div>
-</div>
+</header>
+
+<main class="container">
+    <!-- Area Selection Panel -->
+    <section class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title">🏢 ข้อมูลพื้นที่ตรวจประเมิน</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div>
+                <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">เลือกพื้นที่ที่รับผิดชอบตรวจ:</label>
+                <select id="areaSelect" class="form-control" onchange="onAreaChanged()">
+                    <option value="">-- กำลังโหลดข้อมูลพื้นที่... --</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">รอบการประเมิน:</label>
+                <select id="roundSelect" class="form-control">
+                    <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 1">ประเมินภายในระดับหน่วยงาน ครั้งที่ 1</option>
+                    <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 2">ประเมินภายในระดับหน่วยงาน ครั้งที่ 2</option>
+                    <option value="ประเมินโดยมหาวิทยาลัย">ประเมินโดยมหาวิทยาลัย (คณะกรรมการแต่งตั้ง)</option>
+                    <option value="ประเมินตนเอง ครั้งที่ 1">ประเมินตนเอง ครั้งที่ 1</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 14px 18px; border-radius: var(--radius-md); margin-top: 18px; border-left: 4px solid var(--primary); font-size: 0.92em; line-height: 1.8;">
+            <div><b>ผู้รับผิดชอบพื้นที่ (Area Owner):</b> <span id="ownerNameDisplay" style="color: var(--primary); font-weight: 600;">-</span></div>
+            <div><b>หมวดหมู่พื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></div>
+            <div><b>เกณฑ์มาตรฐานที่ใช้:</b> <span id="formTitleDisplay" style="font-weight: 600; color: #1e4620;">-</span></div>
+        </div>
+    </section>
+
+    <!-- Evaluation Criteria Table -->
+    <section class="panel">
+        <div class="panel-header">
+            <h2 class="panel-title" id="tableHeaderTitle">📊 ตารางเกณฑ์การประเมินมาตรฐาน</h2>
+            <p style="font-size: 0.85em; color: var(--text-muted); margin: 6px 0 0 0;">
+                ระดับคะแนน (0 - 4): 4 = ดีเยี่ยม/ครบถ้วน, 3 = ดีตามเกณฑ์, 2 = พอใช้/ปรับปรุง, 1 = ต้องปรับปรุงเร่งด่วน, 0 = ไม่ผ่านเกณฑ์
+            </p>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 78%;">รายละเอียดเกณฑ์การประเมิน</th>
+                        <th style="width: 22%; text-align: center;">คะแนน (0 - 4)</th>
+                    </tr>
+                </thead>
+                <tbody id="evaluationItems">
+                    <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 20px;">กรุณาเลือกพื้นที่ประเมินด้านบนก่อน</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-card">
+            <div>
+                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 4px;">คะแนนรวมที่ได้</div>
+                <div><span class="summary-value" id="totalScore">0</span> / <span id="maxScoreDisplay">0</span></div>
+            </div>
+            <div>
+                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 4px;">คิดเป็นเปอร์เซ็นต์</div>
+                <div><span class="summary-value" id="percentage">0.00</span> %</div>
+            </div>
+            <div>
+                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 4px;">ผลสรุปตามเกณฑ์</div>
+                <div id="evalStatus" style="font-weight: 700; font-size: 1.1em; color: var(--text-muted);">-</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Evidence & Comments Panel -->
+    <section class="panel" style="border-top: 4px solid var(--warning);">
+        <div class="panel-header">
+            <h2 class="panel-title" style="color: var(--warning);">📷 ภาพถ่ายหลักฐานจุดที่ต้องปรับปรุง / ข้อเสนอแนะ</h2>
+            <p style="font-size: 0.85em; color: var(--text-muted); margin: 6px 0 0 0;">
+                กรณีพื้นที่ไม่ผ่านเกณฑ์ หรือมีจุดที่ต้องปรับปรุง สามารถแนบรูปถ่ายและข้อคิดเห็นเพื่อให้เจ้าของห้องนำไปแก้ไขได้
+            </p>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">แนบรูปถ่ายหลักฐาน:</label>
+            <input type="file" id="evidenceFileInput" accept="image/*">
+            <div id="previewContainer" style="display: none; margin-top: 12px;">
+                <img id="evidencePreview" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+            </div>
+        </div>
+
+        <div>
+            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">ข้อเสนอแนะเพิ่มเติมสำหรับเจ้าของพื้นที่:</label>
+            <textarea id="assessorComment" placeholder="ระบุสิ่งที่ควรจัดเก็บ ทำความสะอาด หรือคำแนะนำที่เป็นประโยชน์..." class="form-control" style="height: 85px;"></textarea>
+        </div>
+
+        <button onclick="submitAssessment()" class="btn-submit">💾 บันทึกผลการตรวจประเมินอย่างเป็นทางการ</button>
+    </section>
+</main>
 
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
     let allAreasData = [];
     let currentMaxScore = 48;
+    let evidencePhotoBase64 = '';
 
     const FORM_TEMPLATES = {
         office: {
@@ -318,18 +553,31 @@
         const token = localStorage.getItem('authToken');
         const userStr = localStorage.getItem('userData');
         if (!token || !userStr) {
-            alert('กรุณาเข้าสู่ระบบก่อน');
             window.location.href = 'index.html';
             return;
         }
         const user = JSON.parse(userStr);
-        document.getElementById('assessorName').innerText = `คุณ ${user.firstName || user.username}`;
+        document.getElementById('assessorName').innerText = user.fullName || user.firstName || user.username;
+
+        document.getElementById('evidenceFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    evidencePhotoBase64 = event.target.result;
+                    document.getElementById('evidencePreview').src = evidencePhotoBase64;
+                    document.getElementById('previewContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         loadAreas();
     };
 
     async function loadAreas() {
         try {
-            const res = await fetch(`${API_URL}/areas`);
+            const res = await fetch(`${API_URL}/area`);
             const data = await res.json();
             const userStr = localStorage.getItem('userData');
             const user = JSON.parse(userStr);
@@ -372,7 +620,7 @@
             ownerNameDisplay.innerText = "-";
             areaCategoryDisplay.innerText = "-";
             formTitleDisplay.innerText = "-";
-            document.getElementById('evaluationItems').innerHTML = '<tr><td colspan="2" style="text-align: center; color: #888;">กรุณาเลือกพื้นที่ประเมินด้านบนก่อน</td></tr>';
+            document.getElementById('evaluationItems').innerHTML = '<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 20px;">กรุณาเลือกพื้นที่ประเมินด้านบนก่อน</td></tr>';
             document.getElementById('maxScoreDisplay').innerText = "0";
             return;
         }
@@ -408,13 +656,13 @@
         tbody.innerHTML = '';
         
         criteria.forEach((c) => {
-            const subItemsHtml = c.items.map(item => `<div>• ${item}</div>`).join('');
+            const subItemsHtml = c.items.map(item => `<div style="color:var(--text-muted); margin-top:2px;">• ${item}</div>`).join('');
             tbody.innerHTML += `
                 <tr>
                     <td>
-                        <b>${c.title}</b>
-                        <div class="sub-criteria">${subItemsHtml}</div>
-                        <div class="evidence-text">${c.evidence}</div>
+                        <b style="color:var(--text-main); font-size:1.02em;">${c.title}</b>
+                        <div style="font-size: 0.88em; margin: 4px 0 6px 0;">${subItemsHtml}</div>
+                        <div style="font-size: 0.82em; color: var(--primary); font-style: italic;">${c.evidence}</div>
                     </td>
                     <td style="text-align: center; vertical-align: middle;">
                         <input type="number" class="score-input score" min="0" max="4" value="0" 
@@ -440,14 +688,14 @@
         
         const statusEl = document.getElementById('evalStatus');
         if (percent >= 80) {
-            statusEl.innerText = "ผ่านเกณฑ์ฯ (ร้อยละ 80 ขึ้นไป)";
-            statusEl.style.color = "#2E7D32";
+            statusEl.innerText = "ผ่านเกณฑ์รับรอง (≥ 80%)";
+            statusEl.style.color = "var(--primary)";
         } else if (percent >= 60) {
-            statusEl.innerText = "ควรปรับปรุง (ร้อยละ 60–79)";
-            statusEl.style.color = "#F57C00";
+            statusEl.innerText = "ควรปรับปรุง (60–79%)";
+            statusEl.style.color = "var(--warning)";
         } else {
-            statusEl.innerText = "ต้องปรับปรุงเร่งด่วน (ต่ำกว่าร้อยละ 60)";
-            statusEl.style.color = "#D32F2F";
+            statusEl.innerText = "ต้องปรับปรุงเร่งด่วน (< 60%)";
+            statusEl.style.color = "var(--danger)";
         }
     }
 
@@ -459,17 +707,7 @@
         }
         
         const roundSelect = document.getElementById('roundSelect').value;
-        if (!roundSelect) {
-            alert("⚠️ กรุณาเลือกรอบการประเมินก่อน");
-            return; 
-        }
-        
         const token = localStorage.getItem('authToken'); 
-        if (!token) {
-            alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
-            window.location.href = 'index.html'; 
-            return;
-        }
         
         const scoresInputs = document.querySelectorAll('.score');
         const scores = Array.from(scoresInputs).map((input, index) => ({
@@ -479,15 +717,18 @@
         
         const totalScore = parseFloat(document.getElementById('totalScore').innerText);
         const percentage = parseFloat(document.getElementById('percentage').innerText);
-        const status = percentage < 80 ? 'Needs Improvement' : 'Passed';
+        const assessorComment = document.getElementById('assessorComment').value.trim();
         
+        if (!confirm(`ยืนยันการบันทึกผลการประเมินอย่างเป็นทางการ?\nคะแนนรวม: ${totalScore} / ${currentMaxScore} (${percentage.toFixed(2)}%)`)) return;
+
         const payload = {
             area: areaId,
             assessmentRound: roundSelect,
             scores: scores,
             totalScore: totalScore,
             percentage: percentage,
-            status: status
+            evidencePhoto: evidencePhotoBase64,
+            assessorComment: assessorComment
         };
         
         try {
@@ -501,13 +742,14 @@
             });
             const data = await res.json();
             if (res.ok) {
-                alert('✅ บันทึกผลการประเมินเรียบร้อยแล้ว!');
+                alert('บันทึกผลการตรวจประเมินสำเร็จเรียบร้อยแล้ว');
+                window.location.reload();
             } else {
-                alert('❌ เกิดข้อผิดพลาด: ' + (data.message || 'ไม่สามารถบันทึกได้'));
+                alert('ไม่สำเร็จ: ' + (data.message || ''));
             }
         } catch (err) {
             console.error("Error submitting assessment:", err);
-            alert('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
         }
     }
 

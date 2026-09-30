@@ -3,391 +3,525 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area Owner - ระบบประเมิน 7ส.</title>
+    <title>Area Owner Portal - ระบบประเมิน 7ส. ออนไลน์</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #2E7D32;
-            --text-color: #333;
-            --warning-color: #F57C00;
+            --primary: #1b5e20;
+            --primary-light: #2e7d32;
+            --primary-surface: #e8f5e9;
+            --secondary: #0d47a1;
+            --secondary-surface: #e3f2fd;
+            --warning: #b76e00;
+            --warning-surface: #fff8e1;
+            --danger: #c62828;
+            --danger-surface: #ffebee;
+            --bg-page: #f8fafc;
+            --surface-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.12);
         }
-        body { font-family: 'Sarabun', sans-serif; background-color: #f4f7f6; margin: 0; }
-        .navbar { background: #0277BD; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .container { max-width: 900px; margin: 20px auto; padding: 20px; }
-        
-        .alert-card { background: #FFF3E0; border-left: 5px solid var(--warning-color); padding: 20px; border-radius: 6px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .alert-card h3 { margin-top: 0; color: var(--warning-color); }
-        
-        .defect-box { background: #fff; border: 1px solid #ffcc80; padding: 12px 15px; border-radius: 5px; margin: 15px 0; }
-        .defect-box h4 { margin: 0 0 8px 0; color: #D32F2F; font-size: 15px; }
-        .defect-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
-        .defect-item:last-child { border-bottom: none; }
-        
-        .feedback-form { background: white; padding: 20px; border-radius: 8px; border: 1px solid #ccc; margin-top: 15px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; }
-        .form-group textarea, .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        
-        .btn-submit { background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 15px; }
-        .btn-submit:hover { background: #1b5e20; }
-        .btn-logout { background: #D32F2F; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
 
-        .notification-bell { position: relative; cursor: pointer; font-size: 24px; margin-right: 15px; }
-        .notif-badge {
-            position: absolute; top: -5px; right: -8px; background: #D32F2F; color: white;
-            border-radius: 50%; padding: 2px 6px; font-size: 12px; font-weight: bold; display: none;
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 60px;
         }
-        .notif-dropdown {
-            display: none; position: absolute; top: 50px; right: 0; background: white; color: #333;
-            width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 1000;
-            max-height: 400px; overflow-y: auto; border: 1px solid #ddd;
+
+        .header-bar {
+            background: linear-gradient(135deg, #1b5e20 0%, #144618 100%);
+            color: white;
+            padding: 0 28px;
+            height: 72px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .notif-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #eee; background: #f9f9f9; border-radius: 8px 8px 0 0; }
-        .notif-item { padding: 12px 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
-        .notif-item:hover { background: #f5f5f5; }
-        .notif-item.unread { background: #FFF3E0; border-left: 4px solid #F57C00; }
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .brand-logo-badge {
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+        .brand-title h1 {
+            font-size: 1.15em;
+            margin: 0;
+            font-weight: 700;
+        }
+        .brand-title p {
+            font-size: 0.78em;
+            margin: 0;
+            opacity: 0.85;
+        }
+
+        .user-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-chip {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 6px 14px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .user-avatar-dot {
+            width: 8px;
+            height: 8px;
+            background: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #38bdf8;
+        }
+        .btn-logout {
+            background: #ffffff;
+            color: var(--danger);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: var(--danger-surface); }
+
+        .container {
+            max-width: 1100px;
+            margin: 28px auto;
+            padding: 0 20px;
+        }
+
+        .panel {
+            background: var(--surface-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            padding: 26px;
+            margin-bottom: 26px;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+        .panel-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92em;
+            text-align: left;
+        }
+        th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8em;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        td {
+            padding: 15px 18px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background-color: #fafbfc; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.82em;
+            font-weight: 600;
+        }
+        .badge::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .badge-warning { background: var(--warning-surface); color: var(--warning); }
+        .badge-warning::before { background: var(--warning); }
+        .badge-info { background: var(--secondary-surface); color: var(--secondary); }
+        .badge-info::before { background: var(--secondary); }
+        .badge-success { background: var(--primary-surface); color: var(--primary); }
+        .badge-success::before { background: var(--primary); }
+
+        .btn-action {
+            background: var(--secondary-surface);
+            color: var(--secondary);
+            border: 1px solid #bfdbfe;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.86em;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-action:hover {
+            background: #dbeafe;
+            transform: translateY(-1px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 620px;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px;
+            border: 1px solid var(--border);
+            animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalScale {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 { margin: 0; font-size: 1.2em; font-weight: 700; color: var(--text-main); }
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95em;
+            background: #ffffff;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.12);
+        }
     </style>
 </head>
 <body>
 
-    <div class="navbar">
-        <h2>🏢 ระบบจัดการพื้นที่ 7ส. (Area Owner)</h2>
-        <div class="user-info" style="position: relative; display: flex; align-items: center;">
-            <div class="notification-bell" onclick="toggleNotification()">
-                🔔
-                <span id="notifBadge" class="notif-badge">0</span>
+<header class="header-bar">
+    <div class="brand-section">
+        <div class="brand-logo-badge">🏢</div>
+        <div class="brand-title">
+            <h1>ระบบติดตามและปรับปรุงพื้นที่ 7ส. (Area Owner Portal)</h1>
+            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
+        </div>
+    </div>
+    <div class="user-nav">
+        <div class="user-chip">
+            <span class="user-avatar-dot"></span>
+            <span id="ownerName">ผู้รับผิดชอบพื้นที่</span>
+        </div>
+        <button class="btn-logout" onclick="logout()">🚪 ออกจากระบบ</button>
+    </div>
+</header>
+
+<main class="container">
+    <!-- Tasks to fix Panel -->
+    <section class="panel" style="border-top: 4px solid var(--warning);">
+        <div class="panel-header">
+            <h2 class="panel-title" style="color: var(--warning);">⚠️ รายการพื้นที่ที่ต้องดำเนินการปรับปรุงแก้ไข (Needs Improvement)</h2>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>วันที่ประเมิน</th><th>พื้นที่รับผิดชอบ</th><th>คะแนนที่ได้</th><th>สถานะความคืบหน้า</th><th>การดำเนินการ</th></tr>
+                </thead>
+                <tbody id="tablePendingTasks">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">กำลังโหลดข้อมูลงาน...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- History Panel -->
+    <section class="panel" style="border-top: 4px solid var(--primary);">
+        <div class="panel-header">
+            <h2 class="panel-title" style="color: var(--primary);">📜 ประวัติผลการประเมินที่ผ่านเกณฑ์มาตรฐาน</h2>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>วันที่ประเมิน</th><th>พื้นที่รับผิดชอบ</th><th>คะแนนรวม</th><th>ผลการรับรอง</th></tr>
+                </thead>
+                <tbody id="tableHistoryTasks">
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">กำลังโหลดประวัติ...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<!-- Correction & Image Upload Modal -->
+<div id="correctionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🛠️ รายละเอียดข้อเสนอแนะและส่งหลักฐานแก้ไข</h3>
+            <button class="close-btn" onclick="closeCorrectionModal()">&times;</button>
+        </div>
+
+        <div style="background: var(--warning-surface); border: 1px solid #ffe0b2; border-left: 4px solid var(--warning); padding: 16px; border-radius: var(--radius-md); margin-bottom: 20px;">
+            <p style="margin: 0 0 6px 0; font-weight: 700; color: #b45309; font-size: 0.95em;">📸 ภาพถ่ายจุดที่ไม่ผ่านเกณฑ์ (จากกรรมการผู้ตรวจ):</p>
+            <div id="assessorImageContainer" style="margin-top: 10px; text-align: center;"></div>
+            <p id="assessorCommentText" style="margin: 8px 0 0 0; color: #78350f; font-size: 0.9em; font-style: italic;"></p>
+        </div>
+
+        <div style="background: #f8fafc; padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border);">
+            <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 1em;">📝 บันทึกผลการดำเนินงานแก้ไข</h4>
+            <div style="margin-bottom: 14px;">
+                <label style="display:block; font-weight: 600; font-size: 0.88em; margin-bottom: 6px;">รายละเอียดการปรับปรุงพื้นที่:</label>
+                <textarea id="correctionDetail" placeholder="เช่น ทำความสะอาดจุดสัมผัส, จัดระเบียบสายไฟและอุปกรณ์เรียบร้อย..." class="form-control" style="height: 85px;"></textarea>
             </div>
-            
-            <div id="notifDropdown" class="notif-dropdown">
-                <div class="notif-header">การแจ้งเตือนของคุณ</div>
-                <div id="notifList">
-                    <div style="padding: 15px; text-align: center; color: #777;">ไม่มีการแจ้งเตือนใหม่</div>
+            <div>
+                <label style="display:block; font-weight: 600; font-size: 0.88em; margin-bottom: 6px;">📷 ภาพถ่ายหลักฐานหลังดำเนินการแก้ไขเสร็จสิ้น:</label>
+                <input type="file" id="ownerFixPhotoInput" accept="image/*">
+                <div id="ownerFixPreviewContainer" style="display: none; margin-top: 12px; text-align: center;">
+                    <img id="ownerFixPreview" style="max-width: 100%; max-height: 220px; border-radius: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
                 </div>
             </div>
-
-            <span id="ownerName" style="margin-right: 15px; font-weight: bold;">อาจารย์ประจำห้อง</span>
-            <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+            <div style="text-align: right; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="closeCorrectionModal()" style="padding: 10px 18px; border: 1px solid var(--border); background: white; border-radius: 8px; cursor: pointer; font-weight: 500;">ยกเลิก</button>
+                <button onclick="submitCorrection()" style="background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-weight: 600;">📤 ส่งมอบงานให้ Admin รับรอง</button>
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="container">
-        <h2>📋 รายการพื้นที่ที่ต้องดำเนินการแก้ไข</h2>
-        <div id="tasksContainer">
-            <p style="text-align:center; color:#666;">กำลังโหลดข้อมูล...</p>
-        </div>
-    </div>
+<script>
+    let activeTaskId = null;
+    let ownerFixPhotoBase64 = '';
+    let currentTasksList = [];
 
-    <script>
-        const CATEGORY_CRITERIA_TITLES = {
-            office: [
-                "1. สภาพพื้นที่โดยรวม", "2. โต๊ะทำงาน ลิ้นชัก และเก้าอี้ปฏิบัติงาน", "3. คอมพิวเตอร์และอุปกรณ์ต่อพ่วง",
-                "4. ตู้เก็บเอกสารและชั้นวางของ", "5. ระบบเอกสารและการจัดเก็บข้อมูล", "6. อุปกรณ์สำนักงานส่วนกลาง",
-                "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "8. การแสดงข้อมูลสถิติการใช้พลังงาน", "9. การคัดแยกขยะและการจัดการของเสีย",
-                "10. สุขลักษณะและบรรยากาศการทำงาน", "11. จุดรับรองแขกหรือพื้นที่ใช้งานร่วม", "12. พฤติกรรม วินัย และการปรับปรุงต่อเนื่อง"
-            ],
-            classroom: [
-                "1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานโต๊ะ เก้าอี้ และอุปกรณ์ประจำห้อง", "3. การจัดเก็บวัสดุ อุปกรณ์ และสื่อการเรียนรู้",
-                "4. ระบบป้าย คู่มือ และข้อมูลกำกับการใช้ห้อง", "5. ความสะอาดและสุขลักษณะของห้องเรียน", "6. สภาพแวดล้อมที่เอื้อต่อการเรียนรู้",
-                "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "8. การติดตามข้อมูลการใช้พลังงานและทรัพยากร", "9. การจัดการของเสียและการตรวจเช็คความสะอาด",
-                "10. ความปลอดภัยและความพร้อมต่อเหตุฉุกเฉิน", "11. การบริหารจัดการและการปรับปรุงต่อเนื่อง", "12. ผลการประเมินความพึงพอใจของผู้ใช้ห้องเรียน"
-            ],
-            computer_lab: [
-                "1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานและการบำรุงรักษาคอมพิวเตอร์", "3. การจัดเก็บอุปกรณ์และวัสดุสิ้นเปลือง",
-                "4. ระบบป้ายกำกับ คู่มือ และข้อปฏิบัติ", "5. ความสะอาดและสุขลักษณะ", "6. สภาพแวดล้อมที่เอื้อต่อการเรียนรู้",
-                "7. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "8. การติดตามและสื่อสารข้อมูลการใช้พลังงาน", "9. การจัดการของเสียอิเล็กทรอนิกส์ (E-Waste)",
-                "10. ความปลอดภัยของระบบไฟฟ้าและเครือข่าย", "11. การควบคุมการใช้ห้องและวินัยผู้ใช้", "12. ผลการประเมินความพึงพอใจ"
-            ],
-            lab: [
-                "1. สภาพพื้นที่โดยรวมของห้องทดลอง", "2. ความพร้อมใช้งานโต๊ะปฏิบัติการและอุปกรณ์หลัก", "3. การจัดเก็บสารเคมี วัสดุทดลอง และอุปกรณ์เฉพาะทาง",
-                "4. ระบบป้ายเตือน คู่มือ และเอกสารกำกับการทำงาน", "5. ความสะอาด สุขลักษณะ และการควบคุมการปนเปื้อน", "6. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า",
-                "7. การติดตามและสื่อสารข้อมูลการใช้ทรัพยากร", "8. การคัดแยกและการจัดการของเสียจากการทดลอง", "9. ความปลอดภัยและอุปกรณ์ป้องกันส่วนบุคคล (PPE)",
-                "10. ความพร้อมต่อเหตุฉุกเฉิน", "11. การบำรุงรักษาและการสอบเทียบเครื่องมือ", "12. ผลการประเมินความพึงพอใจ"
-            ],
-            workshop: [
-                "1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานเครื่องมือและเครื่องจักร", "3. การจัดเก็บเครื่องมือ วัสดุ และอุปกรณ์ฝึกงาน",
-                "4. การกำหนดเขตพื้นที่ปฏิบัติงานและสัญลักษณ์เตือน", "5. ความสะอาด สุขลักษณะ และการดูแลพื้นที่", "6. การใช้พลังงาน ทรัพยากร และติดตามข้อมูล",
-                "7. การคัดแยกของเสียและจัดการเศษวัสดุ", "8. ความปลอดภัยในการทำงานและอุปกรณ์ PPE", "9. ความพร้อมต่อเหตุฉุกเฉิน",
-                "10. การบำรุงรักษาและการสอบเทียบเครื่องจักร", "11. การควบคุมการเข้าถึงและสภาพแวดล้อม", "12. ผลการประเมินความพึงพอใจ"
-            ],
-            specialized_lab: [
-                "1. สภาพพื้นที่โดยรวม", "2. ความพร้อมใช้งานพื้นที่และอุปกรณ์เฉพาะทาง", "3. การจัดเก็บวัสดุ อุปกรณ์ และเครื่องมือเฉพาะทาง",
-                "4. ระบบป้ายกำกับ คู่มือ และเอกสารการทำงาน", "5. ความสะอาด สุขลักษณะ และการดูแลพื้นที่", "6. การใช้พลังงาน ทรัพยากร และติดตามข้อมูล",
-                "7. การคัดแยกของเสียและการจัดการวัสดุใช้แล้ว", "8. ความปลอดภัยในการปฏิบัติงานและอุปกรณ์ป้องกัน", "9. ความพร้อมต่อเหตุฉุกเฉิน",
-                "10. การบำรุงรักษาและการสอบเทียบอุปกรณ์", "11. การควบคุมการเข้าถึงและวินัยผู้ใช้พื้นที่", "12. ผลการประเมินความพึงพอใจ"
-            ],
-            library: [
-                "1. สภาพพื้นที่โดยรวมและความเพียงพอของบริการ", "2. ความพร้อมใช้งานพื้นที่อ่านหนังสือและบริการ", "3. การจัดเก็บหนังสือ เอกสาร และทรัพยากรสารสนเทศ",
-                "4. ระบบห้องสมุดดิจิทัลและการเข้าถึงสารสนเทศ", "5. ระบบป้ายกำกับ คู่มือ และข้อมูลการใช้บริการ", "6. ความสะอาดและสุขลักษณะของห้องสมุด",
-                "7. สภาพแวดล้อม การเข้าถึง และสิ่งอำนวยความสะดวก", "8. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "9. การคัดแยกขยะและการจัดการของเสีย",
-                "10. ความปลอดภัยและความพร้อมต่อเหตุฉุกเฉิน", "11. บุคลากรสนับสนุนและการให้บริการ", "12. การประเมินคุณภาพและการปรับปรุงต่อเนื่อง"
-            ],
-            building_safety: [
-                "1. สภาพอาคารและองค์ประกอบทางกายภาพ", "2. ทางเดิน บันได ทางลาด และเส้นทางสัญจร", "3. ระบบไฟฟ้า แสงสว่าง และระบบสนับสนุนอาคาร",
-                "4. เครื่องดับเพลิงและอุปกรณ์ระงับเหตุเบื้องต้น", "5. ทางหนีไฟ ป้ายอพยพ แผนผังหนีไฟ และจุดรวมพล", "6. ลิฟต์ โถงลิฟต์ และสิ่งอำนวยความสะดวก",
-                "7. การเฝ้าระวังและควบคุมพื้นที่เสี่ยง", "8. การรับมือสถานการณ์ฉุกเฉินและ BCM", "9. การฝึกอบรมและการสื่อสารความปลอดภัย",
-                "10. การบำรุงรักษา การแจ้งซ่อม และปรับปรุงต่อเนื่อง"
-            ],
-            landscape: [
-                "1. สภาพพื้นที่โดยรวม", "2. การจัดสภาพแวดล้อมและภูมิทัศน์", "3. ทางเดิน ทางเชื่อม และเส้นทางสัญจร",
-                "4. พื้นที่จอดรถ จุดพักคอย และพื้นที่ใช้ร่วม", "5. ห้องน้ำหรือพื้นที่สุขลักษณะ", "6. ระบบป้ายบ่งชี้ ป้ายเตือน และข้อมูลกำกับ",
-                "7. ความสะอาด สุขลักษณะ และจุดสัมผัสร่วม", "8. การใช้พลังงานและทรัพยากรอย่างคุ้มค่า", "9. การคัดแยกขยะและการจัดการของเสีย",
-                "10. การสื่อสารมาตรฐานและการปรับปรุงต่อเนื่อง"
-            ],
-            canteen: [
-                "1. สภาพพื้นที่โดยรวมของโรงอาหาร", "2. สุขลักษณะของร้านค้าและผู้ประกอบการ", "3. พื้นที่นั่งรับประทานอาหารและสิ่งอำนวยความสะดวก",
-                "4. ระบบไฟฟ้า ก๊าซหุงต้ม แสงสว่าง และการระบายอากาศ", "5. ความสะอาดและการควบคุมปัจจัยเสี่ยงด้านสุขภาพ", "6. การจัดการขยะ เศษอาหาร น้ำเสีย และถังดักไขมัน",
-                "7. ความปลอดภัยของพื้นที่ จุดเสี่ยง และการสัญจร", "8. อัคคีภัย อุปกรณ์ฉุกเฉิน และการอพยพ", "9. การใช้พลังงาน น้ำ และทรัพยากรอย่างคุ้มค่า",
-                "10. การสื่อสารมาตรฐาน การแจ้งซ่อม และปรับปรุงต่อเนื่อง"
-            ],
-            meeting_room: [
-                "1. สภาพห้องประชุมหรือหอประชุมโดยรวม", "2. พัสดุ ครุภัณฑ์ และอุปกรณ์ประจำห้อง", "3. ระบบโสตทัศนูปกรณ์",
-                "4. ระบบไฟฟ้า แสงสว่าง และระบบปรับอากาศ", "5. ความสะอาด สุขลักษณะ และจุดสัมผัสร่วม", "6. ความปลอดภัยในการจัดวางและการใช้พื้นที่",
-                "7. ป้ายบ่งชี้ ป้ายข้อปฏิบัติ และข้อมูลติดต่อ", "8. อัคคีภัย ทางออกฉุกเฉิน และการอพยพ", "9. การใช้พลังงาน ทรัพยากร และขยะจากการประชุม",
-                "10. การบำรุงรักษา การแจ้งซ่อม และปรับปรุงต่อเนื่อง"
-            ]
-        };
-
-        function getCategoryKey(catName) {
-            if (!catName) return 'office';
-            const c = catName.toLowerCase();
-            if (c.includes('เรียน') || c.includes('classroom')) return 'classroom';
-            if (c.includes('คอมพิวเตอร์') || c.includes('computer')) return 'computer_lab';
-            if (c.includes('ทดลอง') || c.includes('วิทยาศาสตร์') || c.includes('lab') || c.includes('เคมี')) return 'lab';
-            if (c.includes('ฝึกงาน') || c.includes('workshop')) return 'workshop';
-            if (c.includes('วิชาชีพ') || c.includes('เฉพาะทาง')) return 'specialized_lab';
-            if (c.includes('สมุด') || c.includes('library')) return 'library';
-            if (c.includes('ความปลอดภัย') || c.includes('อาคารสถานที่') || c.includes('building')) return 'building_safety';
-            if (c.includes('ภูมิทัศน์') || c.includes('ส่วนกลาง') || c.includes('landscape')) return 'landscape';
-            if (c.includes('อาหาร') || c.includes('canteen') || c.includes('ซุ้ม')) return 'canteen';
-            if (c.includes('ประชุม') || c.includes('meeting') || c.includes('หอประชุม')) return 'meeting_room';
-            return 'office';
-        }
-
-        function toggleNotification() {
-            const dropdown = document.getElementById('notifDropdown');
-            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-        }
-
-        window.addEventListener('click', function(e) {
-            if (!document.querySelector('.notification-bell').contains(e.target) && 
-                !document.getElementById('notifDropdown').contains(e.target)) {
-                document.getElementById('notifDropdown').style.display = 'none';
-            }
-        });
-
-        function updateNotifications(assessments) {
-            const notifList = document.getElementById('notifList');
-            const badge = document.getElementById('notifBadge');
-            
-            const needsImprovement = assessments.filter(a => a.status === 'Needs Improvement');
-            
-            if (needsImprovement.length > 0) {
-                badge.innerText = needsImprovement.length;
-                badge.style.display = 'block';
-                
-                notifList.innerHTML = '';
-                needsImprovement.forEach(item => {
-                    const areaName = item.area ? item.area.areaName : 'ไม่ระบุพื้นที่';
-                    notifList.innerHTML += `
-                        <div class="notif-item unread" onclick="scrollToCard('card-${item._id}')">
-                            <div style="font-weight: bold; color: #D32F2F;">⚠️️ ต้องปรับปรุงแก้ไข</div>
-                            <div style="font-size: 13px; margin-top: 5px;">พื้นที่: ${areaName}</div>
-                            <div style="font-size: 12px; color: #777; margin-top: 3px;">
-                                รอบ: ${item.assessmentRound}
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                badge.style.display = 'none';
-                notifList.innerHTML = `<div style="padding: 15px; text-align: center; color: #777;">ไม่มีการแจ้งเตือนใหม่</div>`;
-            }
-        }
-
-        function scrollToCard(cardId) {
-            const card = document.getElementById(cardId);
-            if (card) {
-                card.scrollIntoView({ behavior: 'smooth' });
-                card.style.outline = '3px solid #F57C00';
-                setTimeout(() => card.style.outline = 'none', 2000);
-            }
-            document.getElementById('notifDropdown').style.display = 'none';
-        }
-
-        window.onload = function() {
-            const token = localStorage.getItem('authToken');
-            const userStr = localStorage.getItem('userData');
-            
-            if (!token || !userStr) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            const user = JSON.parse(userStr);
-            if (user.role !== 'Area Owner') {
-                alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
-                window.location.href = 'index.html';
-                return;
-            }
-
-            document.getElementById('ownerName').innerText = `Area Owner: ${user.firstName || user.username}`;
-            loadPendingTasks();
-        };
-
-        async function loadPendingTasks() {
-            const token = localStorage.getItem('authToken');
-            const container = document.getElementById('tasksContainer');
-            
-            try {
-                const res = await fetch('https://my-7s-app.onrender.com/api/assessment/pending', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
-
-                updateNotifications(data);
-                
-                if (data.length === 0) {
-                    container.innerHTML = `<p style="text-align:center; color:green; font-weight:bold; font-size:18px;">🎉 ไม่มีรายการที่ต้องปรับปรุงในขณะนี้</p>`;
-                    return;
-                }
-
-                container.innerHTML = '';
-                data.forEach(task => {
-                    const date = new Date(task.createdAt).toLocaleDateString('th-TH');
-                    const location = task.area ? `${task.area.areaName} (${task.area.category || 'ทั่วไป'})` : 'ไม่ระบุ';
-                    
-                    const catKey = getCategoryKey(task.area ? task.area.category : '');
-                    const criteriaTitles = CATEGORY_CRITERIA_TITLES[catKey] || CATEGORY_CRITERIA_TITLES.office;
-                    const maxScore = criteriaTitles.length * 4;
-
-                    // คัดเฉพาะข้อที่ได้ต่ำกว่า 3 คะแนน เพื่อแสดงให้ผู้รับผิดชอบเห็นจุดที่ต้องแก้ไข
-                    let defectItemsHtml = '';
-                    if (task.scores && task.scores.length > 0) {
-                        task.scores.forEach(s => {
-                            if (s.score < 3) {
-                                const title = criteriaTitles[s.sectionNumber - 1] || `ข้อที่ ${s.sectionNumber}`;
-                                defectItemsHtml += `
-                                    <div class="defect-item">
-                                        <span>• ${title}</span>
-                                        <b style="color: #D32F2F;">ได้ ${s.score} / 4 คะแนน</b>
-                                    </div>
-                                `;
-                            }
-                        });
-                    }
-
-                    if (defectItemsHtml === '') {
-                        defectItemsHtml = '<div style="color: #666; font-size: 13px;">ไม่มีข้อที่คะแนนต่ำเป็นพิเศษ</div>';
-                    }
-
-                    // แสดงสถานะถ้าส่งงานแก้ไปแล้ว
-                    const isSubmitted = task.status === 'Corrected';
-                    const formDisabled = isSubmitted ? 'style="display:none;"' : '';
-                    const waitingNotice = isSubmitted ? `
-                        <div style="background:#E3F2FD; color:#0277BD; padding:12px; border-radius:5px; margin-top:15px; font-weight:bold;">
-                            ⏳ คุณได้ส่งรายงานการแก้ไขแล้ว อยู่ระหว่างรอผู้ดูแลระบบตรวจสอบและอนุมัติ
-                        </div>
-                    ` : '';
-
-                    container.innerHTML += `
-                        <div class="alert-card" id="card-${task._id}">
-                            <h3>⚠️ แจ้งให้ปรับปรุง: ${location}</h3>
-                            <p style="margin: 4px 0;"><strong>วันที่ประเมิน:</strong> ${date}</p>
-                            <p style="margin: 4px 0;"><strong>รอบการประเมิน:</strong> <span style="color:#0277BD; font-weight:bold;">${task.assessmentRound || 'ไม่ระบุ'}</span></p>
-                            <p style="margin: 4px 0;"><strong>คะแนนรวมที่ได้:</strong> <b style="color:#D32F2F;">${task.totalScore || 0} / ${maxScore} คะแนน</b> (คิดเป็น ${task.percentage}%)</p>
-                            
-                            <div class="defect-box">
-                                <h4>🔍 รายการที่ไม่ผ่านเกณฑ์หรือได้คะแนนต่ำ (ต้องแก้ไข):</h4>
-                                ${defectItemsHtml}
-                            </div>
-
-                            ${waitingNotice}
-
-                            <div class="feedback-form" ${formDisabled}>
-                                <h4 style="margin-top:0;">📝 ส่งรายงานผลการปรับปรุงแก้ไข</h4>
-                                
-                                <div class="form-group">
-                                    <label>อธิบายรายละเอียดการแก้ไขที่ดำเนินการแล้ว:</label>
-                                    <textarea id="desc-${task._id}" rows="3" placeholder="ระบุสิ่งที่ท่านได้ดำเนินการปรับปรุงแก้ไข..."></textarea>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>แนบรูปภาพหลักฐานหลังปรับปรุง:</label>
-                                    <input type="file" id="file-${task._id}" accept="image/*" style="padding: 5px;" onchange="previewImage(event, '${task._id}')">
-                                    <div id="preview-${task._id}" style="margin-top: 10px; text-align: center;"></div>
-                                </div>
-
-                                <button class="btn-submit" onclick="submitFeedback('${task._id}')">💾 ส่งรายงานให้ผู้ดูแลระบบ</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error("Error loading tasks:", error);
-                container.innerHTML = '<p style="color:red; text-align:center;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
-            }
-        }
-
-        function previewImage(event, recordId) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const previewDiv = document.getElementById(`preview-${recordId}`);
-                    previewDiv.innerHTML = `<img src="${e.target.result}" style="max-height: 180px; border-radius: 5px; border: 1px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">`;
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        async function submitFeedback(recordId) {
-            const desc = document.getElementById(`desc-${recordId}`).value.trim();
-            const fileInput = document.getElementById(`file-${recordId}`);
-            const file = fileInput.files[0];
-
-            if (!desc) {
-                alert('กรุณากรอกคำอธิบายการแก้ไข');
-                return;
-            }
-
-            let base64Image = '';
-            if (file) {
-                base64Image = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            const token = localStorage.getItem('authToken');
-            try {
-                const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${recordId}/resolve`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ 
-                        detail: desc,
-                        photoUrl: base64Image
-                    }) 
-                });
-
-                if (res.ok) {
-                    alert('✅ ส่งรายงานและรูปภาพหลักฐานเรียบร้อยแล้ว!');
-                    loadPendingTasks();
-                } else {
-                    alert('❌ เกิดข้อผิดพลาดในการส่งข้อมูล รูปภาพอาจมีขนาดใหญ่เกินไป');
-                }
-            } catch (error) {
-                alert('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ');
-            }
-        }
-
-        function logout() {
-            localStorage.clear();
+    window.onload = function() {
+        const token = localStorage.getItem('authToken');
+        const userStr = localStorage.getItem('userData');
+        if (!token || !userStr) {
             window.location.href = 'index.html';
+            return;
         }
-    </script>
+
+        const user = JSON.parse(userStr);
+        document.getElementById('ownerName').innerText = user.fullName || user.firstName || user.username;
+        loadOwnerTasks();
+    };
+
+    async function loadOwnerTasks() {
+        const token = localStorage.getItem('authToken');
+        try {
+            const res = await fetch('https://my-7s-app.onrender.com/api/assessment/pending', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            currentTasksList = data;
+
+            const tbPending = document.getElementById('tablePendingTasks');
+            const tbHistory = document.getElementById('tableHistoryTasks');
+            tbPending.innerHTML = '';
+            tbHistory.innerHTML = '';
+
+            let hasPending = false;
+            let hasHistory = false;
+
+            data.forEach(item => {
+                const date = new Date(item.createdAt).toLocaleDateString('th-TH');
+                const location = item.area ? `${item.area.areaName} (${item.area.category || 'ทั่วไป'})` : 'ไม่ระบุ';
+
+                if (item.status === 'Needs Improvement' || item.status === 'Corrected') {
+                    hasPending = true;
+                    const statusBadge = item.status === 'Needs Improvement' 
+                        ? `<span class="badge badge-warning">รอการแก้ไข</span>`
+                        : `<span class="badge badge-info">รอ Admin ตรวจรับงาน</span>`;
+
+                    const btnFix = item.status === 'Needs Improvement'
+                        ? `<button class="btn-action" onclick="openCorrectionModal('${item._id}')">🛠️ ส่งงานแก้ไข</button>`
+                        : `<span style="font-size:0.85em; color:var(--text-muted); font-weight:500;">ส่งเอกสารแล้ว</span>`;
+
+                    tbPending.innerHTML += `
+                        <tr>
+                            <td>${date}</td>
+                            <td><b>${location}</b></td>
+                            <td><strong style="color:var(--danger); font-family:Inter;">${item.percentage}%</strong></td>
+                            <td>${statusBadge}</td>
+                            <td>${btnFix}</td>
+                        </tr>
+                    `;
+                } else if (item.status === 'Passed' || item.status === 'Approved') {
+                    hasHistory = true;
+                    tbHistory.innerHTML += `
+                        <tr>
+                            <td>${date}</td>
+                            <td><b>${location}</b></td>
+                            <td><strong style="color:var(--primary); font-family:Inter;">${item.percentage}%</strong></td>
+                            <td><span class="badge badge-success">ผ่านเกณฑ์รับรอง</span></td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if (!hasPending) tbPending.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">ไม่มีรายการที่ต้องปรับปรุงแก้ไขในขณะนี้</td></tr>';
+            if (!hasHistory) tbHistory.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">ยังไม่มีประวัติการประเมินที่ผ่านเกณฑ์</td></tr>';
+        } catch (err) {
+            console.error('Error fetching tasks:', err);
+        }
+    }
+
+    document.getElementById('ownerFixPhotoInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                ownerFixPhotoBase64 = event.target.result;
+                document.getElementById('ownerFixPreview').src = ownerFixPhotoBase64;
+                document.getElementById('ownerFixPreviewContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function openCorrectionModal(id) {
+        const task = currentTasksList.find(t => t._id === id);
+        if (!task) return;
+
+        activeTaskId = id;
+        document.getElementById('correctionDetail').value = '';
+        document.getElementById('ownerFixPhotoInput').value = '';
+        document.getElementById('ownerFixPreviewContainer').style.display = 'none';
+        ownerFixPhotoBase64 = '';
+
+        const imgContainer = document.getElementById('assessorImageContainer');
+        if (task.evidencePhoto) {
+            imgContainer.innerHTML = `<img src="${task.evidencePhoto}" style="max-width:100%; max-height:220px; border-radius:8px; border:1px solid #fecdd3; box-shadow:var(--shadow-sm);">`;
+        } else {
+            imgContainer.innerHTML = '<span style="color: var(--text-muted); font-size:0.9em;">(กรรมการผู้ตรวจไม่ได้แนบรูปภาพ)</span>';
+        }
+
+        document.getElementById('assessorCommentText').innerText = task.assessorComment ? `คำแนะนำ: "${task.assessorComment}"` : '';
+        document.getElementById('correctionModal').style.display = 'flex';
+    }
+
+    function closeCorrectionModal() {
+        document.getElementById('correctionModal').style.display = 'none';
+    }
+
+    async function submitCorrection() {
+        const detail = document.getElementById('correctionDetail').value.trim();
+        if (!detail) {
+            alert('กรุณาระบุรายละเอียดสิ่งที่ได้ทำการปรับปรุงแก้ไข');
+            return;
+        }
+
+        const token = localStorage.getItem('authToken');
+        try {
+            const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${activeTaskId}/resolve`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    detail: detail,
+                    photoUrl: ownerFixPhotoBase64
+                })
+            });
+
+            if (res.ok) {
+                alert('ส่งมอบรายงานการแก้ไขให้ผู้ดูแลระบบเรียบร้อยแล้ว');
+                closeCorrectionModal();
+                loadOwnerTasks();
+            } else {
+                alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+            }
+        } catch (err) {
+            alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+        }
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'index.html';
+    }
+</script>
 </body>
 </html>

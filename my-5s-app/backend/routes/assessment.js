@@ -15,7 +15,7 @@ const verifyToken = (req, res, next) => {
     }
     
     const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey5s', (err, decoded) => {
         if (err) {
             return res.status(401).json({ message: 'กุญแจหมดอายุหรือไม่ถูกต้อง' });
         }
@@ -29,16 +29,16 @@ router.get('/test', (req, res) => {
     res.json({ message: 'Assessment Route is working perfectly!' });
 });
 
-// 🟢 1. บันทึกผลการประเมิน Green 7S Plus
+// 🟢 1. บันทึกผลการประเมิน Green 7S Plus (รองรับรูปภาพหลักฐานและข้อเสนอแนะ)
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { area, assessmentRound, scores, totalScore, percentage } = req.body;
+        const { area, assessmentRound, scores, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
 
         if (!area || !assessmentRound) {
             return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน กรุณาเลือกพื้นที่และรอบการประเมิน' });
         }
 
-        // ตัดเกรดสถานะ: เกณฑ์ Green 7S Plus คือ ต่ำกว่า 80% ต้องปรับปรุง (Needs Improvement)
+        // เกณฑ์ Green 7S Plus: ต่ำกว่า 80% ต้องปรับปรุง (Needs Improvement)
         const evaluationStatus = Number(percentage) < 80 ? 'Needs Improvement' : 'Passed';
 
         const newAssessment = new Assessment({
@@ -48,7 +48,10 @@ router.post('/', verifyToken, async (req, res) => {
             scores: scores,
             totalScore: totalScore,
             percentage: percentage,
-            status: evaluationStatus
+            status: evaluationStatus,
+            // 📸 บันทึกรูปและคอมเมนต์ของผู้ประเมิน
+            evidencePhoto: evidencePhoto || '',
+            assessorComment: assessorComment || ''
         });
 
         await newAssessment.save();
@@ -79,7 +82,8 @@ router.post('/', verifyToken, async (req, res) => {
                                 <p>รอบการประเมิน: <b>${assessmentRound}</b></p>
                                 <p>คะแนนรวมที่ได้: <b>${totalScore} คะแนน</b></p>
                                 <p>คิดเป็น: <b><span style="color:#D32F2F; font-size: 1.25em;">${percentage}%</span></b> (ต่ำกว่าเกณฑ์ร้อยละ 80)</p>
-                                <p>กรุณาเข้าสู่ระบบเพื่อตรวจสอบรายการที่ต้องปรับปรุงและส่งหลักฐานการแก้ไข</p>
+                                ${assessorComment ? `<p>ข้อเสนอแนะ: <i>${assessorComment}</i></p>` : ''}
+                                <p>กรุณาเข้าสู่ระบบเพื่อตรวจสอบรายการที่ต้องปรับปรุงและส่งหลักฐานภาพถ่ายการแก้ไข</p>
                             </div>
                         `
                     };
@@ -94,7 +98,7 @@ router.post('/', verifyToken, async (req, res) => {
             }
         }
 
-        res.status(201).json({ success: true, message: 'บันทึกผลการประเมินเรียบร้อยแล้ว' });
+        res.status(201).json({ success: true, message: 'บันทึกผลการประเมินเรียบร้อยแล้ว', data: newAssessment });
 
     } catch (error) {
         console.error('❌ Error saving assessment:', error); 
@@ -117,7 +121,7 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// 🟢 3. ดึงรายการงานที่ต้องแก้ไข (สำหรับ Owner Dashboard)
+// 🟢 3. ดึงรายการงานที่ต้องแก้ไข (สำหรับ Owner Dashboard - พร้อมส่งรูปผู้ตรวจให้เจ้าของห้องดู)
 router.get('/pending', verifyToken, async (req, res) => {
     try {
         const userId = req.user.userId || req.user.id;
@@ -142,7 +146,7 @@ router.get('/pending', verifyToken, async (req, res) => {
     }
 });
 
-// 🟢 4. ดึงข้อมูลการประเมินแบบเจาะจง 1 รายการ (สำหรับเปิด Modal ดูคะแนนรายข้อ)
+// 🟢 4. ดึงข้อมูลการประเมินแบบเจาะจง 1 รายการ (สำหรับเปิด Modal ดูคะแนนและรูปหลักฐานทั้งสองฝั่ง)
 router.get('/:id', verifyToken, async (req, res) => {
     try {
         const assessment = await Assessment.findById(req.params.id)
@@ -159,7 +163,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     }
 });
 
-// 🟢 5. เจ้าของพื้นที่ส่งรายงานการแก้ไข (Resolve Task)
+// 🟢 5. เจ้าของพื้นที่ส่งรายงานการแก้ไขและรูปถ่าย (Resolve Task)
 router.patch('/:id/resolve', verifyToken, async (req, res) => {
     try {
         const { detail, photoUrl } = req.body;
