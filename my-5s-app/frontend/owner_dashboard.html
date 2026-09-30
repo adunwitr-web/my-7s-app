@@ -65,7 +65,6 @@
 
         .container { max-width: 1100px; margin: 25px auto; padding: 0 20px; }
 
-        /* หนังสือแจ้งเตือนราชการ (Official Alert Banner) */
         .official-notice-box {
             display: none;
             background: #fff7ed;
@@ -126,7 +125,6 @@
             cursor: pointer;
         }
 
-        /* หน้าต่างป๊อปอัปส่งมอบงาน */
         .modal {
             display: none;
             position: fixed;
@@ -158,7 +156,6 @@
             padding-bottom: 12px;
             margin-bottom: 16px;
         }
-        .modal-header h3 { margin: 0; font-size: 1.15em; font-weight: 700; }
         .form-control {
             width: 100%;
             padding: 9px 12px;
@@ -176,7 +173,7 @@
         <div class="gov-emblem">🏛️</div>
         <div class="gov-title">
             <h1>ระบบติดตามผลการประเมินมาตรฐานสถานที่ (ฝ่ายสถานที่และกายภาพ)</h1>
-            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
+            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทยาลัยรัตภูมิ</p>
         </div>
     </div>
     <div class="gov-user-panel">
@@ -189,7 +186,7 @@
 </header>
 
 <main class="container">
-    <!-- หนังสือแจ้งเตือนราชการเมื่อมีจุดบกพร่อง -->
+    <!-- บันทึกข้อความแจ้งเตือนด่วน -->
     <div id="urgentAlertBox" class="official-notice-box">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
             <div>
@@ -205,7 +202,7 @@
         </div>
     </div>
 
-    <!-- รายการข้อตรวจพบที่ต้องดำเนินการแก้ไข -->
+    <!-- รายการข้อตรวจพบที่ต้องปรับปรุง -->
     <section class="doc-panel" style="border-top: 4px solid #ea580c;">
         <div class="doc-panel-header">
             <h2 style="color: #9a3412;">📋 บัญชีรายการข้อตรวจพบที่ต้องปรับปรุงแก้ไข (Action Plan)</h2>
@@ -229,7 +226,7 @@
     <!-- ประวัติสถานที่ที่ผ่านการรับรองมาตรฐาน -->
     <section class="doc-panel" style="border-top: 4px solid var(--gov-primary);">
         <div class="doc-panel-header">
-            <h2 style="color: var(--gov-primary);">📜 ทะเบียนประวัติสถานที่ที่ผ่านการรับรองมาตรฐานแล้ว</h2>
+            <h2 style="color: var(--gov-primary);">📜 ทะเบียนประวัติสถานที่ที่ผ่านการรับรองมาตรฐาน</h2>
         </div>
         <table class="gov-table">
             <thead>
