@@ -164,6 +164,63 @@
             font-family: inherit;
             font-size: 0.95em;
         }
+
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            font-size: 22px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .notif-badge {
+            position: absolute;
+            top: -5px;
+            right: -8px;
+            background: #dc2626;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .notif-dropdown {
+            display: none;
+            position: absolute;
+            top: 65px;
+            right: 130px;
+            background: white;
+            color: #0f172a;
+            width: 320px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border-radius: 6px;
+            z-index: 1000;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--gov-border);
+        }
+        .notif-header {
+            padding: 12px 15px;
+            font-weight: bold;
+            border-bottom: 1px solid var(--gov-border);
+            background: #f8fafc;
+            border-radius: 6px 6px 0 0;
+            color: var(--gov-primary-dark);
+        }
+        .notif-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .notif-item:hover { background: #f1f5f9; }
+        .notif-item.unread {
+            background: #fff7ed;
+            border-left: 4px solid #ea580c;
+        }
+
     </style>
 </head>
 <body>
@@ -172,16 +229,27 @@
     <div class="gov-title-box">
         <div class="gov-emblem">🏛️</div>
         <div class="gov-title">
-            <h1>ระบบติดตามผลการประเมินมาตรฐานสถานที่ (ฝ่ายสถานที่และกายภาพ)</h1>
+            <h1>ระบบติดตามผลการประเมินมาตรฐานสถานที่ (ฝ่ายสถานที่และการจัดการ)</h1>
             <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทยาลัยรัตภูมิ</p>
         </div>
     </div>
     <div class="gov-user-panel">
+        <div class="notification-bell" onclick="toggleNotification()">
+            🔔
+            <span id="notifBadge" class="notif-badge">0</span>
+        </div>
+        
+        <div id="notifDropdown" class="notif-dropdown">
+            <div class="notif-header">การแจ้งเตือนของคุณ</div>
+            <div id="notifList">
+                <div style="padding: 15px; text-align: center; color: #64748b;">ไม่มีการแจ้งเตือนใหม่</div>
+            </div>
+        </div>
         <div class="gov-user-tag">
             <span>ผู้รับผิดชอบสถานที่: </span>
             <strong id="ownerName">กำลังโหลด...</strong>
         </div>
-        <button class="btn-gov-logout" onclick="logout()">ออกจากระบบงาน</button>
+        <button class="btn-gov-logout" onclick="logout()">ออกจากระบบ</button>
     </div>
 </header>
 
@@ -218,7 +286,7 @@
                 </tr>
             </thead>
             <tbody id="tablePendingTasks">
-                <tr><td colspan="5" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังตรวจสอบข้อมูลสารสนเทศ...</td></tr>
+                <tr><td colspan="5" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังตรวจสอบข้อมูล...</td></tr>
             </tbody>
         </table>
     </section>
@@ -265,7 +333,7 @@
                 <textarea id="correctionDetail" placeholder="ระบุการดำเนินงาน เช่น ทำความสะอาดจุดสัมผัส, จัดระเบียบสายไฟและอุปกรณ์เรียบร้อย..." class="form-control" style="height: 85px;"></textarea>
             </div>
             <div>
-                <label style="display:block; font-size: 0.88em; font-weight: 600; margin-bottom: 5px;">📷 ภาพถ่ายเชิงประจักษ์หลังการปรับปรุงเสร็จสิ้น:</label>
+                <label style="display:block; font-size: 0.88em; font-weight: 600; margin-bottom: 5px;">📷 ภาพถ่ายหลังการปรับปรุงเสร็จสิ้น:</label>
                 <input type="file" id="ownerFixPhotoInput" accept="image/*">
                 <div id="ownerFixPreviewContainer" style="display: none; margin-top: 10px; text-align: center;">
                     <img id="ownerFixPreview" style="max-width: 100%; max-height: 220px; border-radius: 4px; border: 1px solid var(--gov-border);">
@@ -307,6 +375,8 @@
             const data = await res.json();
             currentTasksList = data;
 
+            updateNotifications(data);
+
             const tbPending = document.getElementById('tablePendingTasks');
             const tbHistory = document.getElementById('tableHistoryTasks');
             tbPending.innerHTML = '';
@@ -331,11 +401,11 @@
                         : `<span class="status-pill status-info">ส่งรายงานแล้ว (รอการตรวจรับ)</span>`;
 
                     const btnFix = item.status === 'Needs Improvement'
-                        ? `<button class="btn-action-gov" onclick="openCorrectionModal('${item._id}')">ส่งรายงานแก้ไข</button>`
+                        ? `<button class="btn-action-gov" onclick="openCorrectionModal('${item._id}')">ดำเนินการแก้ไข</button>`
                         : `<span style="font-size:0.85em; color:var(--gov-muted);">รอดำเนินการรับรอง</span>`;
 
                     tbPending.innerHTML += `
-                        <tr>
+                        <tr id="row-${item._id}">
                             <td>${date}</td>
                             <td><b>${location}</b></td>
                             <td><strong style="color:#b91c1c;">${item.percentage}%</strong></td>
@@ -456,6 +526,65 @@
         }
     }
 
+    function toggleNotification() {
+        const dropdown = document.getElementById('notifDropdown');
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // 🟢 ปิดกล่องแจ้งเตือนเมื่อคลิกที่อื่นบนหน้าจอ
+    window.addEventListener('click', function(e) {
+        if (!document.querySelector('.notification-bell').contains(e.target) && 
+            !document.getElementById('notifDropdown').contains(e.target)) {
+            document.getElementById('notifDropdown').style.display = 'none';
+        }
+    });
+
+    // 🟢 ฟังก์ชันอัปเดตตัวเลขแจ้งเตือนและสร้างรายการ
+    function updateNotifications(assessments) {
+        const notifList = document.getElementById('notifList');
+        const badge = document.getElementById('notifBadge');
+        const needsImprovement = assessments.filter(a => a.status === 'Needs Improvement');
+        
+        if (needsImprovement.length > 0) {
+            badge.innerText = needsImprovement.length;
+            badge.style.display = 'block';
+            notifList.innerHTML = '';
+            
+            needsImprovement.forEach(item => {
+                const areaName = item.area ? item.area.areaName : 'ไม่ระบุพื้นที่';
+                notifList.innerHTML += `
+                    <div class="notif-item unread" onclick="handleNotificationClick('${item._id}')">
+                        <div style="font-weight: bold; color: #b91c1c;">⚠️ ต้องปรับปรุงแก้ไข</div>
+                        <div style="font-size: 13px; margin-top: 5px;">สถานที่: ${areaName}</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 3px;">ร้อยละ: ${item.percentage}%</div>
+                    </div>
+                `;
+            });
+        } else {
+            badge.style.display = 'none';
+            notifList.innerHTML = `<div style="padding: 15px; text-align: center; color: #64748b;">ไม่มีการแจ้งเตือนใหม่</div>`;
+        }
+    }
+
+    // 🟢 เมื่อคลิกแจ้งเตือน ให้ปิดกล่องและเปิด Modal แทน
+    function handleNotificationClick(taskId) {
+        document.getElementById('notifDropdown').style.display = 'none'; // ปิดกล่องแจ้งเตือน
+        
+        const targetRow = document.getElementById(`row-${taskId}`);
+        if (targetRow) {
+            // เลื่อนหน้าจอให้บรรทัดเป้าหมายมาอยู่กลางจอแบบนุ่มนวล
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // ใส่เอฟเฟกต์ไฮไลต์สีพื้นหลังให้กระพริบเป็นสีส้มอ่อน
+            targetRow.style.transition = 'background-color 0.4s ease';
+            targetRow.style.backgroundColor = '#fed7aa'; 
+            
+            // ลบสีไฮไลต์ออกเมื่อผ่านไป 1.5 วินาที เพื่อคืนสภาพตารางปกติ
+            setTimeout(() => {
+                targetRow.style.backgroundColor = 'transparent'; 
+            }, 1500);
+        }
+    }
     function logout() {
         localStorage.clear();
         window.location.href = 'index.html';

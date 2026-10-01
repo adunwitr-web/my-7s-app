@@ -200,8 +200,8 @@
             <button onclick="toggleDropdown()" class="btn-gov-menu">⚙️ เมนูงานบริหารระบบ ▼</button>
             <div id="settingsDropdown" class="dropdown-menu">
                 <a onclick="openUserModal()">👥 บัญชีทะเบียนบุคลากรและสิทธิ์การตรวจ</a>
-                <a onclick="openSettingsModal()">✉️ การตั้งค่าระบบสื่อสารทางจดหมายอิเล็กทรอนิกส์</a>
-                <a onclick="logout()" style="color:#b91c1c; font-weight:600;">🚪 ออกจากระบบงานกลาง</a>
+                <a onclick="openSettingsModal()">✉️ ตั้งค่าอีเมลระบบ</a>
+                <a onclick="logout()" style="color:#b91c1c; font-weight:600;">🚪 ออกจากระบบ</a>
             </div>
         </div>
     </div>
@@ -236,7 +236,7 @@
             <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr></tbody>
         </table>
 
-        <h4 style="color: #ea580c; margin: 25px 0 6px 0;">2. รายการส่งมอบรายงานปรับปรุงสถานที่ (รอการตรวจรับงาน)</h4>
+        <h4 style="color: #ea580c; margin: 25px 0 6px 0;">2. รายการส่งมอบรายงานปรับปรุงสถานที่ (รอการตรวจสอบ)</h4>
         <table class="gov-table">
             <thead>
                 <tr><th>วันที่ส่งรายงาน</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
@@ -291,7 +291,7 @@
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
                 <input type="text" id="newUsername" placeholder="ชื่อบัญชี (Username)" class="form-control">
                 <input type="password" id="newPassword" placeholder="รหัสผ่าน (เริ่มต้น 123456)" class="form-control">
-                <input type="email" id="newEmail" placeholder="จดหมายอิเล็กทรอนิกส์ (@rmutsv.ac.th)" class="form-control">
+                <input type="email" id="newEmail" placeholder="Email (ex.@rmutsv.ac.th)" class="form-control">
                 <input type="text" id="newFirstName" placeholder="ชื่อจริง" class="form-control">
                 <input type="text" id="newLastName" placeholder="นามสกุล" class="form-control">
                 <select id="newRole" class="form-control">

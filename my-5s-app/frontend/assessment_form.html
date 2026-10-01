@@ -252,7 +252,7 @@
             <span>คณะกรรมการตรวจประเมิน: </span>
             <strong id="assessorName">กำลังโหลด...</strong>
         </div>
-        <button class="btn-gov-logout" onclick="logout()">ออกจากระบบงาน</button>
+        <button class="btn-gov-logout" onclick="logout()">ออกจากระบบ</button>
     </div>
 </header>
 
@@ -783,13 +783,13 @@
             });
             const data = await res.json();
             if (res.ok) {
-                alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบสารสนเทศเรียบร้อยแล้ว');
+                alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบเรียบร้อยแล้ว');
                 window.location.reload();
             } else {
                 alert('ไม่สามารถบันทึกได้: ' + (data.message || ''));
             }
         } catch (err) {
-            alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบสารสนเทศได้');
+            alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบได้');
         }
     }
 
