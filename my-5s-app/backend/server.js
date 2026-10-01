@@ -5,7 +5,7 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-
+const systemConfigRoutes = require('./routes/systemConfig');
 // อนุญาตให้ Frontend เรียกใช้ API ได้โดยไม่ติด CORS
 app.use(cors({
     origin: '*',
