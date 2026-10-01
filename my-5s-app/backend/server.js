@@ -27,6 +27,7 @@ app.use('/api/assessment', require('./routes/assessment'));
 app.use('/api/areas', require('./routes/area'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/system-config', require('./routes/systemConfig'));
+app.use('/api/systemConfig', require('./routes/systemConfig'));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
