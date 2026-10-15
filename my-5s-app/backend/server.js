@@ -5,7 +5,7 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const systemConfigRoutes = require('./routes/systemConfig');
+
 // อนุญาตให้ Frontend เรียกใช้ API ได้โดยไม่ติด CORS
 app.use(cors({
     origin: '*',
@@ -26,8 +26,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/assessment', require('./routes/assessment'));
 app.use('/api/areas', require('./routes/area'));
 app.use('/api/user', require('./routes/user'));
+app.use('/api/forms', require('./routes/forms'));
 app.use('/api/system-config', require('./routes/systemConfig'));
-app.use('/api/systemConfig', require('./routes/systemConfig'));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
