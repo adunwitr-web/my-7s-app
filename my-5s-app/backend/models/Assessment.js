@@ -8,6 +8,21 @@ const assessmentSchema = new mongoose.Schema({
         sectionNumber: { type: Number, required: true },
         score: { type: Number, required: true }
     }],
+
+    items: [{
+        topicName: String,
+        maxScore: Number,
+        score: Number,
+        isNA: { type: Boolean, default: false },
+        // 🟢 เพิ่ม subItems เพื่อเก็บข้อความและรอยติ๊กแต่ละข้อ (1.1, 1.2, ...)
+        subItems: [{
+            text: String,
+            checked: Boolean
+        }],
+
+        topicPhoto: { type: String, default: '' }
+    }],
+    
     totalScore: { type: Number, required: true },
     percentage: { type: Number, required: true },
     status: {
