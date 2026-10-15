@@ -187,7 +187,7 @@
     <div class="gov-title-box">
         <div class="gov-emblem">🏛️</div>
         <div class="gov-title">
-            <h1>ระบบบริหารจัดการและทะเบียนกลาง มาตรฐาน 7ส.</h1>
+            <h1>ระบบบริหารจัดการและทะเบียนกลาง มาตรฐาน 7s Plus. และสิ่งแวดล้อม</h1>
             <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย • งานเลขานุการคณะกรรมการฯ</p>
         </div>
     </div>
@@ -200,6 +200,10 @@
             <button onclick="toggleDropdown()" class="btn-gov-menu">⚙️ เมนูงานบริหารระบบ ▼</button>
             <div id="settingsDropdown" class="dropdown-menu">
                 <a onclick="openUserModal()">👥 บัญชีทะเบียนบุคลากรและสิทธิ์การตรวจ</a>
+                <a href="#" onclick="document.getElementById('excelFileInput').click(); return false;" style="cursor: pointer;">
+                📄 อัปโหลดแบบฟอร์มประเมิน (Excel)
+                </a>
+                <a onclick="openRoundSettingModal()">📅 เปิด-ปิด รอบการประเมิน</a>
                 <a onclick="openSettingsModal()">✉️ ตั้งค่าอีเมลระบบ</a>
                 <a onclick="logout()" style="color:#b91c1c; font-weight:600;">🚪 ออกจากระบบ</a>
             </div>
@@ -272,9 +276,59 @@
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
             <h3 style="margin:0;">บันทึกรายงานผลการตรวจประเมินมาตรฐาน</h3>
+            
             <button onclick="closeModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
         <div id="modalBody"></div>
+
+        
+
+    </div>
+</div>
+
+<div id="editAssessmentModal" class="modal">
+    <div class="modal-content" style="max-width: 650px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0;">✏️ แก้ไขคะแนนประเมินรายหัวข้อ</h3>
+            <button onclick="closeEditAssessmentModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
+        </div>
+        
+        <!-- พื้นที่สำหรับสร้างฟอร์มหัวข้ออัตโนมัติ -->
+        <div id="editAssessmentBody" style="max-height: 50vh; overflow-y: auto; margin-bottom: 15px;">
+            <p style="text-align:center;">กำลังโหลดข้อมูล...</p>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">วันที่ตรวจประเมิน:</label>
+            <input type="date" id="editAssessmentDate" class="form-control">
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; padding-top:15px; border-top:1px solid #f1f5f9;">
+            <button onclick="saveAssessmentChanges()" class="btn-table" style="background:#ea580c; color:white; padding:8px 16px; font-size:0.95em;">
+                💾 บันทึกและคำนวณคะแนนใหม่
+            </button>
+        </div>
+    </div>
+</div>
+
+<div style="background: #fff; padding: 25px; border: 1px solid var(--gov-border); border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <h3 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">📁 คลังแบบฟอร์มประเมินในระบบ</h3>
+    
+    <div style="overflow-x: auto;">
+        <table class="doc-table" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+            <thead style="background: #f8fafc;">
+                <tr>
+                    <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 15%;">วันที่สร้าง</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 35%;">ชื่อแบบฟอร์ม</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 25%;">ประเภทพื้นที่รองรับ</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 15%;">สถานะ</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 10%; text-align: center;">จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="adminFormsTableBody">
+                <tr><td colspan="5" style="text-align:center; padding: 25px; color: #64748b;">กำลังโหลดข้อมูล...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -298,6 +352,9 @@
                     <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
                     <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
                     <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบสถานที่</option>
+                    <!-- 🟢 เพิ่ม 2 บรรทัดด้านล่างนี้เข้าไปครับ -->
+                    <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบสถานที่</option>
+                    <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบสถานที่</option>
                 </select>
                 <select id="newAssignedArea" class="form-control">
                     <option value="">-- โปรดระบุสถานที่รับผิดชอบ --</option>
@@ -388,7 +445,126 @@
     </div>
 </div>
 
+<div id="roundSettingModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
+            <h3 style="margin:0;">📅 กำหนดรอบการประเมินและระยะเวลา</h3>
+            <button onclick="closeRoundSettingModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
+        </div>
+        
+        <div style="background:#e0f2fe; padding:12px; border-radius:4px; border-left:4px solid #0284c7; margin-bottom:15px;">
+            <p style="margin:0; font-size:0.9em; color:#0369a1;">เมื่อกำหนดรอบและเวลาแล้ว ระบบจะบังคับให้กรรมการตรวจประเมินได้เฉพาะในช่วงเวลาที่กำหนดเท่านั้น</p>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">เลือกรอบการประเมินที่ต้องการเปิด:</label>
+            <select id="configRoundName" class="form-control">
+                <option value="">-- ปิดรับการประเมินชั่วคราว --</option>
+                <option value="ประเมินภายใน ครั้งที่ 1">ประเมินภายใน ครั้งที่ 1</option>
+                <option value="ประเมินภายใน ครั้งที่ 2">ประเมินภายใน ครั้งที่ 2</option>
+                <option value="ประเมินภายใน ครั้งที่ 3">ประเมินภายใน ครั้งที่ 3</option>
+                <option value="ประเมินภายนอก">ประเมินภายนอก</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <div style="flex:1;">
+                <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">วันที่เริ่มต้น:</label>
+                <input type="datetime-local" id="configStartDate" class="form-control">
+            </div>
+            <div style="flex:1;">
+                <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">วันที่สิ้นสุด (Deadline):</label>
+                <input type="datetime-local" id="configEndDate" class="form-control">
+            </div>
+        </div>
+
+        <button onclick="saveRoundConfig()" class="btn-table" style="background:#0284c7; color:white; width:100%; padding:10px;">
+            บันทึกการเปิดรอบประเมิน
+        </button>
+    </div>
+</div>
+
+<!-- กล่องสำหรับแสดง Preview ฟอร์ม (ซ่อนไว้ก่อน จะโชว์ตอนอัปโหลดไฟล์เสร็จ) -->
+<div id="formPreviewContainer" style="display: none; background: #ffffff; padding: 25px; border: 1px solid var(--gov-border); border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <h4 style="margin-top: 0; margin-bottom: 20px; color: #b45309; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; font-size: 1.2em;">👀 ตรวจสอบและแก้ไขแบบฟอร์มก่อนบันทึก</h4>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div>
+            <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ชื่อแบบฟอร์มนี้:</label>
+            <input type="text" id="previewFormName" placeholder="เช่น แบบตรวจประเมิน 7s Plus. สำหรับห้องเรียน" class="form-control">
+        </div>
+        <div>
+            <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ประเภทพื้นที่ที่ใช้ฟอร์มนี้:</label>
+            <select id="previewTargetAreas" class="form-control">
+                <option value="สำนักงาน และห้องพักอาจารย์">สำนักงาน และห้องพักอาจารย์</option>
+                <option value="ห้องสมุด">ห้องสมุด</option>
+                <option value="ห้องเรียน">ห้องเรียน</option>
+                <option value="ห้องปฏิบัติการทดลอง">ห้องปฏิบัติการทดลอง</option>
+                <option value="โรงฝึกงาน">โรงฝึกงาน</option>
+                <option value="ภูมิทัศน์และพื้นที่ส่วนกลาง">ภูมิทัศน์และพื้นที่ส่วนกลาง</option>
+                <option value="ห้องปฏิบัติการคอมพิวเตอร์">ห้องปฏิบัติการคอมพิวเตอร์</option>
+                <option value="อาคารสถานที่และความปลอดภัยอาคาร">อาคารสถานที่และความปลอดภัยอาคาร</option>
+                <option value="โรงอาหารและซุ้มอาหาร">โรงอาหารและซุ้มอาหาร</option>
+                <option value="ห้องประชุมและหอประชุม">ห้องประชุมและหอประชุม</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ส่วนตั้งเวลาเผยแพร่ -->
+    <div style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+        <label style="font-weight: 600; font-size: 0.95em; display: block; margin-bottom: 12px; color: #1e293b;">สถานะการเผยแพร่ให้ผู้ประเมิน:</label>
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="radio" name="publishMode" value="immediate" checked onchange="document.getElementById('scheduleContainer').style.display='none'"> 
+                <span>🟢 อัปโหลดขึ้นหน้าผู้ประเมินทันที</span>
+            </label>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="radio" name="publishMode" value="draft" onchange="document.getElementById('scheduleContainer').style.display='none'"> 
+                <span>📝 บันทึกเป็นฉบับร่างไว้ก่อน</span>
+            </label>
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="radio" name="publishMode" value="scheduled" onchange="document.getElementById('scheduleContainer').style.display='block'"> 
+                <span>⏰ ตั้งเวลาเผยแพร่ล่วงหน้า</span>
+            </label>
+        </div>
+        
+        <div id="scheduleContainer" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
+            <label style="font-size: 0.9em; font-weight: 600; color: #475569; display: block; margin-bottom: 8px;">เลือกวันที่และเวลาที่ต้องการให้ฟอร์มออนไลน์:</label>
+            <input type="datetime-local" id="publishDateTime" class="form-control" style="max-width: 300px;">
+        </div>
+    </div>
+
+    <!-- ตารางให้แอดมินดูและแก้ไข -->
+    <div style="max-height: 450px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 25px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+        <table class="doc-table" style="width: 100%; border-collapse: collapse; margin: 0;">
+            <thead style="position: sticky; top: 0; background: #f1f5f9; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <tr>
+                    <th style="width: 10%; padding: 12px; text-align: center; border-bottom: 2px solid #cbd5e1;">หมวด</th>
+                    <th style="width: 25%; padding: 12px; border-bottom: 2px solid #cbd5e1;">ชื่อหมวด</th>
+                    <th style="width: 65%; padding: 12px; border-bottom: 2px solid #cbd5e1;">รายละเอียดข้อย่อย (คลิกเพื่อแก้ไข)</th>
+                </tr>
+            </thead>
+            <tbody id="previewTableBody">
+                <!-- ข้อมูลจาก Excel จะมาแสดงตรงนี้ -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ปุ่ม Action แยกออกมาด้านล่างชัดเจน -->
+    <div style="display: flex; justify-content: flex-end; gap: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+        <button onclick="cancelPreview()" class="btn-submit-doc" style="background: #dc3545; color: white; width: auto; padding: 10px 25px; border-radius: 6px; border: none;">
+            ❌ ยกเลิก
+        </button>
+        <button onclick="saveFormToDatabase()" class="btn-submit-doc" style="background: #2e7d32; color: white; width: auto; padding: 10px 25px; border-radius: 6px; border: none;">
+            💾 ยืนยันและบันทึกฟอร์มลงระบบ
+        </button>
+    </div>
+</div>
+
 <script>
+    const API_URL = 'http://localhost:3000/api';
+
     window.onload = function() {
         const token = localStorage.getItem('authToken');
         const userStr = localStorage.getItem('userData');
@@ -448,14 +624,16 @@
                 const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">ดูบันทึกตรวจ</button>`;
                 const btnApprove = `<button onclick="approveCorrection('${item._id}')" class="btn-table btn-approve">รับรองผล</button>`;
                 const btnReject = `<button onclick="rejectCorrection('${item._id}')" class="btn-table btn-reject">ส่งกลับแก้ไข</button>`;
+                const btnEdit = `<button onclick="editAssessment('${item._id}')" class="btn-table" style="background:#f59e0b; color:white; margin-left:4px;">แก้ไข</button>`;
+                const btnPDF = `<button onclick="downloadPDF('${item._id}')" class="btn-table" style="background:#0ea5e9; color:white; margin-left:4px;">โหลด PDF</button>`;
 
                 if (item.status === 'Passed') {
-                    tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove}</td></tr>`;
+                    tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnEdit} ${btnPDF}</td></tr>`;
                 } else if (item.status === 'Corrected') {
                     const submitDate = item.correctionData?.submittedAt ? new Date(item.correctionData.submittedAt).toLocaleDateString('th-TH') : date;
-                    tbPendingReview.innerHTML += `<tr><td>${submitDate}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject}</td></tr>`;
+                    tbPendingReview.innerHTML += `<tr><td>${submitDate}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
                 } else if (item.status === 'Approved') {
-                    const row = `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td>${item.percentage}%</td><td><span style="color:#15803d; font-weight:600;">ผ่านการรับรองแล้ว</span></td><td>${btnView}</td></tr>`;
+                    const row = `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td>${item.percentage}%</td><td><span style="color:#15803d; font-weight:600;">ผ่านการรับรองแล้ว</span></td><td>${btnView} ${btnPDF}</td></tr>`;
                     if (item.correctionData && item.correctionData.submittedAt) {
                         tbHistoryCorrected.innerHTML += row;
                     } else {
@@ -682,7 +860,7 @@
 
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/user', {
+            const res = await fetch(`http://localhost:3000/api/user`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ username, password: password || '123456', email, firstName, lastName, role, assignedArea })
@@ -750,6 +928,731 @@
         localStorage.clear();
         window.location.href = 'index.html';
     }
+    
+async function downloadPDF(assessmentId) {
+    if (!assessmentId || assessmentId === 'undefined') {
+        alert('ไม่พบรหัสอ้างอิงของแบบประเมินนี้ (ID หายไป)');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const fetchUrl = `https://my-7s-app.onrender.com/api/assessment/${assessmentId}`;
+        
+        const res = await fetch(fetchUrl, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            alert('ดึงข้อมูลไม่สำเร็จ: ' + (data.message || 'ไม่ทราบสาเหตุ'));
+            return;
+        }
+
+        alert('กำลังเตรียมเอกสาร PDF...');
+
+        const areaText = typeof data.area === 'object' && data.area !== null ? (data.area.areaName || data.area.name || 'ไม่ระบุ') : (data.area || 'ไม่ระบุ');
+        const assessorText = typeof data.assessor === 'object' && data.assessor !== null ? (data.assessor.fullName || data.assessor.firstName || 'คณะกรรมการ') : (data.assessor || 'คณะกรรมการ');
+
+        // 1. สร้างเนื้อหา HTML 
+        let contentHtml = `
+            <div style="text-align: center; border-bottom: 2px solid #15803d; padding-bottom: 10px; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #15803d;">รายงานผลการตรวจประเมิน 7 Plus. และสิ่งแวดล้อม</h2>
+                <h4 style="margin: 5px 0 0 0; color: #475569;">วิทยาลัยรัตภูมิ มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</h4>
+            </div>
+            <table style="width: 100%; margin-bottom: 20px; font-size: 14px; line-height: 1.8;">
+                <tr>
+                    <td style="width: 50%;"><b>สถานที่รับการตรวจ:</b> ${areaText}</td>
+                    <td style="width: 50%;"><b>วันที่ตรวจประเมิน:</b> ${data.createdAt ? new Date(data.createdAt).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
+                </tr>
+                <tr>
+                    <td><b>รอบการประเมิน:</b> ${data.assessmentRound || 'ไม่ระบุ'}</td>
+                    <td><b>ผู้ตรวจประเมิน:</b> ${assessorText}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="background-color: #f1f5f9; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #cbd5e1;">
+                        <b>คะแนนรวม:</b> ${data.totalScore} คะแนน 
+                        &nbsp;&nbsp;|&nbsp;&nbsp; <b>คิดเป็นร้อยละ:</b> <span style="color: #15803d; font-weight: bold;">${data.percentage}%</span>
+                        &nbsp;&nbsp;|&nbsp;&nbsp; <b>สถานะ:</b> ${Number(data.percentage) >= 80 ? 'ผ่านเกณฑ์' : 'ต้องปรับปรุง'}
+                    </td>
+                </tr>
+            </table>
+            <h4 style="border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 15px;">รายละเอียดการตรวจประเมินรายข้อ และภาพหลักฐาน</h4>
+        `;
+
+        if (data.items && data.items.length > 0) {
+            data.items.forEach((item, idx) => {
+                const topicScoreText = item.isNA ? '<span style="color:#b91c1c;">(ไม่ประเมิน N/A)</span>' : `<span style="color:#15803d;">(${item.score} / ${item.maxScore} คะแนน)</span>`;
+                
+                contentHtml += `
+                    <div class="keep-together" style="margin-bottom: 20px;">
+                        <div style="font-weight: bold; background-color: #e2e8f0; padding: 5px 10px; border-radius: 4px; font-size: 14px; margin-bottom: 8px;">
+                            ${item.topicName || `หมวดที่ \${idx+1}`} ${topicScoreText}
+                        </div>
+                `;
+
+                if (!item.isNA && item.subItems && item.subItems.length > 0) {
+                    contentHtml += `<ul style="list-style-type: none; padding-left: 15px; margin: 0; font-size: 13px;">`;
+                    item.subItems.forEach(sub => {
+                        const icon = sub.checked ? '<span style="color:#15803d; font-size:16px;">☑</span>' : '<span style="color:#94a3b8; font-size:16px;">☐</span>';
+                        contentHtml += `<li style="margin-bottom: 5px;">${icon} ${sub.text}</li>`;
+                    });
+                    contentHtml += `</ul>`;
+                }
+
+                if (item.topicPhoto) {
+                    contentHtml += `
+                        <div style="margin-top: 10px; text-align: center;">
+                            <img src="${item.topicPhoto}" style="max-height: 250px; max-width: 90%; border-radius: 4px; border: 1px solid #cbd5e1;">
+                        </div>
+                    `;
+                }
+
+                contentHtml += `</div>`;
+            });
+        }
+
+        // 2. ห่อด้วยโครงสร้าง HTML หลักและใส่ CSS สำหรับหน้ากระดาษ (Print Media)
+      const printHtml = '<!DOCTYPE html>\n' +
+            '<html>\n' +
+            '<head>\n' +
+            '    <title>รายงานผลประเมิน_7ส_' + areaText + '</title>\n' +
+            '    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">\n' +
+            '    <style>\n' +
+            '        body { font-family: "Sarabun", sans-serif; color: #1e293b; }\n' +
+            '        @media print {\n' +
+            '            /* 🟢 ซ่อน Header (วันที่) และ Footer (URL) */\n' +
+            '            @page { size: A4; margin: 0; }\n' +
+            '            body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }\n' +
+            '            .keep-together { page-break-inside: avoid !important; break-inside: avoid !important; display: block; }\n' +
+            '        }\n' +
+            '    </style>\n' +
+            '</head>\n' +
+            '<' + 'body>\n' +
+            '    <table style="width: 100%; border: none; border-collapse: collapse;">\n' +
+            '        <!-- 🟢 ขอบบน: ห่างจากขอบกระดาษ 20mm -->\n' +
+            '        <thead><tr><td style="height: 20mm; border: none; padding: 0;"></td></tr></thead>\n' +
+            '        <tbody><tr><td style="border: none; padding: 0;">\n' +
+            '            <!-- 🟢 ขอบซ้าย-ขวา: บังคับใช้ padding 15mm ห่อหุ้มเนื้อหาทั้งหมดเอาไว้ -->\n' +
+            '            <div style="padding: 0 15mm;">\n' +
+            contentHtml + '\n' +
+            '            </div>\n' +
+            '        </td></tr></tbody>\n' +
+            '        <!-- 🟢 ขอบล่าง: ห่างจากขอบกระดาษ 15mm -->\n' +
+            '        <tfoot><tr><td style="height: 15mm; border: none; padding: 0;"></td></tr></tfoot>\n' +
+            '    </table>\n' +
+            '<' + '/body>\n' +
+            '<' + '/html>';
+
+        // 3. สร้าง Iframe ซ่อนไว้เพื่อจัดการการสั่งพิมพ์
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(printHtml);
+        iframe.contentDocument.close();
+
+        // 4. รอให้รูปและฟอนต์โหลดเสร็จ แล้วเรียกหน้าต่าง Print ขึ้นมา
+        iframe.onload = function() {
+            setTimeout(() => {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+                
+                // ลบ Iframe ออกหลังใช้งานเสร็จเพื่อไม่ให้รกหน่วยความจำ
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 5000);
+            }, 800); 
+        };
+
+    } catch (err) {
+        console.error('Error generating PDF:', err);
+        alert('เกิดข้อผิดพลาดของระบบ: ' + err.message);
+    }
+}
+
+    function openRoundSettingModal() {
+        document.getElementById('roundSettingModal').style.display = 'flex';
+        document.getElementById('settingsDropdown').classList.remove('show-dropdown');
+        // ดึงข้อมูลเดิมมาแสดง (ถ้ามี API ดึงข้อมูล config ให้เรียกใช้ตรงนี้)
+    }
+
+    function closeRoundSettingModal() {
+        document.getElementById('roundSettingModal').style.display = 'none';
+    }
+
+    // 🟢 ฟังก์ชันส่งข้อมูลรอบการประเมินไปบันทึกที่หลังบ้าน
+    async function saveRoundConfig() {
+        const roundName = document.getElementById('configRoundName').value;
+        const startDate = document.getElementById('configStartDate').value;
+        const endDate = document.getElementById('configEndDate').value;
+
+        // ถ้าเลือกรอบประเมิน ต้องบังคับให้ใส่วันที่ด้วย
+        if (roundName && (!startDate || !endDate)) {
+            alert('กรุณากำหนดวันเริ่มต้นและวันสิ้นสุดให้ครบถ้วนครับ');
+            return;
+        }
+
+        if (startDate && endDate && (new Date(startDate) > new Date(endDate))) {
+            alert('วันที่สิ้นสุดต้องไม่มาก่อนวันที่เริ่มต้นครับ');
+            return;
+        }
+
+        const token = localStorage.getItem('authToken');
+        
+        try {
+            // ส่งข้อมูลไปเซฟที่ Backend (สมมติว่าใช้ API systemConfig ตัวเดียวกับที่เซฟอีเมล)
+            const res = await fetch('http://localhost:3000/api/system-config/round', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ 
+                    activeRound: roundName, 
+                    roundStartDate: startDate, 
+                    roundEndDate: endDate 
+                })
+            });
+
+            if (res.ok) {
+                alert('บันทึกรอบการประเมินและระยะเวลาสำเร็จ! ระบบผู้ตรวจจะถูกอัปเดตตามนี้');
+                closeRoundSettingModal();
+            } else {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ');
+        }
+    }
+
+    let currentEditId = '';
+    let currentEditItems = []; // เก็บโครงสร้างหัวข้อเพื่อเอาไปคำนวณ
+
+    function closeEditAssessmentModal() {
+        document.getElementById('editAssessmentModal').style.display = 'none';
+    }
+
+    // 🟢 1. ฟังก์ชันเปิดหน้าต่างและโหลดหัวข้อทั้งหมดมาแสดง
+    async function editAssessment(id) {
+        currentEditId = id;
+        const token = localStorage.getItem('authToken');
+        
+        document.getElementById('editAssessmentModal').style.display = 'flex';
+        const body = document.getElementById('editAssessmentBody');
+        body.innerHTML = '<p style="text-align:center;">กำลังดึงข้อมูลหัวข้อประเมิน...</p>';
+
+        try {
+            const res = await fetch(`${API_URL}/assessment/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            console.log('ข้อมูลที่ดึงมาจาก Database:', data);
+            // ตั้งค่าวันที่เดิม
+            document.getElementById('editAssessmentDate').value = new Date(data.createdAt).toISOString().split('T')[0];
+            
+            // ตรวจสอบว่ามีข้อมูลรายหัวข้อ (items) หรือไม่
+            if (data.items && data.items.length > 0) {
+                currentEditItems = data.items;
+                let html = '<div style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">';
+                
+                data.items.forEach((item, index) => {
+                    const topicName = item.topicName || `หัวข้อที่ ${index+1}`;
+                    const maxScore = item.maxScore || 4;
+
+                    html += `
+                    <div class="card mb-3" id="admin-topic-card-${index}">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background-color:#f8fafc;">
+                            <h5 class="mb-0" style="font-size:1em; font-weight:bold; color:var(--gov-primary-dark);">${topicName}</h5>
+                            <label style="color: #b91c1c; font-weight:bold; cursor:pointer; font-size:0.9em;">
+                                <input type="checkbox" id="admin-na-${index}" ${item.isNA ? 'checked' : ''} onchange="adminToggleNA(${index})" style="transform: scale(1.3); margin-right:5px;"> 
+                                ไม่ประเมิน (N/A)
+                            </label>
+                        </div>
+                        <div class="card-body" style="${item.isNA ? 'opacity: 0.5;' : ''}">
+                            <ul style="list-style:none; padding-left:0;">
+                    `;
+
+                    // 🟢 วาดข้อย่อย 1.1, 1.2 ให้แอดมินติ๊กได้เหมือนผู้ตรวจ
+                    if (item.subItems && item.subItems.length > 0) {
+                        item.subItems.forEach((sub, subIdx) => {
+                            html += `
+                                <li style="margin-bottom: 8px; font-size:0.9em;">
+                                    <label style="cursor:pointer; display:flex; align-items:flex-start;">
+                                        <input type="checkbox" class="admin-crit-${index}" ${sub.checked ? 'checked' : ''} ${item.isNA ? 'disabled' : ''} onchange="adminCalculateScore()" style="transform: scale(1.3); margin-top:4px; margin-right:10px; accent-color:var(--gov-primary);">
+                                        <span>${sub.text}</span>
+                                    </label>
+                                </li>
+                            `;
+                        });
+                    } else {
+                        html += `<li style="color:#b91c1c;">(ข้อมูลเก่าไม่มีรายละเอียดข้อย่อย กรุณากดลบแล้วประเมินใหม่)</li>`;
+                    }
+
+                    html += `
+                            </ul>
+                            <div style="text-align: right; margin-top: 10px; font-size: 0.9em; border-top:1px dashed #cbd5e1; padding-top:10px;">
+                                <b>คะแนนหมวดนี้:</b> <span id="admin-score-text-${index}" style="font-weight:bold; color:${item.isNA ? '#b91c1c' : '#15803d'}">${item.isNA ? 'N/A' : `${item.score} /${maxScore}`}</span>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                
+                html += '</div>';
+                
+                // 🟢 เพิ่มส่วนสรุปคะแนนรวมด้านล่างสุดของหน้าต่าง
+                html += `
+                <div style="background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-top: 15px; text-align: center; border: 2px solid #cbd5e1;">
+                    <h4 style="margin:0; color: var(--gov-primary-dark);">คะแนนรวม: <span id="admin-total-score">${data.totalScore}</span> / <span id="admin-max-score">0</span></h4>
+                    <p style="margin:5px 0 0 0; font-weight:bold;">คิดเป็นร้อยละ: <span id="admin-percentage" style="color:var(--gov-primary); font-size:1.2em;">${data.percentage}</span>%</p>
+                </div>
+                `;
+                
+                body.innerHTML = html;
+                
+                // สั่งคำนวณคะแนนแอดมินตอนเปิดหน้าต่างครั้งแรก
+                setTimeout(() => { adminCalculateScore(); }, 100);
+                
+            } else {
+                body.innerHTML = '<p style="text-align:center; color:#b91c1c;">ไม่พบรายละเอียดรายหัวข้อในระบบ</p>';
+            }
+        } catch (err) {
+            console.error('เกิดข้อผิดพลาดในการดึงข้อมูล:', err);
+            body.innerHTML = '<p style="text-align:center;">ไม่สามารถดึงข้อมูลได้</p>';
+        }
+    }
+
+    // 🟢 2. ฟังก์ชันล็อกช่องกรอกคะแนน ถ้าติ๊ก "ไม่ประเมิน (N/A)"
+    function toggleNA(index) {
+        const isNA = document.getElementById(`editNA_${index}`).checked;
+        document.getElementById(`editScore_${index}`).disabled = isNA;
+    }
+
+    // 🟢 3. ฟังก์ชันคำนวณคะแนนใหม่และส่งไปหลังบ้าน
+    async function saveAssessmentChanges() {
+        const token = localStorage.getItem('authToken');
+        
+        // 1. ดึงคะแนนรวมที่คำนวณเสร็จแล้วจากด้านล่างของหน้าต่าง
+        const newTotalScore = parseFloat(document.getElementById('admin-total-score').innerText);
+        const newPercentage = parseFloat(document.getElementById('admin-percentage').innerText);
+        const newStatus = newPercentage < 80 ? 'Needs Improvement' : 'Passed';
+
+        // 2. กวาดข้อมูลรอยติ๊กจากข้อย่อยทั้งหมดมาอัปเดต
+        const updatedItems = currentEditItems.map((item, index) => {
+            const isNA = document.getElementById(`admin-na-${index}`)?.checked || false;
+            const checkboxes = document.querySelectorAll(`.admin-crit-${index}`);
+            const checkedCount = document.querySelectorAll(`.admin-crit-${index}:checked`).length;
+
+            // อัปเดตรอยติ๊กใน subItems (1.1, 1.2, ...)
+            let updatedSubItems = [];
+            if (item.subItems && item.subItems.length > 0) {
+                updatedSubItems = item.subItems.map((sub, subIdx) => {
+                    return {
+                        text: sub.text,
+                        checked: checkboxes[subIdx] ? checkboxes[subIdx].checked : false
+                    };
+                });
+            }
+
+            return {
+                topicName: item.topicName,
+                maxScore: item.maxScore,
+                score: isNA ? 0 : checkedCount,
+                isNA: isNA,
+                subItems: updatedSubItems
+            };
+        });
+
+        // 3. อัปเดตตาราง scores ให้ตรงกันเผื่อ Database ต้องใช้
+        const updatedScores = updatedItems.map((item, index) => ({
+            sectionNumber: index + 1,
+            score: item.score
+        }));
+
+        // 4. ส่งข้อมูลชุดใหม่ไปให้เซิร์ฟเวอร์
+        const payload = {
+            items: updatedItems,
+            scores: updatedScores,
+            totalScore: newTotalScore,
+            percentage: newPercentage,
+            status: newStatus
+        };
+
+        try {
+            // (อย่าลืมเช็กว่า API เปลี่ยนแปลงข้อมูลของคุณใช้ PUT หรือ PATCH นะครับ ปกติจะเป็น PUT)
+            const res = await fetch(`${API_URL}/assessment/${currentEditId}/edit`, {
+                method: 'PATCH', 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('บันทึกการแก้ไขข้อมูลสำเร็จเรียบร้อย');
+                window.location.reload(); // รีเฟรชหน้าให้ข้อมูลใหม่แสดง
+            } else {
+                const data = await res.json();
+                alert('ไม่สามารถบันทึกได้: ' + (data.message || ''));
+            }
+        } catch (err) {
+            console.error('Error saving assessment:', err);
+            alert('ระบบขัดข้อง ไม่สามารถบันทึกข้อมูลได้');
+        }
+    }
+
+    function adminToggleNA(index) {
+        const isNA = document.getElementById(`admin-na-${index}`).checked;
+        const checkboxes = document.querySelectorAll(`.admin-crit-${index}`);
+        const cardBody = document.querySelector(`#admin-topic-card-${index} .card-body`);
+        
+        checkboxes.forEach(cb => {
+            cb.disabled = isNA;
+            if (isNA) cb.checked = false; // ถ้า N/A เอาติ๊กออกให้หมด
+        });
+        
+        if (cardBody) cardBody.style.opacity = isNA ? '0.5' : '1';
+        adminCalculateScore();
+    }
+
+    function adminCalculateScore() {
+        let totalScore = 0;
+        let actualMaxScore = 0;
+
+        currentEditItems.forEach((item, index) => {
+            const isNA = document.getElementById(`admin-na-${index}`)?.checked;
+            const checkboxes = document.querySelectorAll(`.admin-crit-${index}`);
+            const maxScore = checkboxes.length;
+            
+            const scoreText = document.getElementById(`admin-score-text-${index}`);
+            
+            if (isNA) {
+                if (scoreText) {
+                    scoreText.innerText = 'N/A';
+                    scoreText.style.color = '#b91c1c';
+                }
+            } else {
+                const checkedCount = document.querySelectorAll(`.admin-crit-${index}:checked`).length;
+                totalScore += checkedCount;
+                actualMaxScore += maxScore; // รวมคะแนนเต็มเฉพาะข้อที่ตรวจ
+                
+                if (scoreText) {
+                    scoreText.innerText = `${checkedCount} / ${maxScore}`;
+                    scoreText.style.color = '#15803d';
+                }
+            }
+        });
+
+        // คำนวณเปอร์เซ็นต์
+        const percent = actualMaxScore > 0 ? ((totalScore / actualMaxScore) * 100).toFixed(2) : "0.00";
+        
+        document.getElementById('admin-total-score').innerText = totalScore;
+        document.getElementById('admin-max-score').innerText = actualMaxScore;
+        document.getElementById('admin-percentage').innerText = percent;
+    }
+
+    function processExcelForm() {
+    const fileInput = document.getElementById('excelFileInput');
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+        
+        const tbody = document.getElementById('previewTableBody');
+        tbody.innerHTML = '';
+
+        let currentCatNum = '';
+        let currentCatName = '';
+
+        // เริ่มวนลูปอ่านข้อมูลบรรทัดที่ 2 เป็นต้นไป
+        for (let i = 1; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (row.length === 0) continue;
+
+            const catNum = row[0] || '';
+            const catName = row[1] || '';
+            const itemNum = row[2] || '';
+            const subDetail = row[3] || '';
+
+            if (catNum) {
+                currentCatNum = catNum;
+                currentCatName = catName;
+            }
+
+            // สร้างแถวตาราง พร้อมทำให้ช่องรายละเอียดสามารถคลิกพิมพ์แก้ไขได้ (contenteditable)
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="td-cat-num" contenteditable="true" style="text-align:center; font-weight:bold; background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขเลขหมวด">
+                    ${currentCatNum}
+                </td>
+                <td class="td-cat-title" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขชื่อหมวด">
+                    ${currentCatName}
+                </td>
+                <td class="td-cat-item" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขรายละเอียดข้อย่อย">
+                    ${itemNum ? itemNum + ' ' : ''}${subDetail}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+        
+        // 🟢 ส่วนที่แก้ไข: แสดงกล่อง Preview และสั่งให้เลื่อนหน้าจอลงมาอัตโนมัติ
+        const previewContainer = document.getElementById('formPreviewContainer');
+        previewContainer.style.display = 'block';
+        previewContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    reader.readAsArrayBuffer(file);
+}
+// ฟังก์ชันยกเลิกการแสดง Preview
+function cancelPreview() {
+    document.getElementById('formPreviewContainer').style.display = 'none';
+    document.getElementById('excelFileInput').value = '';
+    document.getElementById('previewFormName').value = '';
+    document.getElementById('previewTargetAreas').value = '';
+}
+
+// ฟังก์ชันดึงข้อมูลจากตารางที่อาจจะถูกแก้ไขแล้ว ส่งไปบันทึกที่ Database
+function saveFormToDatabase() {
+    const formName = document.getElementById('previewFormName').value.trim();
+    const targetAreas = [document.getElementById('previewTargetAreas').value]; 
+    
+    const publishMode = document.querySelector('input[name="publishMode"]:checked').value;
+    let publishDate = null;
+    if (publishMode === 'scheduled') {
+        publishDate = document.getElementById('publishDateTime').value;
+        if (!publishDate) {
+            alert('⚠️ กรุณาระบุวันและเวลาที่ต้องการเผยแพร่ครับ');
+            return;
+        }
+    }
+
+    if (!formName) {
+        alert('⚠️ กรุณาระบุ "ชื่อแบบฟอร์ม" ก่อนบันทึกครับ');
+        return;
+    }
+
+    let categories = [];
+    let currentCat = null;
+    const rows = document.querySelectorAll('#previewTableBody tr');
+
+    rows.forEach(row => {
+        const catNum = row.querySelector('.td-cat-num').innerText.trim();
+        const catTitle = row.querySelector('.td-cat-title').innerText.trim();
+        const itemDetail = row.querySelector('.td-cat-item').innerText.trim();
+
+        if (!currentCat || currentCat.num !== catNum) {
+            currentCat = { num: catNum, title: catTitle, items: [] };
+            categories.push(currentCat);
+        }
+        if (itemDetail) {
+            currentCat.items.push(itemDetail);
+        }
+    });
+
+    const token = localStorage.getItem('authToken');
+    
+    // 🟢 ส่วนที่แก้ไข: เช็คว่ากำลัง "แก้ไข" หรือ "สร้างใหม่"
+    const isEdit = currentEditFormId !== null;
+    const url = isEdit ? `http://localhost:3000/api/forms/${currentEditFormId}` : 'http://localhost:3000/api/forms/upload';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    // ส่งข้อมูลไป Backend
+    fetch(url, {
+        method: method, // 🟢 ใช้ตัวแปร method ที่เช็คมาแล้ว
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ 
+            formName: formName, 
+            targetAreas: targetAreas, 
+            categories: categories,
+            publishMode: publishMode,
+            publishDate: publishDate
+        })
+    })
+    .then(res => res.json())
+    .then(response => {
+        alert('✅ ' + (response.message || 'บันทึกแบบฟอร์มสำเร็จ!'));
+        cancelPreview(); 
+        
+        // 🟢 เพิ่มบรรทัดนี้: คืนค่าให้รู้ว่าเลิกแก้ไขแล้ว เพื่อให้การกดอัปโหลด Excel ครั้งถัดไปเป็นการสร้างฟอร์มใหม่ปกติ
+        currentEditFormId = null; 
+        
+        loadAdminForms();
+    })
+    .catch(err => {
+        console.error(err);
+        alert('❌ ระบบขัดข้อง ไม่สามารถบันทึกแบบฟอร์มได้');
+    });
+}
+
+let allAdminFormsData = []; // ตัวแปรเก็บข้อมูลฟอร์มทั้งหมดไว้ใช้ตอนกดปุ่มแก้ไข
+let currentEditFormId = null; // ตัวแปรเช็คว่ากำลังสร้างใหม่หรือแก้ไข
+
+// 1. ฟังก์ชันโหลดตาราง (อัปเดตปุ่มจัดการ)
+async function loadAdminForms() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const res = await fetch('http://localhost:3000/api/forms/all', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            allAdminFormsData = await res.json();
+            const tbody = document.getElementById('adminFormsTableBody');
+            tbody.innerHTML = '';
+            
+            if (allAdminFormsData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 25px; color: #64748b;">ยังไม่มีแบบฟอร์มในระบบ</td></tr>';
+                return;
+            }
+
+            allAdminFormsData.forEach(form => {
+                const dateStr = new Date(form.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+                
+                let statusBadge = '';
+                // ครอบปุ่มด้วย div และใช้ Flexbox เพื่อให้ปุ่มเรียงแนวนอนและเว้นระยะห่าง
+                let actionButtons = `<div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">`;
+                
+                actionButtons += `<button onclick="editForm('${form._id}')" style="background:#f59e0b; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">✏️ แก้ไข</button>`;
+
+                if (form.publishMode === 'immediate') {
+                    statusBadge = '<span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:4px; font-size:0.85em; font-weight:600;">🟢 ใช้งานจริง</span>';
+                    // เพิ่มปุ่มพักการใช้งานสำหรับฟอร์มที่มีสถานะใช้งานจริง
+                    actionButtons += `<button onclick="pauseForm('${form._id}')" style="background:#64748b; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">⏸️ พักใช้งาน</button>`;
+                } else {
+                    if (form.publishMode === 'draft') {
+                        statusBadge = '<span style="background:#f1f5f9; color:#475569; padding:4px 8px; border-radius:4px; font-size:0.85em; font-weight:600;">📝 ฉบับร่าง</span>';
+                    } else if (form.publishMode === 'scheduled') {
+                        const sDate = new Date(form.publishDate).toLocaleDateString('th-TH');
+                        statusBadge = `<span style="background:#fef9c3; color:#854d0e; padding:4px 8px; border-radius:4px; font-size:0.85em; font-weight:600;">⏰ ตั้งเวลา (${sDate})</span>`;
+                    }
+                    // ปุ่มเปิดใช้งานสำหรับฉบับร่างหรือแบบตั้งเวลา
+                    actionButtons += `<button onclick="publishForm('${form._id}')" style="background:#10b981; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">🚀 ใช้งาน</button>`;
+                }
+
+                actionButtons += `<button onclick="deleteForm('${form._id}')" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">🗑️ ลบ</button>`;
+                
+                actionButtons += `</div>`; // ปิด div ของชุดปุ่ม
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${dateStr}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight:bold; color: #0f172a;">${form.formName}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #334155;">${form.targetAreas.join(', ')}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${statusBadge}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">${actionButtons}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// 2. ฟังก์ชันลบฟอร์ม
+async function deleteForm(id) {
+    if(!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบแบบฟอร์มนี้? (ไม่สามารถกู้คืนได้)')) return;
+    const token = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`http://localhost:3000/api/forms/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
+        if(res.ok) { alert('ลบแบบฟอร์มสำเร็จ'); loadAdminForms(); }
+    } catch (err) { alert('ระบบขัดข้อง ลบไม่สำเร็จ'); }
+}
+
+// 3. ฟังก์ชันนำไปใช้งานจริง (เปลี่ยนจากฉบับร่าง)
+async function publishForm(id) {
+    if(!confirm('ต้องการเปิดใช้งานแบบฟอร์มนี้ให้ผู้ประเมินเห็นทันทีใช่หรือไม่?')) return;
+    const token = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`http://localhost:3000/api/forms/${id}/publish`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` }});
+        if(res.ok) { alert('เปิดใช้งานสำเร็จ!'); loadAdminForms(); }
+    } catch (err) { alert('ระบบขัดข้อง'); }
+}
+
+async function pauseForm(id) {
+    if(!confirm('ต้องการพักการใช้งานแบบฟอร์มนี้ใช่หรือไม่?\n(ผู้ประเมินจะไม่เห็นฟอร์มนี้ จนกว่าคุณจะกดเปิดใช้งานอีกครั้ง)')) return;
+    const token = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`http://localhost:3000/api/forms/${id}/pause`, { 
+            method: 'PATCH', 
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if(res.ok) { 
+            alert('⏸️ พักการใช้งานสำเร็จ! ฟอร์มถูกเปลี่ยนเป็นฉบับร่างแล้ว'); 
+            loadAdminForms(); // รีเฟรชตาราง
+        }
+    } catch (err) { 
+        alert('ระบบขัดข้อง'); 
+    }
+}
+// 4. ฟังก์ชันกดปุ่มแก้ไข (ดึงข้อมูลเก่ามาโชว์ในกล่อง Preview)
+function editForm(id) {
+    const form = allAdminFormsData.find(f => f._id === id);
+    if (!form) return;
+    
+    currentEditFormId = id; // บันทึกไว้ว่ากำลังแก้ไข
+    document.getElementById('previewFormName').value = form.formName;
+    document.getElementById('previewTargetAreas').value = form.targetAreas[0] || 'สำนักงาน';
+    
+    // จัดการ Radio Button
+    document.querySelector(`input[name="publishMode"][value="${form.publishMode}"]`).checked = true;
+    if (form.publishMode === 'scheduled' && form.publishDate) {
+        document.getElementById('scheduleContainer').style.display = 'block';
+        document.getElementById('publishDateTime').value = new Date(form.publishDate).toISOString().slice(0, 16);
+    } else {
+        document.getElementById('scheduleContainer').style.display = 'none';
+    }
+
+    // วาดตารางข้อย่อยใหม่
+    const tbody = document.getElementById('previewTableBody');
+    tbody.innerHTML = '';
+    form.categories.forEach(cat => {
+        cat.items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="td-cat-num" contenteditable="true" style="text-align:center; font-weight:bold; background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขเลขหมวด">
+                    ${cat.num}
+                </td>
+                <td class="td-cat-title" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขชื่อหมวด">
+                    ${cat.title}
+                </td>
+                <td class="td-cat-item" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขรายละเอียดข้อย่อย">
+                    ${item}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+
+    // โชว์กล่อง Preview
+    const previewContainer = document.getElementById('formPreviewContainer');
+    previewContainer.style.display = 'block';
+    previewContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// สั่งให้โหลดตารางทันทีที่เปิดหน้าเว็บ
+window.addEventListener('DOMContentLoaded', loadAdminForms);
+
 </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="processExcelForm()">
 </body>
 </html>

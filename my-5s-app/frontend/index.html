@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ - ระบบประเมิน Green 7S Plus มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</title>
+    <title>เข้าสู่ระบบ - ระบบประเมิน Green 7S Plus มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทย่ลัยรัตภูมิ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -138,8 +138,8 @@
 <div class="login-card">
     <div class="institution-logo">🏛️</div>
     <div class="login-header">
-        <h2>ระบบประเมิน 7ส. ออนไลน์ (Green 7S Plus)</h2>
-        <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
+        <h2>ระบบประเมิน 7Plus. ออนไลน์ (Green 7S Plus)</h2>
+        <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทยาลัยรัตภูมิ</p>
     </div>
 
     <form onsubmit="handleLogin(event)">
@@ -193,17 +193,21 @@
 
                 // จำแนกสิทธิ์แล้วส่งไปหน้า Dashboard ตามบทบาท
                 const role = data.user.role;
+                
                 if (role === 'Admin') {
                     window.location.href = 'admin_dashboard.html';
-                } else if (role === 'Area Owner') {
+                } 
+                // 🟢 เช็กคำว่า 'Area Owner' ก่อน มันจะครอบคลุมทั้งเจ้าของห้องปกติ และ แบบควบตำแหน่ง
+                else if (role.includes('Area Owner')) {
                     window.location.href = 'owner_dashboard.html';
-                } else if (role && role.includes('Assessor')) {
+                } 
+                // 🟢 ค่อยเช็ก Assessor สำหรับพวกที่เป็นกรรมการล้วนๆ
+                else if (role.includes('Assessor')) {
                     window.location.href = 'assessment_form.html';
-                } else {
+                } 
+                else {
                     window.location.href = 'assessment_form.html';
                 }
-            } else {
-                alert('❌ ' + (data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'));
             }
         } catch (err) {
             console.error('Login error:', err);

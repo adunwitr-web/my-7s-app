@@ -243,8 +243,8 @@
     <div class="gov-title-box">
         <div class="gov-emblem">🏛️</div>
         <div class="gov-title">
-            <h1>ระบบสารสนเทศการประเมินมาตรฐาน 7ส.</h1>
-            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
+            <h1>ระบบสารสนเทศการประเมินมาตรฐาน 7 Plus. และสิ่งแวดล้อม (Green 7S Plus)</h1>
+            <p>มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทยาลัยรัตภูมิ</p>
         </div>
     </div>
     <div class="gov-user-panel">
@@ -252,6 +252,9 @@
             <span>คณะกรรมการตรวจประเมิน: </span>
             <strong id="assessorName">กำลังโหลด...</strong>
         </div>
+        <button id="btnSwitchToOwner" style="display: none; background: #00bcd4; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px;" onclick="window.location.href='owner_dashboard.html'">
+    🔄 โหมดเจ้าของพื้นที่
+        </button>
         <button class="btn-gov-logout" onclick="logout()">ออกจากระบบ</button>
     </div>
 </header>
@@ -319,15 +322,9 @@
         </div>
 
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--gov-border);">
-            <h3 style="margin: 0 0 8px 0; font-size: 1.05em; color: #b45309;">📷 ภาพถ่ายจุดที่ต้องปรับปรุงแก้ไข / ข้อเสนอแนะเพื่อการปรับปรุงแก้ไข</h3>
-            <p style="font-size: 0.88em; color: var(--gov-muted); margin-top: 0;">หากมีเกณฑ์ข้อใดไม่ผ่าน หรือได้คะแนนต่ำกว่า 3 สามารถแนบรูปถ่ายเพื่อแจ้งให้ผู้รับผิดชอบสถานที่ดูและดำเนินการแก้ไขได้</p>
-
-            <input type="file" id="evidenceFileInput" accept="image/*" style="margin-bottom: 10px;">
-            <div id="previewContainer" style="display: none; margin-bottom: 15px;">
-                <img id="evidencePreview" style="max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid var(--gov-border);">
-            </div>
-
-            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">ข้อเสนอแนะเพื่อการปรับปรุงแก้ไขรายรอบ:</label>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.05em; color: #b45309;">📝 ข้อเสนอแนะเพื่อการปรับปรุงแก้ไข</h3>
+    
+            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">ข้อเสนอแนะรายรอบ:</label>
             <textarea id="assessorComment" placeholder="ระบุข้อเสนอแนะ เช่น จุดที่ต้องจัดเก็บให้เป็นระเบียบ สิ่งที่ต้องทำความสะอาด หรือจุดเสี่ยงความปลอดภัย..." class="form-control" style="height: 85px;"></textarea>
         </div>
 
@@ -336,7 +333,7 @@
 </main>
 
 <script>
-    const API_URL = 'https://my-7s-app.onrender.com/api';
+    const API_URL = 'http://localhost:3000/api';
     let allAreasData = [];
     let currentMaxScore = 48;
     let evidencePhotoBase64 = '';
@@ -543,18 +540,7 @@
         const name = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
         document.getElementById('assessorName').innerText = name;
 
-        document.getElementById('evidenceFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    evidencePhotoBase64 = event.target.result;
-                    document.getElementById('evidencePreview').src = evidencePhotoBase64;
-                    document.getElementById('previewContainer').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        // (ลบส่วน document.getElementById('evidenceFileInput').addEventListener... ออกไปหมดเลย)
 
         loadAreas();
     };
@@ -595,46 +581,42 @@
     }
 
     function onAreaChanged() {
-        const selectedAreaId = document.getElementById('areaSelect').value;
-        const ownerNameDisplay = document.getElementById('ownerNameDisplay');
-        const areaCategoryDisplay = document.getElementById('areaCategoryDisplay');
-        const formTitleDisplay = document.getElementById('formTitleDisplay');
+    const selectedAreaId = document.getElementById('areaSelect').value;
+    const ownerNameDisplay = document.getElementById('ownerNameDisplay');
+    const areaCategoryDisplay = document.getElementById('areaCategoryDisplay');
+    const formTitleDisplay = document.getElementById('formTitleDisplay');
 
-        if (!selectedAreaId) {
-            ownerNameDisplay.innerText = "-";
-            areaCategoryDisplay.innerText = "-";
-            document.getElementById('evaluationItems').innerHTML = '<tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจประเมินด้านบน</td></tr>';
-            document.getElementById('totalScore').innerText = "0";
-            document.getElementById('percentage').innerText = "0.00";
-            document.getElementById('evalStatus').innerText = "-";
-            return;
-        }
-
-        const selectedArea = allAreasData.find(a => a._id === selectedAreaId);
-        if (selectedArea) {
-            let ownerName = "ยังไม่ได้ระบุผู้รับผิดชอบ";
-            if (selectedArea.owner) {
-                const fName = selectedArea.owner.firstName || "";
-                const lName = selectedArea.owner.lastName || "";
-                ownerName = (fName || lName) ? `${fName} ${lName}`.trim() : (selectedArea.owner.username || "ยังไม่ได้ระบุผู้รับผิดชอบ");
-            }
-            ownerNameDisplay.innerText = ownerName;
-
-            const category = selectedArea.category || "สำนักงาน";
-            areaCategoryDisplay.innerText = category;
-
-            const templateKey = detectTemplateKey(category);
-            const template = FORM_TEMPLATES[templateKey] || FORM_TEMPLATES.office;
-
-            formTitleDisplay.innerText = template.title;
-            currentMaxScore = template.maxScore;
-            document.getElementById('maxScoreDisplay').innerText = currentMaxScore;
-            currentCriteriaList = template.criteria;
-
-            renderCleanTable(template.criteria);
-            calculateScoreFromCheckboxes();
-        }
+    // กรณีที่ไม่ได้เลือกห้อง หรือกดกลับไปที่ "-- โปรดระบุสถานที่... --"
+    if (!selectedAreaId) {
+        ownerNameDisplay.innerText = "-";
+        areaCategoryDisplay.innerText = "-";
+        formTitleDisplay.innerText = "ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด";
+        document.getElementById('evaluationItems').innerHTML = '<tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจประเมินด้านบน</td></tr>';
+        document.getElementById('totalScore').innerText = "0";
+        document.getElementById('percentage').innerText = "0.00";
+        document.getElementById('evalStatus').innerText = "-";
+        return;
     }
+
+    const selectedArea = allAreasData.find(a => a._id === selectedAreaId);
+    if (selectedArea) {
+        // 1. อัปเดตชื่อผู้รับผิดชอบ
+        let ownerName = "ยังไม่ได้ระบุผู้รับผิดชอบ";
+        if (selectedArea.owner) {
+            const fName = selectedArea.owner.firstName || "";
+            const lName = selectedArea.owner.lastName || "";
+            ownerName = (fName || lName) ? `${fName} ${lName}`.trim() : (selectedArea.owner.username || "ยังไม่ได้ระบุผู้รับผิดชอบ");
+        }
+        ownerNameDisplay.innerText = ownerName;
+
+        // 2. อัปเดตประเภทพื้นที่ (เช่น "ห้องเรียน", "สำนักงาน")
+        const category = selectedArea.category || "สำนักงาน";
+        areaCategoryDisplay.innerText = category;
+
+        // 🟢 3. ส่วนที่แก้ไขใหม่: โยนประเภทพื้นที่ไปให้ฟังก์ชันโหลดฟอร์มจัดการดึงจาก Database
+        loadFormByAreaType(category);
+    }
+}
 
     function renderCleanTable(criteria) {
         const tbody = document.getElementById('evaluationItems');
@@ -668,6 +650,14 @@
                         <div class="evidence-box">
                             <b>รายการหลักฐาน:</b> ${c.evidence}
                         </div>
+
+                        <!-- 🟢 เพิ่มปุ่มอัปโหลดรูปประจำหัวข้อ ตรงนี้ครับ! -->
+                    <div class="mt-2">
+                        <label class="form-label" style="font-size: 13px;">แนบรูปภาพหลักฐาน (ถ้ามี):</label>
+                        <input type="file" accept="image/*" class="form-control form-control-sm" onchange="compressAndSaveImage(event, '${secNum}')">
+                        <input type="hidden" id="photo-base64-${secNum}" value="">
+                    </div>
+
                     </td>
                     <td class="checklist-cell">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -694,6 +684,10 @@
     }
 
     function checkAllForSection(secNum) {
+        // 🟢 ป้องกันไม่ให้กดปุ่ม "ผ่านทั้งหมด" ได้ ถ้าหัวข้อนี้ถูกติ๊ก N/A อยู่
+        const isNA = document.getElementById(`na-${secNum}`)?.checked;
+        if (isNA) return; 
+
         const boxes = document.querySelectorAll(`.crit-${secNum}`);
         const allChecked = Array.from(boxes).every(b => b.checked);
         boxes.forEach(b => b.checked = !allChecked);
@@ -702,28 +696,48 @@
 
     function calculateScoreFromCheckboxes() {
         let totalScore = 0;
+        let actualMaxScore = 0; // 🟢 เพิ่มตัวแปรนี้เพื่อเก็บ "คะแนนเต็มจริงๆ" (หักข้อที่ N/A ออก)
 
         currentCriteriaList.forEach(c => {
             const secNum = c.num;
-            const checkedBoxes = document.querySelectorAll(`.crit-${secNum}:checked`);
-            const score = checkedBoxes.length;
-            totalScore += score;
-
+            const isNA = document.getElementById(`na-${secNum}`)?.checked;
+            const boxes = document.querySelectorAll(`.crit-${secNum}`);
+            const maxScoreForSection = boxes.length; // ปกติคือ 4 ข้อ
+            
             const scoreBadge = document.getElementById(`score_text_${secNum}`);
-            if (scoreBadge) {
-                scoreBadge.innerText = `${score} / 4`;
-                scoreBadge.style.color = score < 3 ? '#b91c1c' : 'var(--gov-primary)';
-                scoreBadge.style.background = score < 3 ? '#fee2e2' : '#e8f5e9';
-                scoreBadge.style.borderColor = score < 3 ? '#fecdd3' : '#c8e6c9';
+
+            if (isNA) {
+                // 🟢 กรณีติ๊ก ไม่ประเมิน (N/A) -> ข้ามการบวกคะแนน และทำป้ายเป็นสีเทา
+                if (scoreBadge) {
+                    scoreBadge.innerText = `N/A`;
+                    scoreBadge.style.color = '#64748b'; // สีเทา
+                    scoreBadge.style.background = '#f1f5f9';
+                    scoreBadge.style.borderColor = '#cbd5e1';
+                }
+            } else {
+                // 🟢 กรณีประเมินปกติ -> บวกคะแนน และทำสีป้ายตามโค้ดเดิมของคุณ
+                const checkedBoxes = document.querySelectorAll(`.crit-${secNum}:checked`);
+                const score = checkedBoxes.length;
+                totalScore += score;
+                actualMaxScore += maxScoreForSection; // บวกคะแนนเต็มของข้อนี้เข้าไป
+
+                if (scoreBadge) {
+                    scoreBadge.innerText = `${score} / ${maxScoreForSection}`;
+                    scoreBadge.style.color = score < 3 ? '#b91c1c' : 'var(--gov-primary)';
+                    scoreBadge.style.background = score < 3 ? '#fee2e2' : '#e8f5e9';
+                    scoreBadge.style.borderColor = score < 3 ? '#fecdd3' : '#c8e6c9';
+                }
             }
         });
 
-        totalScore = Math.min(totalScore, currentMaxScore);
-        const percent = currentMaxScore > 0 ? ((totalScore / currentMaxScore) * 100) : 0;
+        // 🟢 เปลี่ยนมาใช้ actualMaxScore แทน currentMaxScore เพื่อให้เปอร์เซ็นต์คำนวณถูกต้องเวลาหัก N/A
+        totalScore = Math.min(totalScore, actualMaxScore);
+        const percent = actualMaxScore > 0 ? ((totalScore / actualMaxScore) * 100) : 0;
 
         document.getElementById('totalScore').innerText = totalScore;
         document.getElementById('percentage').innerText = percent.toFixed(2);
 
+        // 🟢 ส่วนสถานะยังคงเงื่อนไขเดิมของคุณเป๊ะๆ
         const statusEl = document.getElementById('evalStatus');
         if (percent >= 80) {
             statusEl.innerText = "ผ่านเกณฑ์ฯ ร้อยละ 80 ขึ้นไป";
@@ -737,22 +751,89 @@
         }
     }
 
-    async function submitAssessment() {
+   async function submitAssessment() {
         const areaId = document.getElementById('areaSelect').value;
         if (!areaId) {
             alert('กรุณาระบุสถานที่รับการตรวจประเมินก่อนลงนามบันทึก');
             return;
         }
 
+        // 🟢 1. ตรวจสอบเวลาเปิด-ปิดรอบประเมินจากระบบก่อน
+        try {
+            const configRes = await fetch(`${API_URL}/system-config/round`);
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                
+                // เช็กว่าผู้ดูแลระบบได้ตั้งค่าเวลาไว้หรือไม่
+                if (!configData.activeRound || !configData.roundStartDate || !configData.roundEndDate) {
+                    alert('ผู้ดูแลระบบยังไม่ได้เปิดรอบการประเมินครับ ไม่สามารถส่งคะแนนได้');
+                    return; // 🛑 สั่งหยุดการทำงานทันที
+                }
+
+                const now = new Date();
+                const startDate = new Date(configData.roundStartDate);
+                const endDate = new Date(configData.roundEndDate);
+                
+
+                // ถ้าเวลาปัจจุบันไม่อยู่ในช่วงที่กำหนด ให้บล็อกการส่งคะแนน
+                if (now < startDate || now > endDate) {
+                    alert('ขณะนี้ไม่อยู่ในช่วงเวลาที่เปิดให้ประเมินครับ ระบบได้ทำการล็อกการส่งคะแนนแล้ว');
+                    return; // 🛑 สั่งหยุดการทำงานทันที
+                }
+            }
+        } catch (error) {
+            console.error('Error checking round time:', error);
+            alert('ไม่สามารถตรวจสอบรอบการประเมินกับเซิร์ฟเวอร์ได้ในขณะนี้');
+            return;
+        }
+
         const roundSelect = document.getElementById('roundSelect').value;
         const token = localStorage.getItem('authToken');
 
+        // 1. โครงสร้าง scores (เก็บคะแนนรวมรายข้อ)
         const scores = currentCriteriaList.map(c => {
             const secNum = c.num;
+            const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
             const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
             return {
                 sectionNumber: secNum,
-                score: checkedCount
+                score: isNA ? 0 : checkedCount
+            };
+        });
+
+        // 🟢 2. โครงสร้าง items (รวม N/A, ข้อย่อย 1.1 1.2 และ รูปภาพประจำข้อ)
+        let actualMaxScore = 0; 
+
+        const items = currentCriteriaList.map(c => {
+            const secNum = c.num;
+            const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
+            
+            const checkboxes = document.querySelectorAll(`.crit-${secNum}`);
+            const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
+            const maxScoreForSection = checkboxes.length || 4; 
+            
+            // ดึงสถานะการติ๊กของข้อย่อยแต่ละข้อ
+            const subItemsData = c.items.map((text, idx) => {
+                return {
+                    text: text,
+                    checked: checkboxes[idx] ? checkboxes[idx].checked : false
+                };
+            });
+            
+            // 🟢 ดึงข้อมูลรูปภาพประจำข้อ (Base64) ที่ถูกย่อขนาดแล้ว
+            const photoInput = document.getElementById(`photo-base64-${secNum}`);
+            const topicPhotoBase64 = photoInput ? photoInput.value : '';
+            
+            // คำนวณคะแนนเต็ม (หักข้อที่ N/A ออก)
+            if (!isNA) { actualMaxScore += maxScoreForSection; }
+            
+            return {
+                topicName: c.title || c.name || c.topicName || `หมวดที่ ${secNum}`,
+                maxScore: maxScoreForSection > 0 ? maxScoreForSection : 10,
+                score: isNA ? 0 : checkedCount,
+                isNA: isNA,
+                subItems: subItemsData,
+                topicPhoto: topicPhotoBase64 // ส่งรูปเข้าไปตรงนี้สำเร็จแล้ว!
             };
         });
 
@@ -760,15 +841,18 @@
         const percentage = parseFloat(document.getElementById('percentage').innerText);
         const assessorComment = document.getElementById('assessorComment').value.trim();
 
-        if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${currentMaxScore} (${percentage.toFixed(2)}%)`)) return;
+        if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${actualMaxScore} (${percentage.toFixed(2)}%)`)) return;
 
+        // 4. เตรียมข้อมูลเพื่อส่งไป Backend
         const payload = {
             area: areaId,
             assessmentRound: roundSelect,
             scores: scores,
+            items: items, 
             totalScore: totalScore,
             percentage: percentage,
-            evidencePhoto: evidencePhotoBase64,
+            // ❌ ลบการอ้างอิง evidencePhotoBase64 ออก ส่งเป็นค่าว่างไปเลยเพื่อไม่ให้ Backend ฟ้อง Error
+            evidencePhoto: '', 
             assessorComment: assessorComment
         };
 
@@ -789,13 +873,192 @@
                 alert('ไม่สามารถบันทึกได้: ' + (data.message || ''));
             }
         } catch (err) {
+            console.error('Submit Error:', err);
             alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบได้');
         }
+    }
+
+    function compressAndSaveImage(event, secNum) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                // ตั้งค่าความกว้างสูงสุดที่ 800px เพื่อให้ไฟล์เล็กแต่ยังชัดเจน
+                const MAX_WIDTH = 800; 
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // แปลงรูปที่ย่อแล้วเป็น Base64 (คุณภาพ 70%)
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                
+                // เอาไปเก็บไว้ในช่อง Input ซ่อน เพื่อรอตอนกดปุ่ม "บันทึกประเมิน"
+                const hiddenInput = document.getElementById(`photo-base64-${secNum}`);
+                if (hiddenInput) {
+                    hiddenInput.value = compressedBase64;
+                    console.log(`✅ ย่อรูปและเตรียมข้อมูลของหมวด ${secNum} เรียบร้อยแล้ว`);
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     function logout() {
         localStorage.clear();
         window.location.href = 'index.html';
+    }
+
+    let currentFormTemplate = []; 
+
+// 1. ฟังก์ชันดึงแบบฟอร์มล่าสุดจาก Database
+// ฟังก์ชันดึงแบบฟอร์มตามประเภทการใช้สอย
+async function loadFormByAreaType(areaCategory) {
+    try {
+        const token = localStorage.getItem('authToken');
+        
+        // เรียก API ค้นหาฟอร์ม พร้อมแนบประเภทพื้นที่ไปด้วย
+        const res = await fetch(`http://localhost:3000/api/forms/match?areaType=${encodeURIComponent(areaCategory)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.categories) {
+                currentFormTemplate = data.categories;
+                
+                // เปลี่ยนชื่อหัวฟอร์มให้ตรงกับที่แอดมินตั้งไว้
+                document.getElementById('formTitleDisplay').innerText = data.formName || 'ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด';
+                
+                // คำนวณคะแนนเต็มใหม่
+                let maxScore = 0;
+                currentFormTemplate.forEach(cat => maxScore += cat.items.length);
+                document.getElementById('maxScoreDisplay').innerText = maxScore;
+                
+                renderDynamicForm();
+            }
+        } else {
+            // กรณีไม่มีฟอร์มที่ตรงกับประเภทห้องนี้
+            currentFormTemplate = [];
+            const tbody = document.getElementById('evaluationItems');
+            tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color: #dc3545; padding: 25px;">ยังไม่มีการตั้งค่าแบบฟอร์มประเมินสำหรับพื้นที่ประเภท "${areaCategory}"</td></tr>`;
+        }
+    } catch (err) {
+        console.error('Error loading form:', err);
+    }
+}
+
+// 2. ฟังก์ชันวาดตารางแบบฟอร์มอัตโนมัติ
+function renderDynamicForm() {
+    const tbody = document.getElementById('evaluationItems');
+    tbody.innerHTML = ''; // ล้างค่าว่างเดิมทิ้ง
+
+    if (currentFormTemplate.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; color: red;">ยังไม่มีการตั้งค่าแบบฟอร์มประเมินในระบบ</td></tr>';
+        return;
+    }
+
+    currentFormTemplate.forEach((cat, index) => {
+        // สร้างรายการข้อย่อยฝั่งซ้าย (<li>)
+        let listItemsHTML = '';
+        // สร้าง Checkbox ฝั่งขวา (<input type="checkbox">)
+        let checkboxesHTML = '';
+
+        cat.items.forEach((item, itemIndex) => {
+            const itemNum = item.split(' ')[0]; // ดึงเลขข้อเช่น 1.1
+            
+            listItemsHTML += `<li style="margin-bottom: 8px;">${item}</li>`;
+            
+            checkboxesHTML += `
+                <div style="margin-bottom: 8px;">
+                    <label style="cursor: pointer;">
+                        <input type="checkbox" class="eval-checkbox eval-cat-${cat.num}" 
+                               data-score="1" onchange="calculateScore()"> 
+                        ${itemNum} ผ่านเกณฑ์
+                    </label>
+                </div>
+            `;
+        });
+
+        // สร้าง HTML แถวของตาราง (<tr>)
+        const rowHTML = `
+            <tr>
+                <!-- คอลัมน์ซ้าย: รายละเอียด -->
+                <td style="padding: 15px; border-bottom: 1px solid var(--gov-border);">
+                    <div style="font-weight: 600; font-size: 1.05em; color: var(--gov-primary-dark); margin-bottom: 10px;">
+                        ${cat.num}. ${cat.title}
+                    </div>
+                    <ul style="padding-left: 20px; color: #444; font-size: 0.95em;">
+                        ${listItemsHTML}
+                    </ul>
+                    <div style="background: #f8fafc; padding: 10px; border-radius: 4px; font-size: 0.85em; color: #666; margin-top: 15px;">
+                        <b>รายการหลักฐาน:</b> ภาพถ่ายสภาพพื้นที่จริง
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span style="font-size: 0.85em; font-weight: 600;">แนบรูปภาพหลักฐาน (ถ้ามี):</span><br>
+                        <input type="file" style="font-size: 0.85em; margin-top: 5px;">
+                    </div>
+                </td>
+
+                <!-- คอลัมน์ขวา: การให้คะแนน -->
+                <td style="padding: 15px; border-bottom: 1px solid var(--gov-border); background: #fafafa; vertical-align: top;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 12px;">
+                        <b>ข้อ ${cat.num}:</b>
+                        <button type="button" onclick="checkAllInCat('${cat.num}')" style="background: #fff; border: 1px solid #ccc; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; cursor: pointer;">
+                            ผ่านทั้งหมด
+                        </button>
+                    </div>
+                    
+                    ${checkboxesHTML}
+
+                    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc;">
+                        <label style="cursor: pointer; color: #2e7d32; font-weight: 600; font-size: 0.9em;">
+                            <input type="checkbox"> หลักฐานประกอบครบถ้วน
+                        </label>
+                    </div>
+
+                    <div style="margin-top: 15px; text-align: right; font-weight: bold; color: #b45309; background: #ffeee6; padding: 8px; border-radius: 4px;">
+                        คะแนนข้อนี้: <span id="score_cat_${cat.num}">0</span> / ${cat.items.length}
+                    </div>
+                </td>
+            </tr>
+        `;
+        
+        // แทรกแถวที่สร้างเสร็จลงไปใน tbody
+        tbody.insertAdjacentHTML('beforeend', rowHTML);
+    });
+}
+
+// 3. ฟังก์ชันปุ่ม "ผ่านทั้งหมด" (ติ๊กทุกข้อในหมวดนั้น)
+function checkAllInCat(catNum) {
+    const checkboxes = document.querySelectorAll(`.eval-cat-${catNum}`);
+    checkboxes.forEach(cb => cb.checked = true);
+    calculateScore(); // เรียกคำนวณคะแนนใหม่
+}
+
+// 4. (ให้เรียก loadCurrentForm() ตอนเปิดหน้าเว็บ หรือเมื่อเลือกสถานที่เสร็จ)
+// เช่น ใส่ไว้ใน onAreaChanged() หรือ onload
+
+</script>
+<script>
+    // ตรวจสอบว่าเป็นสิทธิ์ควบตำแหน่งหรือไม่
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    if (userData.role && userData.role.includes('&')) {
+        document.getElementById('btnSwitchToOwner').style.display = 'inline-block';
     }
 </script>
 </body>
