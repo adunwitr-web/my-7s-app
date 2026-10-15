@@ -751,132 +751,156 @@
         }
     }
 
-   async function submitAssessment() {
-        const areaId = document.getElementById('areaSelect').value;
-        if (!areaId) {
-            alert('กรุณาระบุสถานที่รับการตรวจประเมินก่อนลงนามบันทึก');
-            return;
-        }
+   let isSubmittingAssessment = false;
 
-        // 🟢 1. ตรวจสอบเวลาเปิด-ปิดรอบประเมินจากระบบก่อน
-        try {
-            const configRes = await fetch(`${API_URL}/system-config/round`);
-            if (configRes.ok) {
-                const configData = await configRes.json();
-                
-                // เช็กว่าผู้ดูแลระบบได้ตั้งค่าเวลาไว้หรือไม่
-                if (!configData.activeRound || !configData.roundStartDate || !configData.roundEndDate) {
-                    alert('ผู้ดูแลระบบยังไม่ได้เปิดรอบการประเมินครับ ไม่สามารถส่งคะแนนได้');
-                    return; // 🛑 สั่งหยุดการทำงานทันที
-                }
+async function submitAssessment() {
+    if (isSubmittingAssessment) return;
 
-                const now = new Date();
-                const startDate = new Date(configData.roundStartDate);
-                const endDate = new Date(configData.roundEndDate);
-                
-
-                // ถ้าเวลาปัจจุบันไม่อยู่ในช่วงที่กำหนด ให้บล็อกการส่งคะแนน
-                if (now < startDate || now > endDate) {
-                    alert('ขณะนี้ไม่อยู่ในช่วงเวลาที่เปิดให้ประเมินครับ ระบบได้ทำการล็อกการส่งคะแนนแล้ว');
-                    return; // 🛑 สั่งหยุดการทำงานทันที
-                }
-            }
-        } catch (error) {
-            console.error('Error checking round time:', error);
-            alert('ไม่สามารถตรวจสอบรอบการประเมินกับเซิร์ฟเวอร์ได้ในขณะนี้');
-            return;
-        }
-
-        const roundSelect = document.getElementById('roundSelect').value;
-        const token = localStorage.getItem('authToken');
-
-        // 1. โครงสร้าง scores (เก็บคะแนนรวมรายข้อ)
-        const scores = currentCriteriaList.map(c => {
-            const secNum = c.num;
-            const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
-            const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
-            return {
-                sectionNumber: secNum,
-                score: isNA ? 0 : checkedCount
-            };
-        });
-
-        // 🟢 2. โครงสร้าง items (รวม N/A, ข้อย่อย 1.1 1.2 และ รูปภาพประจำข้อ)
-        let actualMaxScore = 0; 
-
-        const items = currentCriteriaList.map(c => {
-            const secNum = c.num;
-            const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
-            
-            const checkboxes = document.querySelectorAll(`.crit-${secNum}`);
-            const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
-            const maxScoreForSection = checkboxes.length || 4; 
-            
-            // ดึงสถานะการติ๊กของข้อย่อยแต่ละข้อ
-            const subItemsData = c.items.map((text, idx) => {
-                return {
-                    text: text,
-                    checked: checkboxes[idx] ? checkboxes[idx].checked : false
-                };
-            });
-            
-            // 🟢 ดึงข้อมูลรูปภาพประจำข้อ (Base64) ที่ถูกย่อขนาดแล้ว
-            const photoInput = document.getElementById(`photo-base64-${secNum}`);
-            const topicPhotoBase64 = photoInput ? photoInput.value : '';
-            
-            // คำนวณคะแนนเต็ม (หักข้อที่ N/A ออก)
-            if (!isNA) { actualMaxScore += maxScoreForSection; }
-            
-            return {
-                topicName: c.title || c.name || c.topicName || `หมวดที่ ${secNum}`,
-                maxScore: maxScoreForSection > 0 ? maxScoreForSection : 10,
-                score: isNA ? 0 : checkedCount,
-                isNA: isNA,
-                subItems: subItemsData,
-                topicPhoto: topicPhotoBase64 // ส่งรูปเข้าไปตรงนี้สำเร็จแล้ว!
-            };
-        });
-
-        const totalScore = parseFloat(document.getElementById('totalScore').innerText);
-        const percentage = parseFloat(document.getElementById('percentage').innerText);
-        const assessorComment = document.getElementById('assessorComment').value.trim();
-
-        if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${actualMaxScore} (${percentage.toFixed(2)}%)`)) return;
-
-        // 4. เตรียมข้อมูลเพื่อส่งไป Backend
-        const payload = {
-            area: areaId,
-            assessmentRound: roundSelect,
-            scores: scores,
-            items: items, 
-            totalScore: totalScore,
-            percentage: percentage,
-            // ❌ ลบการอ้างอิง evidencePhotoBase64 ออก ส่งเป็นค่าว่างไปเลยเพื่อไม่ให้ Backend ฟ้อง Error
-            evidencePhoto: '', 
-            assessorComment: assessorComment
-        };
-
-        try {
-            const res = await fetch(`${API_URL}/assessment`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
-                },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (res.ok) {
-                alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบเรียบร้อยแล้ว');
-                window.location.reload();
-            } else {
-                alert('ไม่สามารถบันทึกได้: ' + (data.message || ''));
-            }
-        } catch (err) {
-            console.error('Submit Error:', err);
-            alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบได้');
-        }
+    const areaId = document.getElementById('areaSelect').value;
+    if (!areaId) {
+        alert('กรุณาระบุสถานที่รับการตรวจประเมินก่อนลงนามบันทึก');
+        return;
     }
+
+    const roundSelect = document.getElementById('roundSelect').value;
+    const token = localStorage.getItem('authToken');
+
+    // ดึงข้อมูลผู้ประเมินเพื่อสร้างรหัสเช็กการส่งซ้ำ (ผู้ประเมิน + ห้อง + รอบการประเมิน)
+    const userStr = localStorage.getItem('userData');
+    let currentUserId = 'assessor';
+    if (userStr) {
+        try {
+            const currentUser = JSON.parse(userStr);
+            currentUserId = currentUser._id || currentUser.id || currentUser.username || 'assessor';
+        } catch (e) {}
+    }
+
+    const duplicateKey = 'assessed_' + currentUserId + '_' + areaId + '_' + roundSelect;
+
+    // 1. ตรวจสอบว่าเคยประเมินห้องนี้ในรอบนี้ไปแล้วหรือยัง
+    if (localStorage.getItem(duplicateKey)) {
+        alert('คุณได้ทำการประเมินพื้นที่นี้ในรอบการประเมินนี้ไปแล้ว ไม่สามารถส่งซ้ำได้ครับ');
+        return;
+    }
+
+    // 2. ตรวจสอบเวลาเปิด-ปิดรอบประเมินจากระบบก่อน
+    try {
+        const configRes = await fetch(`${API_URL}/system-config/round`);
+        if (configRes.ok) {
+            const configData = await configRes.json();
+
+            if (!configData.activeRound || !configData.roundStartDate || !configData.roundEndDate) {
+                alert('ผู้ดูแลระบบยังไม่ได้เปิดรอบการประเมินครับ ไม่สามารถส่งคะแนนได้');
+                return;
+            }
+
+            const now = new Date();
+            const startDate = new Date(configData.roundStartDate);
+            const endDate = new Date(configData.roundEndDate);
+
+            if (now < startDate || now > endDate) {
+                alert('ขณะนี้ไม่อยู่ในช่วงเวลาที่เปิดให้ประเมินครับ ระบบได้ทำการล็อกการส่งคะแนนแล้ว');
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('Error checking round time:', error);
+        alert('ไม่สามารถตรวจสอบรอบการประเมินกับเซิร์ฟเวอร์ได้ในขณะนี้');
+        return;
+    }
+
+    // 3. โครงสร้าง scores (เก็บคะแนนรวมรายข้อ)
+    const scores = currentCriteriaList.map(c => {
+        const secNum = c.num;
+        const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
+        const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
+        return {
+            sectionNumber: secNum,
+            score: isNA ? 0 : checkedCount
+        };
+    });
+
+    // 4. โครงสร้าง items (รวม N/A, ข้อย่อย และรูปภาพประจำข้อ)
+    let actualMaxScore = 0;
+
+    const items = currentCriteriaList.map(c => {
+        const secNum = c.num;
+        const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
+
+        const checkboxes = document.querySelectorAll(`.crit-${secNum}`);
+        const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
+        const maxScoreForSection = checkboxes.length || 4;
+
+        const subItemsData = c.items.map((text, idx) => {
+            return {
+                text: text,
+                checked: checkboxes[idx] ? checkboxes[idx].checked : false
+            };
+        });
+
+        const photoInput = document.getElementById(`photo-base64-${secNum}`);
+        const topicPhotoBase64 = photoInput ? photoInput.value : '';
+
+        if (!isNA) {
+            actualMaxScore += maxScoreForSection;
+        }
+
+        return {
+            topicName: c.title || c.name || c.topicName || `หมวดที่ ${secNum}`,
+            maxScore: maxScoreForSection > 0 ? maxScoreForSection : 10,
+            score: isNA ? 0 : checkedCount,
+            isNA: isNA,
+            subItems: subItemsData,
+            topicPhoto: topicPhotoBase64
+        };
+    });
+
+    const totalScore = parseFloat(document.getElementById('totalScore').innerText);
+    const percentage = parseFloat(document.getElementById('percentage').innerText);
+    const assessorComment = document.getElementById('assessorComment').value.trim();
+
+    if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${actualMaxScore} (${percentage.toFixed(2)}%)`)) return;
+
+    // 5. เตรียมข้อมูลเพื่อส่งไป Backend
+    const payload = {
+        area: areaId,
+        assessmentRound: roundSelect,
+        scores: scores,
+        items: items,
+        totalScore: totalScore,
+        percentage: percentage,
+        evidencePhoto: '',
+        assessorComment: assessorComment
+    };
+
+    // ล็อกการกดซ้ำระหว่างรอเซิร์ฟเวอร์ตอบกลับ
+    isSubmittingAssessment = true;
+
+    try {
+        const res = await fetch(`${API_URL}/assessment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+            // บันทึกประวัติลงเครื่องว่าประเมินห้องนี้ในรอบนี้สำเร็จแล้ว
+            localStorage.setItem(duplicateKey, 'true');
+            alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบเรียบร้อยแล้ว');
+            window.location.reload();
+        } else {
+            isSubmittingAssessment = false;
+            alert('ไม่สามารถบันทึกได้: ' + (data.message || ''));
+        }
+    } catch (err) {
+        isSubmittingAssessment = false;
+        console.error('Submit Error:', err);
+        alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบได้');
+    }
+}
 
     function compressAndSaveImage(event, secNum) {
         const file = event.target.files[0];
@@ -932,7 +956,7 @@ async function loadFormByAreaType(areaCategory) {
         const token = localStorage.getItem('authToken');
         
         // เรียก API ค้นหาฟอร์ม พร้อมแนบประเภทพื้นที่ไปด้วย
-        const res = await fetch('https://my-7s-app.onrender.com/api/assessment', {
+        const res = await fetch(`https://my-7s-app.onrender.com/api/forms/match?areaType=${encodeURIComponent(areaCategory)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
