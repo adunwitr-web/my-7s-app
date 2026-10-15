@@ -1071,7 +1071,15 @@ function checkAllInCat(catNum) {
 
 // 4. (ให้เรียก loadCurrentForm() ตอนเปิดหน้าเว็บ หรือเมื่อเลือกสถานที่เสร็จ)
 // เช่น ใส่ไว้ใน onAreaChanged() หรือ onload
+async function loadCriteriaAndRender() {
+    // โค้ดเดิมของคุณที่ดึงข้อมูลมาวนลูปสร้าง HTML ใส่หน้าเว็บ...
+    // เช่น document.getElementById('criteriaContainer').innerHTML = htmlContent;
 
+    // 🟢 เพิ่มบรรทัดนี้ไว้ล่างสุด เพื่อให้พอมันสร้างฟอร์มเสร็จ มันจะคำนวณคะแนนตั้งต้นทันที!
+    if (typeof calculateScoreFromCheckboxes === 'function') {
+        calculateScoreFromCheckboxes();
+    }
+}
 </script>
 <script>
     // ตรวจสอบว่าเป็นสิทธิ์ควบตำแหน่งหรือไม่
@@ -1079,6 +1087,14 @@ function checkAllInCat(catNum) {
     if (userData.role && userData.role.includes('&')) {
         document.getElementById('btnSwitchToOwner').style.display = 'inline-block';
     }
+
+    document.addEventListener('change', function(e) {
+    if (e.target.type === 'checkbox' || e.target.id.startsWith('na-')) {
+        if (typeof calculateScoreFromCheckboxes === 'function') {
+            calculateScoreFromCheckboxes();
+        }
+    }
+});
 </script>
 </body>
 </html>
