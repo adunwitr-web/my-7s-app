@@ -333,7 +333,7 @@
 </main>
 
 <script>
-    const API_URL = 'http://localhost:3000/api';
+    const API_URL = 'https://my-7s-app.onrender.com/api';
     let allAreasData = [];
     let currentMaxScore = 48;
     let evidencePhotoBase64 = '';
@@ -932,7 +932,7 @@ async function loadFormByAreaType(areaCategory) {
         const token = localStorage.getItem('authToken');
         
         // เรียก API ค้นหาฟอร์ม พร้อมแนบประเภทพื้นที่ไปด้วย
-        const res = await fetch(`http://localhost:3000/api/forms/match?areaType=${encodeURIComponent(areaCategory)}`, {
+        const res = await fetch('https://my-7s-app.onrender.com/api/assessment', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
