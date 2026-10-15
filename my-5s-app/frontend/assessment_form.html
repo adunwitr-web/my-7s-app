@@ -751,17 +751,22 @@
         }
     }
 
-   let isSubmittingAssessment = false;
+
+let isSubmittingAssessment = false;
 
 async function submitAssessment() {
     if (isSubmittingAssessment) return;
+
+    // 🟢 สั่งรันฟังก์ชันคำนวณคะแนนอัปเดตหน้าจอให้ชัวร์ก่อนดึงค่า
+    if (typeof calculateScoreFromCheckboxes === 'function') {
+        calculateScoreFromCheckboxes();
+    }
 
     const areaId = document.getElementById('areaSelect').value;
     if (!areaId) {
         alert('กรุณาระบุสถานที่รับการตรวจประเมินก่อนลงนามบันทึก');
         return;
     }
-
     const roundSelect = document.getElementById('roundSelect').value;
     const token = localStorage.getItem('authToken');
 
@@ -774,7 +779,6 @@ async function submitAssessment() {
             currentUserId = currentUser._id || currentUser.id || currentUser.username || 'assessor';
         } catch (e) {}
     }
-
     const duplicateKey = 'assessed_' + currentUserId + '_' + areaId + '_' + roundSelect;
 
     // 1. ตรวจสอบว่าเคยประเมินห้องนี้ในรอบนี้ไปแล้วหรือยัง
@@ -788,16 +792,13 @@ async function submitAssessment() {
         const configRes = await fetch(`${API_URL}/system-config/round`);
         if (configRes.ok) {
             const configData = await configRes.json();
-
             if (!configData.activeRound || !configData.roundStartDate || !configData.roundEndDate) {
                 alert('ผู้ดูแลระบบยังไม่ได้เปิดรอบการประเมินครับ ไม่สามารถส่งคะแนนได้');
                 return;
             }
-
             const now = new Date();
             const startDate = new Date(configData.roundStartDate);
             const endDate = new Date(configData.roundEndDate);
-
             if (now < startDate || now > endDate) {
                 alert('ขณะนี้ไม่อยู่ในช่วงเวลาที่เปิดให้ประเมินครับ ระบบได้ทำการล็อกการส่งคะแนนแล้ว');
                 return;
@@ -822,29 +823,23 @@ async function submitAssessment() {
 
     // 4. โครงสร้าง items (รวม N/A, ข้อย่อย และรูปภาพประจำข้อ)
     let actualMaxScore = 0;
-
     const items = currentCriteriaList.map(c => {
         const secNum = c.num;
         const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
-
         const checkboxes = document.querySelectorAll(`.crit-${secNum}`);
         const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
         const maxScoreForSection = checkboxes.length || 4;
-
         const subItemsData = c.items.map((text, idx) => {
             return {
                 text: text,
                 checked: checkboxes[idx] ? checkboxes[idx].checked : false
             };
         });
-
         const photoInput = document.getElementById(`photo-base64-${secNum}`);
         const topicPhotoBase64 = photoInput ? photoInput.value : '';
-
         if (!isNA) {
             actualMaxScore += maxScoreForSection;
         }
-
         return {
             topicName: c.title || c.name || c.topicName || `หมวดที่ ${secNum}`,
             maxScore: maxScoreForSection > 0 ? maxScoreForSection : 10,
@@ -855,8 +850,9 @@ async function submitAssessment() {
         };
     });
 
-    const totalScore = parseFloat(document.getElementById('totalScore').innerText);
-    const percentage = parseFloat(document.getElementById('percentage').innerText);
+    // ดึงค่าคะแนนรวมและเปอร์เซ็นต์ที่คำนวณเสร็จแล้วบนหน้าจอมาใช้
+    const totalScore = parseFloat(document.getElementById('totalScore').innerText) || 0;
+    const percentage = parseFloat(document.getElementById('percentage').innerText) || 0;
     const assessorComment = document.getElementById('assessorComment').value.trim();
 
     if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${actualMaxScore} (${percentage.toFixed(2)}%)`)) return;
@@ -901,7 +897,6 @@ async function submitAssessment() {
         alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบได้');
     }
 }
-
     function compressAndSaveImage(event, secNum) {
         const file = event.target.files[0];
         if (!file) return;
