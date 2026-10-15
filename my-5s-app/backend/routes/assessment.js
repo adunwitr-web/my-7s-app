@@ -27,8 +27,8 @@ const verifyToken = (req, res, next) => {
 // 1. ลงนามและบันทึกผลการตรวจประเมิน (จัดส่งอีเมลแจ้งเตือนไปยังผู้รับผิดชอบสถานที่ทันที)
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { area, assessmentRound, scores, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
-
+        const { area, assessmentRound, scores, items, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
+        console.log("👉 ข้อมูล items ที่ได้รับจากหน้าเว็บ:", items);
         if (!area || !assessmentRound) {
             return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน กรุณาระบุสถานที่และรอบการประเมิน' });
         }
@@ -40,6 +40,7 @@ router.post('/', verifyToken, async (req, res) => {
             assessor: req.user.userId || req.user.id,
             assessmentRound: assessmentRound,
             scores: scores,
+            items: items,
             totalScore: totalScore,
             percentage: percentage,
             status: evaluationStatus,
@@ -264,6 +265,36 @@ router.patch('/:id/reject', verifyToken, async (req, res) => {
         res.json({ success: true, message: 'ส่งเรื่องกลับให้ดำเนินการปรับปรุงแก้ไขเรียบร้อยแล้ว' });
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการส่งกลับข้อมูล' });
+    }
+});
+
+router.patch('/:id/edit', verifyToken, async (req, res) => {
+    try {
+        const { percentage, createdAt, items, totalScore } = req.body;
+        
+        const assessment = await Assessment.findById(req.params.id);
+
+        if (!assessment) {
+            return res.status(404).json({ message: 'ไม่พบบันทึกการประเมินนี้' });
+        }
+
+        // อัปเดตข้อมูลใหม่ที่แอดมินแก้ไข
+        if (percentage !== undefined) assessment.percentage = percentage;
+        if (createdAt !== undefined) assessment.createdAt = createdAt;
+        if (items !== undefined) assessment.items = items; // อัปเดตโครงสร้างรายข้อ (N/A และคะแนน)
+        if (totalScore !== undefined) assessment.totalScore = totalScore;
+
+        // อัปเดตสถานะให้สอดคล้องกับเปอร์เซ็นต์ใหม่ (ถ้าเปอร์เซ็นต์ถูกแก้จนผ่าน/ไม่ผ่าน)
+        if (percentage !== undefined && assessment.status !== 'Approved') {
+             assessment.status = Number(percentage) < 80 ? 'Needs Improvement' : 'Passed';
+        }
+
+        await assessment.save();
+        res.json({ success: true, message: 'บันทึกการแก้ไขคะแนนและวันที่สำเร็จ' });
+
+    } catch (error) {
+        console.error('Error editing assessment:', error);
+        res.status(500).json({ message: 'เซิร์ฟเวอร์เกิดข้อผิดพลาดในการแก้ไขข้อมูล' });
     }
 });
 
