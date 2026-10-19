@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --gov-primary: #1b5e20;
@@ -244,6 +246,60 @@
         <div class="stat-card" style="border-left-color: #0284c7;">
             <div class="stat-label">คะแนนเฉลี่ยร้อยละความสอดคล้องทุกสถานที่</div>
             <div class="stat-value" id="statAverage" style="color: #0284c7;">0.0%</div>
+        </div>
+    </section>
+
+    <!-- 📊 แดชบอร์ดวิเคราะห์และสถิติภาพรวมสำหรับ Admin -->
+    <section class="doc-panel" style="border-top: 4px solid #1b5e20;">
+        <div class="doc-panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <h2 style="color: var(--gov-primary-dark); margin: 0;">📊 แดชบอร์ดสรุปเปอร์เซ็นต์คะแนนประเมินภาพรวมและรายห้อง</h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <div>
+                    <label style="font-weight: 600; font-size: 0.85em;">เลือกสถานที่:</label>
+                    <select id="adminAreaFilter" class="form-control" style="width: auto; display: inline-block; padding: 4px 8px;" onchange="updateAdminDashboard()">
+                        <option value="ALL">-- ภาพรวมทุกสถานที่ --</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-weight: 600; font-size: 0.85em;">เลือกปีประเมิน:</label>
+                    <select id="adminYearFilter" class="form-control" style="width: auto; display: inline-block; padding: 4px 8px;" onchange="updateAdminDashboard()">
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; margin-bottom: 20px;">
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.85em; color: #166534; font-weight: 600;">เฉลี่ยปีนี้ (<span class="admin-lbl-curr-year">2569</span>)</div>
+                <div id="adminAvgCurrentYear" style="font-size: 1.8em; font-weight: 700; color: #15803d; margin-top: 4px;">- %</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.85em; color: #475569; font-weight: 600;">เฉลี่ยปีที่แล้ว (<span class="admin-lbl-prev-year">2568</span>)</div>
+                <div id="adminAvgPrevYear" style="font-size: 1.8em; font-weight: 700; color: #64748b; margin-top: 4px;">- %</div>
+            </div>
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.85em; color: #1e40af; font-weight: 600;">อัตราการเติบโต/เปลี่ยนแปลง</div>
+                <div id="adminYearDiff" style="font-size: 1.8em; font-weight: 700; color: #1d4ed8; margin-top: 4px;">-</div>
+            </div>
+            <div style="background: #fefce8; border: 1px solid #fef08a; padding: 15px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.85em; color: #854d0e; font-weight: 600;">จำนวนการประเมินปีนี้</div>
+                <div id="adminTotalCountThisYear" style="font-size: 1.8em; font-weight: 700; color: #a16207; margin-top: 4px;">0 ครั้ง</div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+            <div style="background: #ffffff; padding: 15px; border: 1px solid var(--gov-border); border-radius: 6px;">
+                <h4 style="margin: 0 0 12px 0; color: var(--gov-primary-dark); font-size: 0.95em;">📈 แนวโน้มคะแนนเฉลี่ยรายเดือน (เปรียบเทียบปีนี้ vs ปีที่แล้ว)</h4>
+                <div style="position: relative; height: 280px; width: 100%;">
+                    <canvas id="adminMonthlyLineChart"></canvas>
+                </div>
+            </div>
+            <div style="background: #ffffff; padding: 15px; border: 1px solid var(--gov-border); border-radius: 6px;">
+                <h4 style="margin: 0 0 12px 0; color: var(--gov-primary-dark); font-size: 0.95em;">📊 คะแนนเฉลี่ยจำแนกตามประเภทพื้นที่/ห้อง</h4>
+                <div style="position: relative; height: 280px; width: 100%;">
+                    <canvas id="adminAreaBarChart"></canvas>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -581,6 +637,9 @@
 
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
+    let rawAdminData = [];
+    let adminLineChartInstance = null;
+    let adminBarChartInstance = null;
 
     window.onload = function() {
         const token = localStorage.getItem('authToken');
@@ -610,6 +669,8 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
+            rawAdminData = data;
+            
             document.getElementById('statTotal').innerText = data.length;
 
             if (data.length > 0) {
@@ -622,6 +683,8 @@
                 document.getElementById('statPending').innerText = pendingCount;
                 document.getElementById('statAverage').innerText = `${(totalScore / data.length).toFixed(1)}%`;
             }
+
+            initAdminDashboard(data);
 
             const tbPendingPass = document.getElementById('tablePendingPass');
             const tbPendingReview = document.getElementById('tablePendingReview');
@@ -667,6 +730,204 @@
         } catch (err) {
             console.error(err);
         }
+    }
+
+    /* 📊 ฟังก์ชันการคำนวณและสร้างกราฟแดชบอร์ด Admin */
+    function initAdminDashboard(data) {
+        const yearSelect = document.getElementById('adminYearFilter');
+        const areaSelect = document.getElementById('adminAreaFilter');
+        const currentYearBE = new Date().getFullYear() + 543;
+
+        const years = new Set([currentYearBE, currentYearBE - 1]);
+        const areasSet = new Set();
+
+        data.forEach(item => {
+            if (item.createdAt) {
+                const yrBE = new Date(item.createdAt).getFullYear() + 543;
+                years.add(yrBE);
+            }
+            if (item.area) {
+                const areaName = typeof item.area === 'object' ? item.area.areaName : item.area;
+                if (areaName) areasSet.add(areaName);
+            }
+        });
+
+        const sortedYears = Array.from(years).sort((a, b) => b - a);
+        yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">ปี พ.ศ. ${y}</option>`).join('');
+
+        let areaOptions = '<option value="ALL">-- ภาพรวมทุกสถานที่ --</option>';
+        Array.from(areasSet).sort().forEach(name => {
+            areaOptions += `<option value="${name}">${name}</option>`;
+        });
+        areaSelect.innerHTML = areaOptions;
+
+        updateAdminDashboard();
+    }
+
+    function updateAdminDashboard() {
+        const selectedYearBE = parseInt(document.getElementById('adminYearFilter').value) || (new Date().getFullYear() + 543);
+        const selectedArea = document.getElementById('adminAreaFilter').value;
+        const prevYearBE = selectedYearBE - 1;
+
+        document.querySelectorAll('.admin-lbl-curr-year').forEach(el => el.innerText = selectedYearBE);
+        document.querySelectorAll('.admin-lbl-prev-year').forEach(el => el.innerText = prevYearBE);
+
+        let filteredData = rawAdminData;
+        if (selectedArea !== 'ALL') {
+            filteredData = rawAdminData.filter(item => {
+                const areaName = item.area ? (typeof item.area === 'object' ? item.area.areaName : item.area) : '';
+                return areaName === selectedArea;
+            });
+        }
+
+        const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        const currentYearScores = Array(12).fill(null);
+        const currentYearCounts = Array(12).fill(0);
+        const prevYearScores = Array(12).fill(null);
+        const prevYearCounts = Array(12).fill(0);
+
+        let countThisYearTotal = 0;
+
+        filteredData.forEach(item => {
+            if (!item.createdAt) return;
+            const d = new Date(item.createdAt);
+            const itemYearBE = d.getFullYear() + 543;
+            const monthIdx = d.getMonth();
+            const pct = parseFloat(item.percentage) || 0;
+
+            if (itemYearBE === selectedYearBE) {
+                if (currentYearScores[monthIdx] === null) currentYearScores[monthIdx] = 0;
+                currentYearScores[monthIdx] += pct;
+                currentYearCounts[monthIdx]++;
+                countThisYearTotal++;
+            } else if (itemYearBE === prevYearBE) {
+                if (prevYearScores[monthIdx] === null) prevYearScores[monthIdx] = 0;
+                prevYearScores[monthIdx] += pct;
+                prevYearCounts[monthIdx]++;
+            }
+        });
+
+        const currentData = currentYearScores.map((sum, i) => sum !== null && currentYearCounts[i] > 0 ? (sum / currentYearCounts[i]).toFixed(2) : null);
+        const prevData = prevYearScores.map((sum, i) => sum !== null && prevYearCounts[i] > 0 ? (sum / prevYearCounts[i]).toFixed(2) : null);
+
+        const validCurrent = currentData.filter(v => v !== null).map(Number);
+        const validPrev = prevData.filter(v => v !== null).map(Number);
+
+        const avgCurrent = validCurrent.length > 0 ? (validCurrent.reduce((a,b) => a+b, 0) / validCurrent.length).toFixed(2) : null;
+        const avgPrev = validPrev.length > 0 ? (validPrev.reduce((a,b) => a+b, 0) / validPrev.length).toFixed(2) : null;
+
+        document.getElementById('adminAvgCurrentYear').innerText = avgCurrent !== null ? `${avgCurrent}%` : '-';
+        document.getElementById('adminAvgPrevYear').innerText = avgPrev !== null ? `${avgPrev}%` : 'ไม่มีข้อมูล';
+        document.getElementById('adminTotalCountThisYear').innerText = `${countThisYearTotal} ครั้ง`;
+
+        const diffEl = document.getElementById('adminYearDiff');
+        if (avgCurrent !== null && avgPrev !== null) {
+            const diff = (avgCurrent - avgPrev).toFixed(2);
+            if (diff > 0) {
+                diffEl.innerHTML = `<span style="color:#16a34a;">+${diff}% 📈</span>`;
+            } else if (diff < 0) {
+                diffEl.innerHTML = `<span style="color:#dc2626;">${diff}% 📉</span>`;
+            } else {
+                diffEl.innerHTML = `<span>0.00% ➖</span>`;
+            }
+        } else {
+            diffEl.innerText = '-';
+        }
+
+        // 📈 กราฟที่ 1: Line Chart แนวโน้มรายเดือน
+        const ctxLine = document.getElementById('adminMonthlyLineChart').getContext('2d');
+        if (adminLineChartInstance) adminLineChartInstance.destroy();
+
+        adminLineChartInstance = new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: `ปี พ.ศ. ${selectedYearBE}`,
+                        data: currentData,
+                        borderColor: '#1b5e20',
+                        backgroundColor: 'rgba(27, 94, 32, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4
+                    },
+                    {
+                        label: `ปี พ.ศ. ${prevYearBE} (ปีที่แล้ว)`,
+                        data: prevData,
+                        borderColor: '#64748b',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+            }
+        });
+
+        // 📊 กราฟที่ 2: Bar Chart คะแนนเฉลี่ยจำแนกตามห้อง/สถานที่
+        const areaStatsMap = new Map();
+        rawAdminData.forEach(item => {
+            if (!item.createdAt) return;
+            const d = new Date(item.createdAt);
+            const yrBE = d.getFullYear() + 543;
+            if (yrBE !== selectedYearBE) return;
+
+            const areaName = item.area ? (typeof item.area === 'object' ? item.area.areaName : item.area) : 'ไม่ระบุ';
+            const pct = parseFloat(item.percentage) || 0;
+
+            if (!areaStatsMap.has(areaName)) {
+                areaStatsMap.set(areaName, { sum: 0, count: 0 });
+            }
+            const stat = areaStatsMap.get(areaName);
+            stat.sum += pct;
+            stat.count++;
+        });
+
+        const barLabels = [];
+        const barData = [];
+        const barColors = [];
+
+        areaStatsMap.forEach((stat, name) => {
+            const avg = (stat.sum / stat.count).toFixed(2);
+            const shortName = name.length > 18 ? name.substring(0, 16) + '...' : name;
+            barLabels.push(shortName);
+            barData.push(avg);
+            barColors.push(avg >= 80 ? '#2e7d32' : (avg >= 60 ? '#f59e0b' : '#dc2626'));
+        });
+
+        const ctxBar = document.getElementById('adminAreaBarChart').getContext('2d');
+        if (adminBarChartInstance) adminBarChartInstance.destroy();
+
+        adminBarChartInstance = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: barLabels.length > 0 ? barLabels : ['ไม่มีข้อมูลปีนี้'],
+                datasets: [{
+                    label: `คะแนนเฉลี่ยปี ${selectedYearBE} (%)`,
+                    data: barData.length > 0 ? barData : [0],
+                    backgroundColor: barColors.length > 0 ? barColors : ['#cbd5e1'],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+                    x: { ticks: { font: { size: 10 } } }
+                }
+            }
+        });
     }
 
     async function viewDetails(id) {

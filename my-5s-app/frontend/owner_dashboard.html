@@ -7,6 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --gov-primary: #1b5e20;
@@ -168,7 +170,7 @@
         }
         .form-control {
             width: 100%;
-            padding: 9px 12px;
+            padding: 8px 12px;
             border: 1px solid var(--gov-border);
             border-radius: 4px;
             font-family: inherit;
@@ -292,6 +294,37 @@
         </div>
     </div>
 
+    <!-- 📊 สแกนแดชบอร์ดสรุปรายเดือนและปี -->
+    <section class="doc-panel" style="border-top: 4px solid #0284c7;">
+        <div class="doc-panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <h2 style="color: #0369a1; margin: 0;">📊 แดชบอร์ดสรุปคะแนนประเมินรายเดือน (Monthly Performance)</h2>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-weight: 600; font-size: 0.88em;">เลือกปีประเมิน:</label>
+                <select id="ownerYearFilter" class="form-control" style="width: auto; padding: 4px 10px;" onchange="updateOwnerDashboard()">
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; margin-bottom: 20px;">
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.85em; color: #166534; font-weight: 600;">คะแนนเฉลี่ยปีนี้ (<span class="lbl-current-year">2569</span>)</div>
+                <div id="ownerAvgCurrentYear" style="font-size: 1.8em; font-weight: 700; color: #15803d; margin-top: 4px;">- %</div>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.85em; color: #475569; font-weight: 600;">คะแนนเฉลี่ยปีที่แล้ว (<span class="lbl-prev-year">2568</span>)</div>
+                <div id="ownerAvgPrevYear" style="font-size: 1.8em; font-weight: 700; color: #64748b; margin-top: 4px;">- %</div>
+            </div>
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 6px; text-align: center;">
+                <div style="font-size: 0.85em; color: #1e40af; font-weight: 600;">การเปลี่ยนแปลงเทียบปีที่แล้ว</div>
+                <div id="ownerYearDiff" style="font-size: 1.8em; font-weight: 700; color: #1d4ed8; margin-top: 4px;">-</div>
+            </div>
+        </div>
+
+        <div style="position: relative; height: 320px; width: 100%;">
+            <canvas id="ownerMonthlyChart"></canvas>
+        </div>
+    </section>
+
     <section class="doc-panel" style="border-top: 4px solid #ea580c;">
         <div class="doc-panel-header">
             <h2 style="color: #9a3412;">📋 บัญชีรายการข้อตรวจพบที่ต้องปรับปรุงแก้ไข (Action Plan)</h2>
@@ -376,6 +409,7 @@
     let activeTaskId = null;
     let ownerFixPhotoBase64 = '';
     let currentTasksList = [];
+    let ownerChartInstance = null;
 
     window.onload = function() {
         const token = localStorage.getItem('authToken');
@@ -404,6 +438,7 @@
             currentTasksList = data;
 
             updateNotifications(data);
+            initOwnerDashboard(data);
 
             const tbPending = document.getElementById('tablePendingTasks');
             const tbHistory = document.getElementById('tableHistoryTasks');
@@ -481,6 +516,139 @@
         } catch (err) {
             console.error(err);
         }
+    }
+
+    /* 📊 ฟังก์ชันคำนวณและวาดกราฟแดชบอร์ดฝั่งเจ้าของห้อง */
+    function initOwnerDashboard(data) {
+        const yearSelect = document.getElementById('ownerYearFilter');
+        const currentYearBE = new Date().getFullYear() + 543;
+        
+        const years = new Set([currentYearBE, currentYearBE - 1]);
+        data.forEach(item => {
+            if (item.createdAt) {
+                const yrBE = new Date(item.createdAt).getFullYear() + 543;
+                years.add(yrBE);
+            }
+        });
+
+        const sortedYears = Array.from(years).sort((a, b) => b - a);
+        yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">ปี พ.ศ. ${y}</option>`).join('');
+        
+        updateOwnerDashboard();
+    }
+
+    function updateOwnerDashboard() {
+        const selectedYearBE = parseInt(document.getElementById('ownerYearFilter').value) || (new Date().getFullYear() + 543);
+        const prevYearBE = selectedYearBE - 1;
+
+        document.querySelectorAll('.lbl-current-year').forEach(el => el.innerText = selectedYearBE);
+        document.querySelectorAll('.lbl-prev-year').forEach(el => el.innerText = prevYearBE);
+
+        const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        const currentYearMonthlyScores = Array(12).fill(null);
+        const currentYearMonthlyCounts = Array(12).fill(0);
+        const prevYearMonthlyScores = Array(12).fill(null);
+        const prevYearMonthlyCounts = Array(12).fill(0);
+
+        currentTasksList.forEach(item => {
+            if (!item.createdAt) return;
+            const d = new Date(item.createdAt);
+            const itemYearBE = d.getFullYear() + 543;
+            const monthIdx = d.getMonth();
+            const pct = parseFloat(item.percentage) || 0;
+
+            if (itemYearBE === selectedYearBE) {
+                if (currentYearMonthlyScores[monthIdx] === null) currentYearMonthlyScores[monthIdx] = 0;
+                currentYearMonthlyScores[monthIdx] += pct;
+                currentYearMonthlyCounts[monthIdx]++;
+            } else if (itemYearBE === prevYearBE) {
+                if (prevYearMonthlyScores[monthIdx] === null) prevYearMonthlyScores[monthIdx] = 0;
+                prevYearMonthlyScores[monthIdx] += pct;
+                prevYearMonthlyCounts[monthIdx]++;
+            }
+        });
+
+        const currentData = currentYearMonthlyScores.map((sum, i) => sum !== null && currentYearMonthlyCounts[i] > 0 ? (sum / currentYearMonthlyCounts[i]).toFixed(2) : null);
+        const prevData = prevYearMonthlyScores.map((sum, i) => sum !== null && prevYearMonthlyCounts[i] > 0 ? (sum / prevYearMonthlyCounts[i]).toFixed(2) : null);
+
+        const validCurrent = currentData.filter(v => v !== null).map(Number);
+        const validPrev = prevData.filter(v => v !== null).map(Number);
+
+        const avgCurrent = validCurrent.length > 0 ? (validCurrent.reduce((a,b) => a+b, 0) / validCurrent.length).toFixed(2) : null;
+        const avgPrev = validPrev.length > 0 ? (validPrev.reduce((a,b) => a+b, 0) / validPrev.length).toFixed(2) : null;
+
+        document.getElementById('ownerAvgCurrentYear').innerText = avgCurrent !== null ? `${avgCurrent}%` : '-';
+        document.getElementById('ownerAvgPrevYear').innerText = avgPrev !== null ? `${avgPrev}%` : 'ไม่มีข้อมูล';
+
+        const diffEl = document.getElementById('ownerYearDiff');
+        if (avgCurrent !== null && avgPrev !== null) {
+            const diff = (avgCurrent - avgPrev).toFixed(2);
+            if (diff > 0) {
+                diffEl.innerHTML = `<span style="color:#16a34a;">+${diff}% 📈</span>`;
+            } else if (diff < 0) {
+                diffEl.innerHTML = `<span style="color:#dc2626;">${diff}% 📉</span>`;
+            } else {
+                diffEl.innerHTML = `<span>0.00% ➖</span>`;
+            }
+        } else {
+            diffEl.innerText = '-';
+        }
+
+        const ctx = document.getElementById('ownerMonthlyChart').getContext('2d');
+        if (ownerChartInstance) ownerChartInstance.destroy();
+
+        ownerChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: `ปี พ.ศ. ${selectedYearBE}`,
+                        data: currentData,
+                        borderColor: '#0284c7',
+                        backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#0284c7'
+                    },
+                    {
+                        label: `ปี พ.ศ. ${prevYearBE} (ปีที่แล้ว)`,
+                        data: prevData,
+                        borderColor: '#94a3b8',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#94a3b8'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw !== null ? context.raw + '%' : 'ไม่มีการประเมิน'}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: { callback: value => value + '%' },
+                        title: { display: true, text: 'ร้อยละคะแนน (%)' }
+                    }
+                }
+            }
+        });
     }
 
     document.getElementById('ownerFixPhotoInput').addEventListener('change', function(e) {
