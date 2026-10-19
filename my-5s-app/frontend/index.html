@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เข้าสู่ระบบ - ระบบประเมิน Green 7S Plus มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทย่ลัยรัตภูมิ</title>
+    <title>เข้าสู่ระบบ - ระบบประเมิน Green 7S Plus มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทยาลัยรัตภูมิ</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -131,6 +131,17 @@
             padding-top: 16px;
             line-height: 1.5;
         }
+
+        /* 📱 Responsive Mobile/Tablet */
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .login-card { padding: 24px 18px; border-radius: 12px; }
+            .institution-logo { width: 50px; height: 50px; font-size: 24px; margin-bottom: 12px; }
+            .login-header h2 { font-size: 1.2em; }
+            .login-header p { font-size: 0.82em; margin-bottom: 18px; }
+            .form-control { padding: 10px 12px; font-size: 0.9em; }
+            .btn-login { padding: 12px; font-size: 0.95em; }
+        }
     </style>
 </head>
 <body>
@@ -187,27 +198,25 @@
             const data = await res.json();
 
             if (res.ok) {
-                // บันทึก Token และ User Information
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('userData', JSON.stringify(data.user));
 
-                // จำแนกสิทธิ์แล้วส่งไปหน้า Dashboard ตามบทบาท
                 const role = data.user.role;
                 
                 if (role === 'Admin') {
                     window.location.href = 'admin_dashboard.html';
                 } 
-                // 🟢 เช็กคำว่า 'Area Owner' ก่อน มันจะครอบคลุมทั้งเจ้าของห้องปกติ และ แบบควบตำแหน่ง
                 else if (role.includes('Area Owner')) {
                     window.location.href = 'owner_dashboard.html';
                 } 
-                // 🟢 ค่อยเช็ก Assessor สำหรับพวกที่เป็นกรรมการล้วนๆ
                 else if (role.includes('Assessor')) {
                     window.location.href = 'assessment_form.html';
                 } 
                 else {
                     window.location.href = 'assessment_form.html';
                 }
+            } else {
+                alert('❌ ' + (data.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'));
             }
         } catch (err) {
             console.error('Login error:', err);

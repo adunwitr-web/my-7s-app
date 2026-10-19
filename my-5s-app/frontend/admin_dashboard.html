@@ -31,20 +31,22 @@
         .gov-header {
             background: linear-gradient(135deg, var(--gov-primary-dark) 0%, var(--gov-primary) 100%);
             color: white;
-            padding: 0 30px;
-            height: 75px;
+            padding: 12px 30px;
+            min-height: 75px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid var(--gov-gold);
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .gov-title-box { display: flex; align-items: center; gap: 14px; }
         .gov-emblem { font-size: 26px; }
         .gov-title h1 { margin: 0; font-size: 1.15em; font-weight: 700; }
         .gov-title p { margin: 0; font-size: 0.8em; opacity: 0.9; }
 
-        .gov-user-panel { display: flex; align-items: center; gap: 12px; }
+        .gov-user-panel { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .gov-user-tag {
             background: rgba(255, 255, 255, 0.15);
             padding: 6px 14px;
@@ -122,11 +124,18 @@
         }
         .doc-panel-header h2 { margin: 0; font-size: 1.15em; font-weight: 700; }
 
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .gov-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9em;
             margin-top: 10px;
+            min-width: 650px;
         }
         .gov-table th, .gov-table td {
             border: 1px solid var(--gov-border);
@@ -142,12 +151,12 @@
             font-weight: 600;
             font-size: 0.85em;
             cursor: pointer;
+            margin-bottom: 4px;
         }
         .btn-view { background: #e0f2fe; color: #0369a1; }
-        .btn-approve { background: #dcfce7; color: #15803d; margin-left: 4px; }
-        .btn-reject { background: #fee2e2; color: #b91c1c; margin-left: 4px; }
+        .btn-approve { background: #dcfce7; color: #15803d; }
+        .btn-reject { background: #fee2e2; color: #b91c1c; }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -159,11 +168,12 @@
             background-color: rgba(15, 23, 42, 0.6);
             align-items: center;
             justify-content: center;
+            padding: 10px;
         }
         .modal-content {
             background-color: #ffffff;
             border-radius: 6px;
-            width: 90%;
+            width: 100%;
             max-width: 720px;
             max-height: 90vh;
             overflow-y: auto;
@@ -178,6 +188,18 @@
             border-radius: 4px;
             font-family: inherit;
             font-size: 0.95em;
+        }
+
+        /* 📱 Responsive Mobile & iPad */
+        @media (max-width: 768px) {
+            .gov-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
+            .gov-user-panel { width: 100%; justify-content: space-between; }
+            .dropdown { width: 100%; }
+            .btn-gov-menu { width: 100%; margin-top: 6px; }
+            .dropdown-menu { right: 0; left: 0; width: 100%; }
+            .container { padding: 0 10px; margin: 15px auto; }
+            .doc-panel { padding: 16px 14px; }
+            .modal-content { padding: 18px 14px; }
         }
     </style>
 </head>
@@ -200,9 +222,7 @@
             <button onclick="toggleDropdown()" class="btn-gov-menu">⚙️ เมนูงานบริหารระบบ ▼</button>
             <div id="settingsDropdown" class="dropdown-menu">
                 <a onclick="openUserModal()">👥 บัญชีทะเบียนบุคลากรและสิทธิ์การตรวจ</a>
-                <a href="#" onclick="document.getElementById('excelFileInput').click(); return false;" style="cursor: pointer;">
-                📄 อัปโหลดแบบฟอร์มประเมิน (Excel)
-                </a>
+                <a href="#" onclick="document.getElementById('excelFileInput').click(); return false;">📄 อัปโหลดแบบฟอร์มประเมิน (Excel)</a>
                 <a onclick="openRoundSettingModal()">📅 เปิด-ปิด รอบการประเมิน</a>
                 <a onclick="openSettingsModal()">✉️ ตั้งค่าอีเมลระบบ</a>
                 <a onclick="logout()" style="color:#b91c1c; font-weight:600;">🚪 ออกจากระบบ</a>
@@ -233,20 +253,24 @@
         </div>
 
         <h4 style="color: #0369a1; margin: 15px 0 6px 0;">1. รายการผ่านเกณฑ์มาตรฐาน (รอการรับรองผลอย่างเป็นทางการ)</h4>
-        <table class="gov-table">
-            <thead>
-                <tr><th>วันที่มีการตรวจ</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
-            </thead>
-            <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr></tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr><th>วันที่มีการตรวจ</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+                </thead>
+                <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr></tbody>
+            </table>
+        </div>
 
         <h4 style="color: #ea580c; margin: 25px 0 6px 0;">2. รายการส่งมอบรายงานปรับปรุงสถานที่ (รอการตรวจสอบ)</h4>
-        <table class="gov-table">
-            <thead>
-                <tr><th>วันที่ส่งรายงาน</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
-            </thead>
-            <tbody id="tablePendingReview"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr></tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr><th>วันที่ส่งรายงาน</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+                </thead>
+                <tbody id="tablePendingReview"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr></tbody>
+            </table>
+        </div>
     </section>
 
     <section class="doc-panel">
@@ -254,24 +278,27 @@
             <h2 style="color: var(--gov-primary);">📜 ทะเบียนประวัติผลการประเมินที่ได้รับรองเสร็จสิ้น</h2>
         </div>
         <h4 style="color: var(--gov-primary); margin: 15px 0 6px 0;">1. รับรองผลการประเมินผ่านเกณฑ์โดยตรง</h4>
-        <table class="gov-table">
-            <thead>
-                <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
-            </thead>
-            <tbody id="tableHistoryDirectPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
+                </thead>
+                <tbody id="tableHistoryDirectPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
+            </table>
+        </div>
 
         <h4 style="color: #7e22ce; margin: 25px 0 6px 0;">2. รับรองผลหลังได้รับการปรับปรุงแก้ไขแล้ว</h4>
-        <table class="gov-table">
-            <thead>
-                <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
-            </thead>
-            <tbody id="tableHistoryCorrectedPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
+                </thead>
+                <tbody id="tableHistoryCorrectedPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
+            </table>
+        </div>
     </section>
 </main>
 
-<!-- หน้าต่างดูบันทึกและพิจารณาอนุมัติ -->
 <div id="detailsModal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
@@ -306,11 +333,11 @@
     </div>
 </div>
 
-<div style="background: #fff; padding: 25px; border: 1px solid var(--gov-border); border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+<div style="background: #fff; padding: 20px; border: 1px solid var(--gov-border); border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
     <h3 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">📁 คลังแบบฟอร์มประเมินในระบบ</h3>
     
-    <div style="overflow-x: auto;">
-        <table class="doc-table" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+    <div class="table-responsive">
+        <table class="doc-table" style="width: 100%; margin-top: 15px; border-collapse: collapse; min-width: 650px;">
             <thead style="background: #f8fafc;">
                 <tr>
                     <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 15%;">วันที่สร้าง</th>
@@ -327,7 +354,6 @@
     </div>
 </div>
 
-<!-- หน้าต่างทะเบียนบุคลากร -->
 <div id="userModal" class="modal">
     <div class="modal-content" style="max-width: 860px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
@@ -359,16 +385,17 @@
             </button>
         </div>
 
-        <table class="gov-table">
-            <thead>
-                <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>สถานที่รับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
-            </thead>
-            <tbody id="userTableBody"></tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>สถานที่รับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- หน้าต่างปรับปรุงข้อมูลและกำหนดรหัสผ่านใหม่ -->
 <div id="editUserModal" class="modal">
     <div class="modal-content" style="max-width: 520px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
@@ -383,12 +410,12 @@
             <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">จดหมายอิเล็กทรอนิกส์:</label>
             <input type="email" id="editEmail" class="form-control">
         </div>
-        <div style="display:flex; gap:10px; margin-bottom:12px;">
-            <div style="flex:1;">
+        <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+            <div style="flex:1; min-width: 140px;">
                 <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">ชื่อจริง:</label>
                 <input type="text" id="editFirstName" class="form-control">
             </div>
-            <div style="flex:1;">
+            <div style="flex:1; min-width: 140px;">
                 <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">นามสกุล:</label>
                 <input type="text" id="editLastName" class="form-control">
             </div>
@@ -419,7 +446,6 @@
     </div>
 </div>
 
-<!-- หน้าต่างตั้งค่าจดหมายอิเล็กทรอนิกส์ -->
 <div id="settingsModal" class="modal">
     <div class="modal-content" style="max-width: 500px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
@@ -463,12 +489,12 @@
             </select>
         </div>
 
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <div style="flex:1;">
+        <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+            <div style="flex:1; min-width: 180px;">
                 <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">วันที่เริ่มต้น:</label>
                 <input type="datetime-local" id="configStartDate" class="form-control">
             </div>
-            <div style="flex:1;">
+            <div style="flex:1; min-width: 180px;">
                 <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">วันที่สิ้นสุด (Deadline):</label>
                 <input type="datetime-local" id="configEndDate" class="form-control">
             </div>
@@ -480,10 +506,10 @@
     </div>
 </div>
 
-<div id="formPreviewContainer" style="display: none; background: #ffffff; padding: 25px; border: 1px solid var(--gov-border); border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+<div id="formPreviewContainer" style="display: none; background: #ffffff; padding: 20px; border: 1px solid var(--gov-border); border-radius: 8px; margin-top: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
     <h4 style="margin-top: 0; margin-bottom: 20px; color: #b45309; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; font-size: 1.2em;">👀 ตรวจสอบและแก้ไขแบบฟอร์มก่อนบันทึก</h4>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
         <div>
             <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ชื่อแบบฟอร์มนี้:</label>
             <input type="text" id="previewFormName" placeholder="เช่น แบบตรวจประเมิน 7s Plus. สำหรับห้องเรียน" class="form-control">
@@ -529,8 +555,8 @@
         </div>
     </div>
 
-    <div style="max-height: 450px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 25px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-        <table class="doc-table" style="width: 100%; border-collapse: collapse; margin: 0;">
+    <div class="table-responsive" style="max-height: 450px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 25px;">
+        <table class="doc-table" style="width: 100%; border-collapse: collapse; margin: 0; min-width: 600px;">
             <thead style="position: sticky; top: 0; background: #f1f5f9; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                 <tr>
                     <th style="width: 10%; padding: 12px; text-align: center; border-bottom: 2px solid #cbd5e1;">หมวด</th>
@@ -543,7 +569,7 @@
         </table>
     </div>
 
-    <div style="display: flex; justify-content: flex-end; gap: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+    <div style="display: flex; justify-content: flex-end; gap: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0; flex-wrap: wrap;">
         <button onclick="cancelPreview()" class="btn-submit-doc" style="background: #dc3545; color: white; width: auto; padding: 10px 25px; border-radius: 6px; border: none;">
             ❌ ยกเลิก
         </button>
@@ -615,8 +641,8 @@
                 const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">ดูบันทึกตรวจ</button>`;
                 const btnApprove = `<button onclick="approveCorrection('${item._id}')" class="btn-table btn-approve">รับรองผล</button>`;
                 const btnReject = `<button onclick="rejectCorrection('${item._id}')" class="btn-table btn-reject">ส่งกลับแก้ไข</button>`;
-                const btnEdit = `<button onclick="editAssessment('${item._id}')" class="btn-table" style="background:#f59e0b; color:white; margin-left:4px;">แก้ไข</button>`;
-                const btnPDF = `<button onclick="downloadPDF('${item._id}')" class="btn-table" style="background:#0ea5e9; color:white; margin-left:4px;">โหลด PDF</button>`;
+                const btnEdit = `<button onclick="editAssessment('${item._id}')" class="btn-table" style="background:#f59e0b; color:white;">แก้ไข</button>`;
+                const btnPDF = `<button onclick="downloadPDF('${item._id}')" class="btn-table" style="background:#0ea5e9; color:white;">โหลด PDF</button>`;
 
                 if (item.status === 'Passed') {
                     tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnEdit} ${btnPDF}</td></tr>`;
@@ -763,7 +789,7 @@
                         <td>${areaDisplay}</td>
                         <td>
                             <button onclick="openEditModal('${u._id}')" class="btn-table" style="background:#fed7aa; color:#9a3412;">ปรับปรุง/รหัส</button>
-                            <button onclick="deleteUser('${u._id}', '${u.username}')" class="btn-table" style="background:#fee2e2; color:#b91c1c; margin-left:4px;">ลบ</button>
+                            <button onclick="deleteUser('${u._id}', '${u.username}')" class="btn-table" style="background:#fee2e2; color:#b91c1c;">ลบ</button>
                         </td>
                     </tr>
                 `;
@@ -815,7 +841,6 @@
         const password = document.getElementById('editPassword').value.trim();
         const rawArea = document.getElementById('editAssignedArea').value;
 
-        // 🟢 เช็ก ObjectId 24 ตัวอักษรให้ถูกต้องก่อนส่ง
         const isMongoId = /^[0-9a-fA-F]{24}$/.test(rawArea);
         const safeAssignedArea = isMongoId ? rawArea : null;
 
@@ -860,7 +885,6 @@
             return;
         }
 
-        // 🟢 ตรวจสอบ ObjectId 24 ตัวอักษร
         const isMongoId = /^[0-9a-fA-F]{24}$/.test(rawArea);
         const safeAssignedArea = isMongoId ? rawArea : null;
 
@@ -957,144 +981,144 @@
         window.location.href = 'index.html';
     }
     
-async function downloadPDF(assessmentId) {
-    if (!assessmentId || assessmentId === 'undefined') {
-        alert('ไม่พบรหัสอ้างอิงของแบบประเมินนี้ (ID หายไป)');
-        return;
-    }
-
-    try {
-        const token = localStorage.getItem('authToken');
-        const fetchUrl = `https://my-7s-app.onrender.com/api/assessment/${assessmentId}`;
-        
-        const res = await fetch(fetchUrl, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        const data = await res.json();
-        
-        if (!res.ok) {
-            alert('ดึงข้อมูลไม่สำเร็จ: ' + (data.message || 'ไม่ทราบสาเหตุ'));
+    async function downloadPDF(assessmentId) {
+        if (!assessmentId || assessmentId === 'undefined') {
+            alert('ไม่พบรหัสอ้างอิงของแบบประเมินนี้ (ID หายไป)');
             return;
         }
 
-        alert('กำลังเตรียมเอกสาร PDF...');
-
-        const areaText = typeof data.area === 'object' && data.area !== null ? (data.area.areaName || data.area.name || 'ไม่ระบุ') : (data.area || 'ไม่ระบุ');
-        const assessorText = typeof data.assessor === 'object' && data.assessor !== null ? (data.assessor.fullName || data.assessor.firstName || 'คณะกรรมการ') : (data.assessor || 'คณะกรรมการ');
-
-        let contentHtml = `
-            <div style="text-align: center; border-bottom: 2px solid #15803d; padding-bottom: 10px; margin-bottom: 20px;">
-                <h2 style="margin: 0; color: #15803d;">รายงานผลการตรวจประเมิน 7 Plus. และสิ่งแวดล้อม</h2>
-                <h4 style="margin: 5px 0 0 0; color: #475569;">วิทยาลัยรัตภูมิ มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</h4>
-            </div>
-            <table style="width: 100%; margin-bottom: 20px; font-size: 14px; line-height: 1.8;">
-                <tr>
-                    <td style="width: 50%;"><b>สถานที่รับการตรวจ:</b> ${areaText}</td>
-                    <td style="width: 50%;"><b>วันที่ตรวจประเมิน:</b> ${data.createdAt ? new Date(data.createdAt).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
-                </tr>
-                <tr>
-                    <td><b>รอบการประเมิน:</b> ${data.assessmentRound || 'ไม่ระบุ'}</td>
-                    <td><b>ผู้ตรวจประเมิน:</b> ${assessorText}</td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="background-color: #f1f5f9; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #cbd5e1;">
-                        <b>คะแนนรวม:</b> ${data.totalScore} คะแนน 
-                        &nbsp;&nbsp;|&nbsp;&nbsp; <b>คิดเป็นร้อยละ:</b> <span style="color: #15803d; font-weight: bold;">${data.percentage}%</span>
-                        &nbsp;&nbsp;|&nbsp;&nbsp; <b>สถานะ:</b> ${Number(data.percentage) >= 80 ? 'ผ่านเกณฑ์' : 'ต้องปรับปรุง'}
-                    </td>
-                </tr>
-            </table>
-            <h4 style="border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 15px;">รายละเอียดการตรวจประเมินรายข้อ และภาพหลักฐาน</h4>
-        `;
-
-        if (data.items && data.items.length > 0) {
-            data.items.forEach((item, idx) => {
-                const topicScoreText = item.isNA ? '<span style="color:#b91c1c;">(ไม่ประเมิน N/A)</span>' : `<span style="color:#15803d;">(${item.score} / ${item.maxScore} คะแนน)</span>`;
-                
-                contentHtml += `
-                    <div class="keep-together" style="margin-bottom: 20px;">
-                        <div style="font-weight: bold; background-color: #e2e8f0; padding: 5px 10px; border-radius: 4px; font-size: 14px; margin-bottom: 8px;">
-                            ${item.topicName || `หมวดที่ ${idx+1}`} ${topicScoreText}
-                        </div>
-                `;
-
-                if (!item.isNA && item.subItems && item.subItems.length > 0) {
-                    contentHtml += `<ul style="list-style-type: none; padding-left: 15px; margin: 0; font-size: 13px;">`;
-                    item.subItems.forEach(sub => {
-                        const icon = sub.checked ? '<span style="color:#15803d; font-size:16px;">☑</span>' : '<span style="color:#94a3b8; font-size:16px;">☐</span>';
-                        contentHtml += `<li style="margin-bottom: 5px;">${icon} ${sub.text}</li>`;
-                    });
-                    contentHtml += `</ul>`;
-                }
-
-                if (item.topicPhoto) {
-                    contentHtml += `
-                        <div style="margin-top: 10px; text-align: center;">
-                            <img src="${item.topicPhoto}" style="max-height: 250px; max-width: 90%; border-radius: 4px; border: 1px solid #cbd5e1;">
-                        </div>
-                    `;
-                }
-
-                contentHtml += `</div>`;
+        try {
+            const token = localStorage.getItem('authToken');
+            const fetchUrl = `https://my-7s-app.onrender.com/api/assessment/${assessmentId}`;
+            
+            const res = await fetch(fetchUrl, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-        }
+            
+            const data = await res.json();
+            
+            if (!res.ok) {
+                alert('ดึงข้อมูลไม่สำเร็จ: ' + (data.message || 'ไม่ทราบสาเหตุ'));
+                return;
+            }
 
-        const printHtml = '<!DOCTYPE html>\n' +
-            '<html>\n' +
-            '<head>\n' +
-            '    <title>รายงานผลประเมิน_7ส_' + areaText + '</title>\n' +
-            '    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">\n' +
-            '    <style>\n' +
-            '        body { font-family: "Sarabun", sans-serif; color: #1e293b; }\n' +
-            '        @media print {\n' +
-            '            @page { size: A4; margin: 0; }\n' +
-            '            body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }\n' +
-            '            .keep-together { page-break-inside: avoid !important; break-inside: avoid !important; display: block; }\n' +
-            '        }\n' +
-            '    </style>\n' +
-            '</head>\n' +
-            '<' + 'body>\n' +
-            '    <table style="width: 100%; border: none; border-collapse: collapse;">\n' +
-            '        <thead><tr><td style="height: 20mm; border: none; padding: 0;"></td></tr></thead>\n' +
-            '        <tbody><tr><td style="border: none; padding: 0;">\n' +
-            '            <div style="padding: 0 15mm;">\n' +
-            contentHtml + '\n' +
-            '            </div>\n' +
-            '        </td></tr></tbody>\n' +
-            '        <tfoot><tr><td style="height: 15mm; border: none; padding: 0;"></td></tr></tfoot>\n' +
-            '    </table>\n' +
-            '<' + '/body>\n' +
-            '<' + '/html>';
+            alert('กำลังเตรียมเอกสาร PDF...');
 
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'fixed';
-        iframe.style.right = '0';
-        iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        document.body.appendChild(iframe);
+            const areaText = typeof data.area === 'object' && data.area !== null ? (data.area.areaName || data.area.name || 'ไม่ระบุ') : (data.area || 'ไม่ระบุ');
+            const assessorText = typeof data.assessor === 'object' && data.assessor !== null ? (data.assessor.fullName || data.assessor.firstName || 'คณะกรรมการ') : (data.assessor || 'คณะกรรมการ');
 
-        iframe.contentDocument.open();
-        iframe.contentDocument.write(printHtml);
-        iframe.contentDocument.close();
+            let contentHtml = `
+                <div style="text-align: center; border-bottom: 2px solid #15803d; padding-bottom: 10px; margin-bottom: 20px;">
+                    <h2 style="margin: 0; color: #15803d;">รายงานผลการตรวจประเมิน 7 Plus. และสิ่งแวดล้อม</h2>
+                    <h4 style="margin: 5px 0 0 0; color: #475569;">วิทยาลัยรัตภูมิ มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</h4>
+                </div>
+                <table style="width: 100%; margin-bottom: 20px; font-size: 14px; line-height: 1.8;">
+                    <tr>
+                        <td style="width: 50%;"><b>สถานที่รับการตรวจ:</b> ${areaText}</td>
+                        <td style="width: 50%;"><b>วันที่ตรวจประเมิน:</b> ${data.createdAt ? new Date(data.createdAt).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
+                    </tr>
+                    <tr>
+                        <td><b>รอบการประเมิน:</b> ${data.assessmentRound || 'ไม่ระบุ'}</td>
+                        <td><b>ผู้ตรวจประเมิน:</b> ${assessorText}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="background-color: #f1f5f9; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px solid #cbd5e1;">
+                            <b>คะแนนรวม:</b> ${data.totalScore} คะแนน 
+                            &nbsp;&nbsp;|&nbsp;&nbsp; <b>คิดเป็นร้อยละ:</b> <span style="color: #15803d; font-weight: bold;">${data.percentage}%</span>
+                            &nbsp;&nbsp;|&nbsp;&nbsp; <b>สถานะ:</b> ${Number(data.percentage) >= 80 ? 'ผ่านเกณฑ์' : 'ต้องปรับปรุง'}
+                        </td>
+                    </tr>
+                </table>
+                <h4 style="border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; margin-bottom: 15px;">รายละเอียดการตรวจประเมินรายข้อ และภาพหลักฐาน</h4>
+            `;
 
-        iframe.onload = function() {
-            setTimeout(() => {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
+            if (data.items && data.items.length > 0) {
+                data.items.forEach((item, idx) => {
+                    const topicScoreText = item.isNA ? '<span style="color:#b91c1c;">(ไม่ประเมิน N/A)</span>' : `<span style="color:#15803d;">(${item.score} / ${item.maxScore} คะแนน)</span>`;
+                    
+                    contentHtml += `
+                        <div class="keep-together" style="margin-bottom: 20px;">
+                            <div style="font-weight: bold; background-color: #e2e8f0; padding: 5px 10px; border-radius: 4px; font-size: 14px; margin-bottom: 8px;">
+                                ${item.topicName || `หมวดที่ ${idx+1}`} ${topicScoreText}
+                            </div>
+                    `;
+
+                    if (!item.isNA && item.subItems && item.subItems.length > 0) {
+                        contentHtml += `<ul style="list-style-type: none; padding-left: 15px; margin: 0; font-size: 13px;">`;
+                        item.subItems.forEach(sub => {
+                            const icon = sub.checked ? '<span style="color:#15803d; font-size:16px;">☑</span>' : '<span style="color:#94a3b8; font-size:16px;">☐</span>';
+                            contentHtml += `<li style="margin-bottom: 5px;">${icon} ${sub.text}</li>`;
+                        });
+                        contentHtml += `</ul>`;
+                    }
+
+                    if (item.topicPhoto) {
+                        contentHtml += `
+                            <div style="margin-top: 10px; text-align: center;">
+                                <img src="${item.topicPhoto}" style="max-height: 250px; max-width: 90%; border-radius: 4px; border: 1px solid #cbd5e1;">
+                            </div>
+                        `;
+                    }
+
+                    contentHtml += `</div>`;
+                });
+            }
+
+            const printHtml = '<!DOCTYPE html>\n' +
+                '<html>\n' +
+                '<head>\n' +
+                '    <title>รายงานผลประเมิน_7ส_' + areaText + '</title>\n' +
+                '    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">\n' +
+                '    <style>\n' +
+                '        body { font-family: "Sarabun", sans-serif; color: #1e293b; }\n' +
+                '        @media print {\n' +
+                '            @page { size: A4; margin: 0; }\n' +
+                '            body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }\n' +
+                '            .keep-together { page-break-inside: avoid !important; break-inside: avoid !important; display: block; }\n' +
+                '        }\n' +
+                '    </style>\n' +
+                '</head>\n' +
+                '<' + 'body>\n' +
+                '    <table style="width: 100%; border: none; border-collapse: collapse;">\n' +
+                '        <thead><tr><td style="height: 20mm; border: none; padding: 0;"></td></tr></thead>\n' +
+                '        <tbody><tr><td style="border: none; padding: 0;">\n' +
+                '            <div style="padding: 0 15mm;">\n' +
+                contentHtml + '\n' +
+                '            </div>\n' +
+                '        </td></tr></tbody>\n' +
+                '        <tfoot><tr><td style="height: 15mm; border: none; padding: 0;"></td></tr></tfoot>\n' +
+                '    </table>\n' +
+                '<' + '/body>\n' +
+                '<' + '/html>';
+
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+
+            iframe.contentDocument.open();
+            iframe.contentDocument.write(printHtml);
+            iframe.contentDocument.close();
+
+            iframe.onload = function() {
                 setTimeout(() => {
-                    document.body.removeChild(iframe);
-                }, 5000);
-            }, 800); 
-        };
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                    }, 5000);
+                }, 800); 
+            };
 
-    } catch (err) {
-        console.error('Error generating PDF:', err);
-        alert('เกิดข้อผิดพลาดของระบบ: ' + err.message);
+        } catch (err) {
+            console.error('Error generating PDF:', err);
+            alert('เกิดข้อผิดพลาดของระบบ: ' + err.message);
+        }
     }
-}
 
     function openRoundSettingModal() {
         document.getElementById('roundSettingModal').style.display = 'flex';
@@ -1180,15 +1204,15 @@ async function downloadPDF(assessmentId) {
 
                     html += `
                     <div class="card mb-3" id="admin-topic-card-${index}">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background-color:#f8fafc;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background-color:#f8fafc; padding: 10px;">
                             <h5 class="mb-0" style="font-size:1em; font-weight:bold; color:var(--gov-primary-dark);">${topicName}</h5>
                             <label style="color: #b91c1c; font-weight:bold; cursor:pointer; font-size:0.9em;">
                                 <input type="checkbox" id="admin-na-${index}" ${item.isNA ? 'checked' : ''} onchange="adminToggleNA(${index})" style="transform: scale(1.3); margin-right:5px;"> 
                                 ไม่ประเมิน (N/A)
                             </label>
                         </div>
-                        <div class="card-body" style="${item.isNA ? 'opacity: 0.5;' : ''}">
-                            <ul style="list-style:none; padding-left:0;">
+                        <div class="card-body" style="${item.isNA ? 'opacity: 0.5;' : ''} padding: 10px;">
+                            <ul style="list-style:none; padding-left:0; margin:0;">
                     `;
 
                     if (item.subItems && item.subItems.length > 0) {
@@ -1251,7 +1275,6 @@ async function downloadPDF(assessmentId) {
         const updatedItems = currentEditItems.map((item, index) => {
             const isNA = document.getElementById(`admin-na-${index}`)?.checked || false;
             const checkboxes = document.querySelectorAll(`.admin-crit-${index}`);
-            const checkedCount = document.querySelectorAll(`.admin-crit-${index}:checked`).length;
 
             let updatedSubItems = [];
             if (item.subItems && item.subItems.length > 0) {
@@ -1262,6 +1285,8 @@ async function downloadPDF(assessmentId) {
                     };
                 });
             }
+
+            const checkedCount = document.querySelectorAll(`.admin-crit-${index}:checked`).length;
 
             return {
                 topicName: item.topicName,
@@ -1378,7 +1403,7 @@ async function downloadPDF(assessmentId) {
 
             for (let i = 1; i < jsonData.length; i++) {
                 const row = jsonData[i];
-                if (row.length === 0) continue;
+                if (!row || row.length === 0) continue;
 
                 const catNum = row[0] || '';
                 const catName = row[1] || '';
@@ -1392,13 +1417,13 @@ async function downloadPDF(assessmentId) {
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="td-cat-num" contenteditable="true" style="text-align:center; font-weight:bold; background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขเลขหมวด">
+                    <td class="td-cat-num" contenteditable="true" style="text-align:center; font-weight:bold; background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px;" title="คลิกเพื่อแก้ไขเลขหมวด">
                         ${currentCatNum}
                     </td>
-                    <td class="td-cat-title" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขชื่อหมวด">
+                    <td class="td-cat-title" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px;" title="คลิกเพื่อแก้ไขชื่อหมวด">
                         ${currentCatName}
                     </td>
-                    <td class="td-cat-item" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขรายละเอียดข้อย่อย">
+                    <td class="td-cat-item" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px;" title="คลิกเพื่อแก้ไขรายละเอียดข้อย่อย">
                         ${itemNum ? itemNum + ' ' : ''}${subDetail}
                     </td>
                 `;
@@ -1513,24 +1538,24 @@ async function downloadPDF(assessmentId) {
                     const dateStr = new Date(form.createdAt).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
                     
                     let statusBadge = '';
-                    let actionButtons = `<div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">`;
+                    let actionButtons = `<div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">`;
                     
-                    actionButtons += `<button onclick="editForm('${form._id}')" style="background:#f59e0b; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">✏️ แก้ไข</button>`;
+                    actionButtons += `<button onclick="editForm('${form._id}')" style="background:#f59e0b; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:0.85em;">✏️ แก้ไข</button>`;
 
                     if (form.publishMode === 'immediate') {
                         statusBadge = '<span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:4px; font-size:0.85em; font-weight:600;">🟢 ใช้งานจริง</span>';
-                        actionButtons += `<button onclick="pauseForm('${form._id}')" style="background:#64748b; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">⏸️ พักใช้งาน</button>`;
+                        actionButtons += `<button onclick="pauseForm('${form._id}')" style="background:#64748b; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:0.85em;">⏸️ พัก</button>`;
                     } else {
                         if (form.publishMode === 'draft') {
                             statusBadge = '<span style="background:#f1f5f9; color:#475569; padding:4px 8px; border-radius:4px; font-size:0.85em; font-weight:600;">📝 ฉบับร่าง</span>';
                         } else if (form.publishMode === 'scheduled') {
                             const sDate = new Date(form.publishDate).toLocaleDateString('th-TH');
-                            statusBadge = `<span style="background:#fef9c3; color:#854d0e; padding:4px 8px; border-radius:4px; font-size:0.85em; font-weight:600;">⏰ ตั้งเวลา (${sDate})</span>`;
+                            statusBadge = `<span style="background:#fef9c3; color:#854d0e; padding:4px 8px; border-radius:4px; font-size:0.85em; font-weight:600;">⏰ (${sDate})</span>`;
                         }
-                        actionButtons += `<button onclick="publishForm('${form._id}')" style="background:#10b981; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">🚀 ใช้งาน</button>`;
+                        actionButtons += `<button onclick="publishForm('${form._id}')" style="background:#10b981; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:0.85em;">🚀 ใช้งาน</button>`;
                     }
 
-                    actionButtons += `<button onclick="deleteForm('${form._id}')" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:0.85em;">🗑️ ลบ</button>`;
+                    actionButtons += `<button onclick="deleteForm('${form._id}')" style="background:#dc3545; color:#fff; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:0.85em;">🗑️ ลบ</button>`;
                     actionButtons += `</div>`;
 
                     const tr = document.createElement('tr');
@@ -1606,13 +1631,13 @@ async function downloadPDF(assessmentId) {
             cat.items.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="td-cat-num" contenteditable="true" style="text-align:center; font-weight:bold; background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขเลขหมวด">
+                    <td class="td-cat-num" contenteditable="true" style="text-align:center; font-weight:bold; background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px;" title="คลิกเพื่อแก้ไขเลขหมวด">
                         ${cat.num}
                     </td>
-                    <td class="td-cat-title" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขชื่อหมวด">
+                    <td class="td-cat-title" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px;" title="คลิกเพื่อแก้ไขชื่อหมวด">
                         ${cat.title}
                     </td>
-                    <td class="td-cat-item" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px; cursor: text;" title="คลิกเพื่อแก้ไขรายละเอียดข้อย่อย">
+                    <td class="td-cat-item" contenteditable="true" style="background:#fffbe6; border: 1px dashed #f6c23e; padding: 8px;" title="คลิกเพื่อแก้ไขรายละเอียดข้อย่อย">
                         ${item}
                     </td>
                 `;

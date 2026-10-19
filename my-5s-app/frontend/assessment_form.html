@@ -33,19 +33,21 @@
             background: linear-gradient(135deg, var(--gov-primary-dark) 0%, var(--gov-primary) 100%);
             color: white;
             padding: 0 30px;
-            height: 75px;
+            min-height: 75px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
             border-bottom: 3px solid var(--gov-gold);
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .gov-title-box { display: flex; align-items: center; gap: 14px; }
         .gov-emblem { font-size: 26px; }
         .gov-title h1 { margin: 0; font-size: 1.15em; font-weight: 700; }
         .gov-title p { margin: 0; font-size: 0.8em; opacity: 0.9; }
 
-        .gov-user-panel { display: flex; align-items: center; gap: 12px; }
+        .gov-user-panel { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .gov-user-tag {
             background: rgba(255, 255, 255, 0.15);
             padding: 6px 14px;
@@ -105,11 +107,18 @@
             font-weight: 600;
         }
 
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 15px;
+        }
+
         .doc-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9em;
-            margin-top: 15px;
+            min-width: 600px;
         }
         .doc-table th, .doc-table td {
             border: 1px solid var(--gov-border);
@@ -183,7 +192,6 @@
             color: var(--gov-muted);
         }
 
-        /* 📸 ปุ่มเลือกรูปภาพและถ่ายรูป */
         .upload-btn-group {
             display: flex;
             gap: 8px;
@@ -293,6 +301,8 @@
             align-items: center;
             margin-top: 20px;
             text-align: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
         .summary-num { font-size: 1.9em; font-weight: 700; color: var(--gov-primary); }
 
@@ -311,6 +321,28 @@
             transition: background 0.2s;
         }
         .btn-submit-doc:hover { background: var(--gov-primary-dark); }
+
+        /* 📱 Responsive Mobile & iPad */
+        @media (max-width: 768px) {
+            .gov-header {
+                padding: 12px 16px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .gov-user-panel {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .container { padding: 0 10px; margin: 15px auto; }
+            .doc-paper { padding: 18px 16px; }
+            .form-grid { grid-template-columns: 1fr; padding: 12px; }
+            .form-field[style*="span 2"] { grid-column: span 1 !important; }
+            .sub-item-row { flex-direction: column; gap: 6px; }
+            .sub-item-actions { width: 100%; justify-content: flex-start; }
+            .summary-box { flex-direction: column; align-items: stretch; }
+            .summary-box > div { border-bottom: 1px dashed var(--gov-border); padding-bottom: 10px; }
+            .summary-box > div:last-child { border-bottom: none; padding-bottom: 0; }
+        }
     </style>
 </head>
 <body>
@@ -328,7 +360,7 @@
             <span>คณะกรรมการตรวจประเมิน: </span>
             <strong id="assessorName">กำลังโหลด...</strong>
         </div>
-        <button id="btnSwitchToOwner" style="display: none; background: #00bcd4; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px;" onclick="window.location.href='owner_dashboard.html'">
+        <button id="btnSwitchToOwner" style="display: none; background: #00bcd4; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="window.location.href='owner_dashboard.html'">
             🔄 โหมดเจ้าของพื้นที่
         </button>
         <button class="btn-gov-logout" onclick="logout()">ออกจากระบบ</button>
@@ -378,24 +410,26 @@
         <div style="font-size: 0.92em; line-height: 1.8; margin-bottom: 15px;">
             <span><b>ผู้รับผิดชอบพื้นที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
             <span><b>ประเภทพื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
-            <span style="color: #b91c1c; font-weight: bold; margin-left: 10px;">🔒 (ล็อคประเภทพื้นที่ตามสิทธิ์ผู้ใช้งาน)</span>
+            <span style="color: #b91c1c; font-weight: bold; margin-left: 10px; display: inline-block;">🔒 (ล็อคประเภทพื้นที่ตามสิทธิ์ผู้ใช้งาน)</span>
         </div>
 
         <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 4px; font-size: 0.88em; border-left: 4px solid var(--gov-primary); margin-bottom: 10px;">
             <b>คำชี้แจงการให้คะแนน:</b> ติ๊กเลือกข้อกำหนดที่ดำเนินการถูกต้อง หากข้อย่อยใดในห้องไม่มีของจริง ให้ติ๊ก <b>"ไม่ประเมิน (N/A)"</b> ที่ข้อย่อยนั้น ระบบจะตัดคะแนนเต็มข้อนั้นออกให้อัตโนมัติ
         </div>
 
-        <table class="doc-table">
-            <thead>
-                <tr>
-                    <th style="width: 55%;">รายละเอียด / เกณฑ์การประเมิน</th>
-                    <th style="width: 45%;">ผลการตรวจสอบตามเกณฑ์</th>
-                </tr>
-            </thead>
-            <tbody id="evaluationItems">
-                <tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจด้านบน</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="doc-table">
+                <thead>
+                    <tr>
+                        <th style="width: 55%;">รายละเอียด / เกณฑ์การประเมิน</th>
+                        <th style="width: 45%;">ผลการตรวจสอบตามเกณฑ์</th>
+                    </tr>
+                </thead>
+                <tbody id="evaluationItems">
+                    <tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจด้านบน</td></tr>
+                </tbody>
+            </table>
+        </div>
 
         <div class="summary-box">
             <div>
@@ -424,7 +458,6 @@
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
     
-    // 🏛️ ข้อมูลห้องจริงวิทยาลัยรัตภูมิแยกตามประเภทพื้นที่ (Category)
     const rattaData = {
         "สำนักงาน": [
             "1. งานทะเบียนและวัดผล (MS 9105)",
@@ -640,7 +673,6 @@
             }
         } catch (err) {}
 
-        // แบบฟอร์มมาตรฐาน 7ส.
         currentFormTemplate = [
             {
                 num: "1",
@@ -738,16 +770,13 @@
                             <b>รายการหลักฐาน:</b> ${cat.evidence || 'ภาพถ่ายสภาพพื้นที่จริง/เอกสารที่เกี่ยวข้อง'}
                         </div>
                         
-                        <!-- 📸 ส่วนเลือกไฟล์ / ถ่ายรูปหลักฐาน -->
                         <div style="margin-top: 10px;">
                             <label style="font-size: 0.85em; font-weight: 600; display:block; margin-bottom:4px;">แนบรูปภาพหลักฐาน (ถ้ามี):</label>
                             
-                            <!-- Input ซ่อนจริง -->
                             <input type="file" id="file-input-${secNum}" accept="image/*" style="display:none;" onchange="handleImageSelected(event, '${secNum}')">
                             <input type="file" id="camera-input-${secNum}" accept="image/*" capture="environment" style="display:none;" onchange="handleImageSelected(event, '${secNum}')">
                             <input type="hidden" id="photo-base64-${secNum}" value="">
 
-                            <!-- ปุ่มแสดงให้ผู้ใช้กด -->
                             <div class="upload-btn-group">
                                 <button type="button" class="btn-upload-action btn-upload-camera" onclick="document.getElementById('camera-input-${secNum}').click()">
                                     📷 ถ่ายรูปด้วยกล้อง
@@ -757,7 +786,6 @@
                                 </button>
                             </div>
 
-                            <!-- แสดงรูปพรีวิวเล็กๆ เมื่อเลือกรูปแล้ว -->
                             <div class="img-preview-box" id="preview-box-${secNum}">
                                 <img id="preview-img-${secNum}" src="" alt="พรีวิวหลักฐาน">
                                 <button type="button" class="btn-remove-img" onclick="removeImage('${secNum}')">✕</button>
@@ -790,7 +818,6 @@
         calculateScoreFromCheckboxes();
     }
 
-    // 📷 บีบอัดและจัดการเมื่อเลือกรูปภาพหรือถ่ายรูป
     function handleImageSelected(event, secNum) {
         const file = event.target.files[0];
         if (!file) return;
@@ -817,11 +844,9 @@
 
                 const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
                 
-                // บันทึกค่าลง Input hidden
                 const hiddenInput = document.getElementById(`photo-base64-${secNum}`);
                 if (hiddenInput) hiddenInput.value = compressedBase64;
 
-                // แสดงรูปพรีวิว
                 const previewBox = document.getElementById(`preview-box-${secNum}`);
                 const previewImg = document.getElementById(`preview-img-${secNum}`);
                 if (previewBox && previewImg) {
@@ -834,7 +859,6 @@
         reader.readAsDataURL(file);
     }
 
-    // 🗑️ ลบรูปภาพที่เลือก
     function removeImage(secNum) {
         const hiddenInput = document.getElementById(`photo-base64-${secNum}`);
         if (hiddenInput) hiddenInput.value = '';

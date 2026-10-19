@@ -31,20 +31,22 @@
         .gov-header {
             background: linear-gradient(135deg, var(--gov-primary-dark) 0%, var(--gov-primary) 100%);
             color: white;
-            padding: 0 30px;
-            height: 75px;
+            padding: 12px 30px;
+            min-height: 75px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid var(--gov-gold);
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .gov-title-box { display: flex; align-items: center; gap: 14px; }
         .gov-emblem { font-size: 26px; }
         .gov-title h1 { margin: 0; font-size: 1.15em; font-weight: 700; }
         .gov-title p { margin: 0; font-size: 0.8em; opacity: 0.9; }
 
-        .gov-user-panel { display: flex; align-items: center; gap: 12px; }
+        .gov-user-panel { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .gov-user-tag {
             background: rgba(255, 255, 255, 0.15);
             padding: 6px 14px;
@@ -91,10 +93,17 @@
         }
         .doc-panel-header h2 { margin: 0; font-size: 1.15em; font-weight: 700; }
 
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .gov-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.92em;
+            min-width: 600px;
         }
         .gov-table th, .gov-table td {
             border: 1px solid var(--gov-border);
@@ -136,11 +145,12 @@
             background-color: rgba(15, 23, 42, 0.6);
             align-items: center;
             justify-content: center;
+            padding: 10px;
         }
         .modal-content {
             background-color: #ffffff;
             border-radius: 6px;
-            width: 90%;
+            width: 100%;
             max-width: 650px;
             max-height: 90vh;
             overflow-y: auto;
@@ -190,10 +200,10 @@
             display: none;
             position: absolute;
             top: 65px;
-            right: 130px;
+            right: 20px;
             background: white;
             color: #0f172a;
-            width: 320px;
+            width: 300px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             border-radius: 6px;
             z-index: 1000;
@@ -221,6 +231,16 @@
             border-left: 4px solid #ea580c;
         }
 
+        /* 📱 Responsive Mobile & iPad */
+        @media (max-width: 768px) {
+            .gov-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
+            .gov-user-panel { width: 100%; justify-content: space-between; }
+            .container { padding: 0 10px; margin: 15px auto; }
+            .doc-panel { padding: 16px 14px; }
+            .modal-content { padding: 18px 14px; }
+            .official-notice-box > div { flex-direction: column; gap: 12px; }
+            #btnOpenFixFromAlert { width: 100%; }
+        }
     </style>
 </head>
 <body>
@@ -249,17 +269,16 @@
             <span>ผู้รับผิดชอบสถานที่: </span>
             <strong id="ownerName">กำลังโหลด...</strong>
         </div>
-        <button id="btnSwitchToAssessor" style="display: none; background: #ff9800; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px;" onclick="window.location.href='assessment_form.html'">
-    🔄 โหมดผู้ประเมิน
+        <button id="btnSwitchToAssessor" style="display: none; background: #ff9800; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="window.location.href='assessment_form.html'">
+            🔄 โหมดผู้ประเมิน
         </button>
         <button class="btn-gov-logout" onclick="logout()">ออกจากระบบ</button>
     </div>
 </header>
 
 <main class="container">
-    <!-- บันทึกข้อความแจ้งเตือนด่วน -->
     <div id="urgentAlertBox" class="official-notice-box">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div>
             <div>
                 <h3 style="margin: 0 0 6px 0; color: #9a3412; font-size: 1.1em; font-weight: 700;">
                     ⚠️ บันทึกข้อความแจ้งเตือน: มีรายการตรวจพบที่ไม่ผ่านเกณฑ์มาตรฐาน
@@ -273,49 +292,50 @@
         </div>
     </div>
 
-    <!-- รายการข้อตรวจพบที่ต้องปรับปรุง -->
     <section class="doc-panel" style="border-top: 4px solid #ea580c;">
         <div class="doc-panel-header">
             <h2 style="color: #9a3412;">📋 บัญชีรายการข้อตรวจพบที่ต้องปรับปรุงแก้ไข (Action Plan)</h2>
         </div>
-        <table class="gov-table">
-            <thead>
-                <tr>
-                    <th>วันที่มีการตรวจ</th>
-                    <th>สถานที่รับผิดชอบ</th>
-                    <th>ร้อยละที่ได้</th>
-                    <th>สถานะการพิจารณา</th>
-                    <th>การปฏิบัติการ</th>
-                </tr>
-            </thead>
-            <tbody id="tablePendingTasks">
-                <tr><td colspan="5" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังตรวจสอบข้อมูล...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr>
+                        <th>วันที่มีการตรวจ</th>
+                        <th>สถานที่รับผิดชอบ</th>
+                        <th>ร้อยละที่ได้</th>
+                        <th>สถานะการพิจารณา</th>
+                        <th>การปฏิบัติการ</th>
+                    </tr>
+                </thead>
+                <tbody id="tablePendingTasks">
+                    <tr><td colspan="5" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังตรวจสอบข้อมูล...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 
-    <!-- ประวัติสถานที่ที่ผ่านการรับรองมาตรฐาน -->
     <section class="doc-panel" style="border-top: 4px solid var(--gov-primary);">
         <div class="doc-panel-header">
             <h2 style="color: var(--gov-primary);">📜 ทะเบียนประวัติสถานที่ที่ผ่านการรับรองมาตรฐาน</h2>
         </div>
-        <table class="gov-table">
-            <thead>
-                <tr>
-                    <th>วันที่มีการตรวจ</th>
-                    <th>สถานที่รับผิดชอบ</th>
-                    <th>ร้อยละที่ได้</th>
-                    <th>ผลการรับรองมาตรฐาน</th>
-                </tr>
-            </thead>
-            <tbody id="tableHistoryTasks">
-                <tr><td colspan="4" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังรวบรวมประวัติการรับรอง...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr>
+                        <th>วันที่มีการตรวจ</th>
+                        <th>สถานที่รับผิดชอบ</th>
+                        <th>ร้อยละที่ได้</th>
+                        <th>ผลการรับรองมาตรฐาน</th>
+                    </tr>
+                </thead>
+                <tbody id="tableHistoryTasks">
+                    <tr><td colspan="4" style="text-align: center; color: var(--gov-muted); padding: 20px;">กำลังรวบรวมประวัติการรับรอง...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </main>
 
-<!-- หน้าต่างรายงานผลการปรับปรุงสถานที่ -->
 <div id="correctionModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -342,7 +362,7 @@
                     <img id="ownerFixPreview" style="max-width: 100%; max-height: 220px; border-radius: 4px; border: 1px solid var(--gov-border);">
                 </div>
             </div>
-            <div style="text-align: right; margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px;">
+            <div style="text-align: right; margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
                 <button onclick="closeCorrectionModal()" style="padding: 8px 16px; border: 1px solid var(--gov-border); background: white; border-radius: 4px; cursor: pointer;">ยกเลิก</button>
                 <button onclick="submitCorrection()" class="btn-action-gov" style="background: var(--gov-primary); padding: 8px 20px;">
                     ส่งรายงานให้เลขานุการตรวจสอบ
@@ -366,6 +386,11 @@
         }
         const user = JSON.parse(userStr);
         document.getElementById('ownerName').innerText = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
+        
+        if (user.role && user.role.includes('&')) {
+            document.getElementById('btnSwitchToAssessor').style.display = 'inline-block';
+        }
+
         loadOwnerTasks();
     };
 
@@ -534,7 +559,6 @@
         dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
     }
 
-    // 🟢 ปิดกล่องแจ้งเตือนเมื่อคลิกที่อื่นบนหน้าจอ
     window.addEventListener('click', function(e) {
         if (!document.querySelector('.notification-bell').contains(e.target) && 
             !document.getElementById('notifDropdown').contains(e.target)) {
@@ -542,7 +566,6 @@
         }
     });
 
-    // 🟢 ฟังก์ชันอัปเดตตัวเลขแจ้งเตือนและสร้างรายการ
     function updateNotifications(assessments) {
         const notifList = document.getElementById('notifList');
         const badge = document.getElementById('notifBadge');
@@ -569,35 +592,24 @@
         }
     }
 
-    // 🟢 เมื่อคลิกแจ้งเตือน ให้ปิดกล่องและเปิด Modal แทน
     function handleNotificationClick(taskId) {
-        document.getElementById('notifDropdown').style.display = 'none'; // ปิดกล่องแจ้งเตือน
+        document.getElementById('notifDropdown').style.display = 'none';
         
         const targetRow = document.getElementById(`row-${taskId}`);
         if (targetRow) {
-            // เลื่อนหน้าจอให้บรรทัดเป้าหมายมาอยู่กลางจอแบบนุ่มนวล
             targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // ใส่เอฟเฟกต์ไฮไลต์สีพื้นหลังให้กระพริบเป็นสีส้มอ่อน
             targetRow.style.transition = 'background-color 0.4s ease';
             targetRow.style.backgroundColor = '#fed7aa'; 
             
-            // ลบสีไฮไลต์ออกเมื่อผ่านไป 1.5 วินาที เพื่อคืนสภาพตารางปกติ
             setTimeout(() => {
                 targetRow.style.backgroundColor = 'transparent'; 
             }, 1500);
         }
     }
+
     function logout() {
         localStorage.clear();
         window.location.href = 'index.html';
-    }
-</script>
-<script>
-    // ตรวจสอบว่าเป็นสิทธิ์ควบตำแหน่งหรือไม่ (เช็กว่ามีเครื่องหมาย & ในชื่อสิทธิ์ไหม)
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    if (userData.role && userData.role.includes('&')) {
-        document.getElementById('btnSwitchToAssessor').style.display = 'inline-block';
     }
 </script>
 </body>
