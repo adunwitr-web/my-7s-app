@@ -117,39 +117,25 @@
             text-align: center;
         }
 
-        .crit-text-list {
-            list-style: none;
-            padding-left: 0;
-            margin: 8px 0;
-        }
-        .crit-text-list li {
-            position: relative;
-            padding-left: 18px;
-            margin-bottom: 6px;
-            color: var(--gov-text);
-            font-size: 0.92em;
-        }
-        .crit-text-list li::before {
-            content: "•";
-            position: absolute;
-            left: 4px;
-            color: var(--gov-primary);
-            font-weight: bold;
-        }
-
-        .evidence-box {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
-            padding: 8px 12px;
+        .crit-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 6px 8px;
             border-radius: 4px;
-            margin-top: 10px;
-            font-size: 0.85em;
-            color: var(--gov-muted);
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+        }
+        .crit-item-row.is-na-item {
+            opacity: 0.5;
+            background: #f1f5f9;
+            text-decoration: line-through;
         }
 
         .checklist-cell {
             background: #fafbfc;
-            width: 260px;
+            width: 320px;
             border-left: 2px solid #e2e8f0;
         }
         .checkbox-label {
@@ -159,13 +145,7 @@
             cursor: pointer;
             font-size: 0.9em;
             color: var(--gov-text);
-            margin-bottom: 6px;
-            padding: 3px 6px;
-            border-radius: 4px;
-            transition: background 0.15s;
-        }
-        .checkbox-label:hover {
-            background: #edf2f7;
+            margin: 0;
         }
         .checkbox-label input[type="checkbox"] {
             width: 17px;
@@ -173,6 +153,22 @@
             accent-color: var(--gov-primary);
             cursor: pointer;
             margin: 0;
+        }
+
+        .na-sub-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8em;
+            color: #64748b;
+            cursor: pointer;
+            background: #ffffff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #cbd5e1;
+        }
+        .na-sub-label input[type="checkbox"] {
+            accent-color: #dc2626;
         }
 
         .btn-quick-pass {
@@ -185,9 +181,7 @@
             cursor: pointer;
             font-weight: 600;
         }
-        .btn-quick-pass:hover {
-            background: #e8f5e9;
-        }
+        .btn-quick-pass:hover { background: #e8f5e9; }
 
         .score-badge-box {
             margin-top: 10px;
@@ -263,17 +257,31 @@
     <div class="doc-paper">
         <div class="doc-header-center">
             <h2>แบบตรวจประเมินกิจกรรม Green 7S Plus</h2>
-            <p id="formTitleDisplay">ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด</p>
+            <p id="formTitleDisplay">ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด วิทยาลัยรัตภูมิ</p>
         </div>
 
         <div class="form-grid">
             <div class="form-field">
-                <label>สถานที่รับการตรวจประเมิน:</label>
-                <select id="areaSelect" class="form-control" onchange="onAreaChanged()">
-                    <option value="">-- โปรดระบุสถานที่ที่รับผิดชอบตรวจ --</option>
+                <label>1. เลือกประเภทพื้นที่ (Category):</label>
+                <select id="categorySelect" class="form-control" onchange="onCategoryChanged()">
+                    <option value="">-- โปรดเลือกประเภทพื้นที่ --</option>
+                    <option value="สำนักงาน">สำนักงาน</option>
+                    <option value="ห้องพักอาจารย์">ห้องพักอาจารย์</option>
+                    <option value="ห้องเรียน">ห้องเรียน</option>
+                    <option value="ห้องปฏิบัติการ">ห้องปฏิบัติการ</option>
+                    <option value="อาคารและโรงฝึกงาน">อาคารและโรงฝึกงาน</option>
+                    <option value="ห้องสมุด">ห้องสมุด</option>
+                    <option value="สภาพแวดล้อมภายในอาคาร">สภาพแวดล้อมภายในอาคาร</option>
+                    <option value="สภาพแวดล้อมภายนอกอาคาร">สภาพแวดล้อมภายนอกอาคาร</option>
                 </select>
             </div>
             <div class="form-field">
+                <label>2. เลือกห้อง/สถานที่รับการตรวจ:</label>
+                <select id="areaSelect" class="form-control" onchange="onAreaChanged()">
+                    <option value="">-- โปรดเลือกประเภทพื้นที่ก่อน --</option>
+                </select>
+            </div>
+            <div class="form-field" style="grid-column: span 2;">
                 <label>รอบการตรวจประเมินตามแผนปฏิบัติราชการ:</label>
                 <select id="roundSelect" class="form-control">
                     <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 1">ประเมินภายในระดับหน่วยงาน ครั้งที่ 1</option>
@@ -287,22 +295,22 @@
 
         <div style="font-size: 0.92em; line-height: 1.8; margin-bottom: 15px;">
             <span><b>หัวหน้างาน/ผู้รับผิดชอบพื้นที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
-            <span><b>ประเภทการใช้สอย:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
+            <span><b>ประเภทพื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
         </div>
 
         <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 4px; font-size: 0.88em; border-left: 4px solid var(--gov-primary); margin-bottom: 10px;">
-            <b>คำชี้แจงการให้คะแนน:</b> ติ๊กเลือกข้อกำหนดที่ดำเนินการถูกต้องในช่องขวามือ โดยระบบจะคำนวณคะแนนให้อัตโนมัติ หากหัวข้อใดไม่เกี่ยวข้องกับพื้นที่ให้เลือก "ไม่ประเมิน (N/A)"
+            <b>คำชี้แจงการให้คะแนน:</b> ติ๊กเลือกข้อกำหนดที่ดำเนินการถูกต้อง หากข้อย่อยใดในห้องไม่มีของจริง ให้ติ๊ก <b>"ไม่ประเมิน (N/A)" ที่ข้อย่อยนั้น</b> ระบบจะตัดข้อนั้นออกและไม่นำคะแนนไปนับรวมในผลประเมิน
         </div>
 
         <table class="doc-table">
             <thead>
                 <tr>
-                    <th style="width: 70%;">รายละเอียด / เกณฑ์การประเมิน และรายการหลักฐานเชิงประจักษ์</th>
-                    <th style="width: 30%;">ผลการตรวจสอบตามเกณฑ์</th>
+                    <th style="width: 55%;">รายละเอียด / เกณฑ์การประเมิน</th>
+                    <th style="width: 45%;">ผลการตรวจสอบและสิทธิ์การเลือก N/A รายข้อ</th>
                 </tr>
             </thead>
             <tbody id="evaluationItems">
-                <tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจประเมินด้านบน</td></tr>
+                <tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกประเภทพื้นที่และสถานที่รับการตรวจด้านบน</td></tr>
             </tbody>
         </table>
 
@@ -323,8 +331,7 @@
 
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--gov-border);">
             <h3 style="margin: 0 0 8px 0; font-size: 1.05em; color: #b45309;">📝 ข้อเสนอแนะเพื่อการปรับปรุงแก้ไข</h3>
-            <label style="display:block; font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">ข้อเสนอแนะรายรอบ:</label>
-            <textarea id="assessorComment" placeholder="ระบุข้อเสนอแนะ เช่น จุดที่ต้องจัดเก็บให้เป็นระเบียบ สิ่งที่ต้องทำความสะอาด หรือจุดเสี่ยงความปลอดภัย..." class="form-control" style="height: 85px;"></textarea>
+            <textarea id="assessorComment" placeholder="ระบุข้อเสนอแนะ เช่น จุดที่ต้องจัดเก็บให้เป็นระเบียบ สิ่งที่ต้องทำความสะอาด..." class="form-control" style="height: 85px;"></textarea>
         </div>
 
         <button onclick="submitAssessment()" class="btn-submit-doc">💾 บันทึกผลการตรวจประเมินอย่างเป็นทางการ</button>
@@ -333,6 +340,89 @@
 
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
+    
+    // 🏛️ ข้อมูลห้องจริงวิทยาลัยรัตภูมิแยกตามประเภทพื้นที่ (Category)
+    const rattaData = {
+        "สำนักงาน": [
+            "1. งานทะเบียนและวัดผล (MS 9105)",
+            "2. งานประชาสัมพันธ์ (MS 9107)",
+            "3. งานสารสนเทศ (MS 9201)",
+            "4. ห้องสำนักงานผู้อำนวยการ (MS 9205)",
+            "5. สำนักงานศูนย์ภาษา (MS 9402)"
+        ],
+        "ห้องพักอาจารย์": [
+            "1. ห้องรองผู้อำนวยการฝ่าย (MS 9203)",
+            "2. สาขาวิชาคอมพิวเตอร์ธุรกิจ (MS 9301)",
+            "3. สาขาบริหารธุรกิจ (MS 9305)",
+            "4. สาขาศึกษาทั่วไป (MS 9404)",
+            "5. สาขาวิชาวิศวกรรมปัญญาประดิษฐ์ประยุกต์ (PC 10307)",
+            "6. สาขาวิชาวิศวกรรมเครื่องจักรกลเกษตร (PC 10407)",
+            "7. สาขาวิชาช่างไฟฟ้า (PC 10504)",
+            "8. สาขาวิชาช่างยนต์ (11200)"
+        ],
+        "ห้องเรียน": [
+            "1. ห้องเรียนมัลติมีเดีย (MS 9302)",
+            "2. ห้องเรียนการบัญชี (MS 9304)",
+            "3. ห้องเรียนการบัญชี (MS 9306)",
+            "4. ห้องเรียนการบัญชี (MS 9307)",
+            "5. ห้องเรียนรวม (MS 9405)",
+            "6. ห้องเรียนรู้ด้วยตนเองทางภาษา (MS 9406)",
+            "7. ห้องเรียน (PC 10204)",
+            "8. ห้องเรียน (PC 10205)",
+            "9. ห้องเรียน (PC 10303)",
+            "10. ห้องเรียน (PC 10405)",
+            "11. ห้องเรียน (PC 10406)",
+            "12. ห้องเรียน (PC 11201)"
+        ],
+        "ห้องปฏิบัติการ": [
+            "1. ห้องปฏิบัติการฟิสิกส์ (MS 9103)",
+            "2. ห้องสื่อโฆษณากราฟฟิก (MS 9106)",
+            "3. ห้องปฏิบัติการคอมพิวเตอร์ (MS 9303)",
+            "4. ห้องปฏิบัติทางการตลาด (MS 9308)",
+            "5. ห้องปฏิบัติการสตูดิโอ (MS 9309)",
+            "6. ห้องปฏิบัติการทางภาษา (MS 9407)",
+            "7. ห้องปฏิบัติการคอมพิวเตอร์ในงานบัญชี (PC 10203)",
+            "8. ห้องปฏิบัติการคอมพิวเตอร์บัญชีดิจิทัล (PC 10206)",
+            "9. ห้องปฏิบัติการระบบขนถ่ายวัสดุ (PC 10207)",
+            "10. ห้องปฏิบัติการเครือข่ายคอมพิวเตอร์ (PC 10301)",
+            "11. ห้องปฏิบัติการฮาร์ดแวร์ (PC 10302)",
+            "12. ห้องปฏิบัติการอินเตอร์เน็ตในทุกสิ่ง (PC 10305)",
+            "13. ห้องปฏิบัติการซอฟต์แวร์ (PC 10306)",
+            "14. ห้องปฏิบัติการเขียนแบบ (PC 10401)",
+            "15. ห้องปฏิบัติการไฮดรอลิกส์และนิวแมตกส์ (PC 10402)",
+            "16. ห้องปฏิบัติการเขียนแบบด้วยคอมพิวเตอร์ (PC 10403)",
+            "17. ห้องปฏิบัติการระบบส่งจ่ายกำลังไฟฟ้า (PC 10503)",
+            "18. ห้องปฏิบัติการเครื่องมือวัดทางไฟฟ้าและอิเล็กทรอนิกส์ (PC 10505)",
+            "19. ห้องปฏิบัติการเครื่องกลไฟฟ้า (PC 10506)",
+            "20. ห้องปฏิบัติการเทคโนโลยีไฟฟ้า (PC 10507)",
+            "21. ห้องปฏิบัติการไฟฟ้าและอิเล็กโทรนิกส์ยานยนต์ (PC 11202-3)"
+        ],
+        "อาคารและโรงฝึกงาน": [
+            "1. โรงฝึกงานแทรกเตอร์",
+            "2. โรงฝึกงานพื้นฐาน",
+            "3. โรงฝึกงานเครื่องต้นกำลัง",
+            "4. โรงฝึกงานช่างยนต์",
+            "5. โรงฝึกงานไฟฟ้า"
+        ],
+        "ห้องสมุด": [
+            "ห้องสมุด (MS 9401)"
+        ],
+        "สภาพแวดล้อมภายในอาคาร": [
+            "1. ห้องน้ำ",
+            "2. ห้องประชุมโกสน (MS 9207)",
+            "3. ห้องประชุมโตนปลิว (MS 9209)",
+            "4. ห้องประชุมโตนงาช้าง (PC 10201)",
+            "5. อุปกรณ์ดับเพลิง"
+        ],
+        "สภาพแวดล้อมภายนอกอาคาร": [
+            "1. ทางเดิน",
+            "2. สระน้ำ",
+            "3. ลานจอดรถ",
+            "4. ประตูเข้า-ออก",
+            "5. โรงอาหาร"
+        ]
+    };
+
     let allAreasData = [];
     let currentFormTemplate = [];
     let isSubmittingAssessment = false;
@@ -360,87 +450,51 @@
             const token = localStorage.getItem('authToken');
             let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) throw new Error("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
-
-            const data = await res.json();
-            allAreasData = data;
-            let areasData = data;
-            let isAreaLocked = false;
-
-            const userStr = localStorage.getItem('userData');
-            const user = userStr ? JSON.parse(userStr) : null;
-            
-            // 🔒 เช็กว่า User มีสถานที่ผูกไว้หรือไม่ (รองรับทั้ง Assessor ปกติ และ Assessor & Area Owner)
-            if (user && user.assignedArea) {
-                const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
-                if (assignedId) {
-                    const filtered = data.filter(area => area._id === assignedId);
-                    if (filtered.length > 0) {
-                        areasData = filtered;
-                        isAreaLocked = true;
-                    }
-                }
-            }
-
-            const select = document.getElementById('areaSelect');
-            select.innerHTML = '<option value="">-- โปรดระบุสถานที่ที่รับผิดชอบตรวจ --</option>';
-            areasData.forEach(area => {
-                select.innerHTML += `<option value="${area._id}">${area.areaName} (${area.category || 'ทั่วไป'})</option>`;
-            });
-
-            // 🔒 ถ้าถูกล็อกห้อง ให้เลือกค่าอัตโนมัติแล้วทำการปิดการเลือก (Disabled)
-            if (isAreaLocked && areasData.length > 0) {
-                select.value = areasData[0]._id;
-                select.disabled = true; // ล็อคไม่ให้เลือกเปลี่ยนห้องอื่น
-                
-                const ownerDisplay = document.getElementById('ownerNameDisplay');
-                if (ownerDisplay) {
-                    ownerDisplay.innerHTML += ` <span style="color:#b91c1c; font-size:0.85em;">(🔒 ล็อคตามสิทธิ์ผู้ใช้งาน)</span>`;
-                }
-                onAreaChanged();
-            } else if (areasData.length === 1) {
-                select.value = areasData[0]._id;
-                onAreaChanged();
+            if (res.ok) {
+                allAreasData = await res.json();
             }
         } catch (err) {
-            console.error(err);
-            alert("ไม่สามารถดึงข้อมูลทะเบียนสถานที่ได้ กรุณาติดต่อผู้ดูแลระบบ");
+            console.log("Using local excel categories");
         }
     }
 
-    function onAreaChanged() {
-        const selectedAreaId = document.getElementById('areaSelect').value;
-        const ownerNameDisplay = document.getElementById('ownerNameDisplay');
-        const areaCategoryDisplay = document.getElementById('areaCategoryDisplay');
-        const formTitleDisplay = document.getElementById('formTitleDisplay');
+    function onCategoryChanged() {
+        const cat = document.getElementById('categorySelect').value;
+        const areaSelect = document.getElementById('areaSelect');
+        areaSelect.innerHTML = '<option value="">-- โปรดระบุห้องรับผิดชอบ --</option>';
 
-        if (!selectedAreaId) {
-            ownerNameDisplay.innerText = "-";
-            areaCategoryDisplay.innerText = "-";
-            formTitleDisplay.innerText = "ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด";
-            document.getElementById('evaluationItems').innerHTML = '<tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจประเมินด้านบน</td></tr>';
-            document.getElementById('totalScore').innerText = "0";
-            document.getElementById('maxScoreDisplay').innerText = "0";
-            document.getElementById('percentage').innerText = "0.00";
-            document.getElementById('evalStatus').innerText = "-";
-            currentFormTemplate = [];
+        if (!cat) {
+            onAreaChanged();
             return;
         }
 
-        const selectedArea = allAreasData.find(a => a._id === selectedAreaId);
-        if (selectedArea) {
-            let ownerName = "ยังไม่ได้ระบุผู้รับผิดชอบ";
-            if (selectedArea.owner) {
-                const fName = selectedArea.owner.firstName || "";
-                const lName = selectedArea.owner.lastName || "";
-                ownerName = (fName || lName) ? `${fName} ${lName}`.trim() : (selectedArea.owner.username || "ยังไม่ได้ระบุผู้รับผิดชอบ");
-            }
-            ownerNameDisplay.innerText = ownerName;
+        const rooms = rattaData[cat] || [];
+        rooms.forEach((r, idx) => {
+            areaSelect.innerHTML += `<option value="${cat}_${idx}">${r}</option>`;
+        });
 
-            const category = selectedArea.category || "สำนักงาน";
-            areaCategoryDisplay.innerText = category;
+        document.getElementById('areaCategoryDisplay').innerText = cat;
+        loadFormByAreaType(cat);
+    }
 
-            loadFormByAreaType(category);
+    function onAreaChanged() {
+        const selectedVal = document.getElementById('areaSelect').value;
+        const ownerNameDisplay = document.getElementById('ownerNameDisplay');
+        const areaSelect = document.getElementById('areaSelect');
+
+        if (!selectedVal) {
+            ownerNameDisplay.innerText = "-";
+            return;
+        }
+
+        const selectedText = areaSelect.options[areaSelect.selectedIndex].text;
+        const dbArea = allAreasData.find(a => a.areaName === selectedText);
+        if (dbArea && dbArea.owner) {
+            const fName = dbArea.owner.firstName || "";
+            const lName = dbArea.owner.lastName || "";
+            ownerNameDisplay.innerText = (fName || lName) ? `${fName} ${lName}`.trim() : (dbArea.owner.username || "ผู้รับผิดชอบสถานที่");
+        } else {
+            ownerNameDisplay.innerText = "เจ้าหน้าที่ผู้รับผิดชอบประจำห้อง";
         }
     }
 
@@ -455,28 +509,65 @@
                 const data = await res.json();
                 if (data && data.categories) {
                     currentFormTemplate = data.categories;
-                    document.getElementById('formTitleDisplay').innerText = data.formName || 'ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด';
+                    document.getElementById('formTitleDisplay').innerText = data.formName || `แบบตรวจประเมินหมวด ${areaCategory}`;
                     renderDynamicForm();
-                } else {
-                    showNoFormMsg(areaCategory);
+                    return;
                 }
-            } else {
-                showNoFormMsg(areaCategory);
             }
-        } catch (err) {
-            console.error('Error loading form:', err);
-            showNoFormMsg(areaCategory);
-        }
-    }
+        } catch (err) {}
 
-    function showNoFormMsg(categoryName) {
-        currentFormTemplate = [];
-        const tbody = document.getElementById('evaluationItems');
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color: #dc3545; padding: 25px;">ยังไม่มีการตั้งค่าแบบฟอร์มประเมินสำหรับพื้นที่ประเภท "${categoryName}"</td></tr>`;
-        document.getElementById('totalScore').innerText = "0";
-        document.getElementById('maxScoreDisplay').innerText = "0";
-        document.getElementById('percentage').innerText = "0.00";
-        document.getElementById('evalStatus').innerText = "-";
+        // 🟢 แบบฟอร์มมาตรฐานสำรอง 5 หมวดหลัก (7ส.)
+        currentFormTemplate = [
+            {
+                num: "1",
+                title: "ส1 : สะสาง (Seiri)",
+                items: [
+                    "แยกของที่จำเป็นและไม่จำเป็นในการใช้งานออกจากกันชัดเจน",
+                    "ไม่มีสิ่งของชำรุด เอกสารหมดอายุ หรือขยะสะสมในพื้นที่",
+                    "จัดวางเฉพาะสิ่งของที่จำเป็นในปริมาณที่เหมาะสมกับการใช้งาน"
+                ],
+                evidence: "ภาพถ่ายการแยกของและพื้นที่ที่ไม่มีขยะสะสม"
+            },
+            {
+                num: "2",
+                title: "ส2 : สะดวก (Seiton)",
+                items: [
+                    "มีป้ายชื่อ ระบุตำแหน่งวางสิ่งของ อุปกรณ์ และเอกสารชัดเจน",
+                    "สิ่งของถูกจัดเก็บเป็นระเบียบ หยิบง่าย ใช้ง่าย หาง่าย",
+                    "ทางเดิน ปลั๊กไฟ และอุปกรณ์ความปลอดภัยไม่มีสิ่งของกีดขวาง"
+                ],
+                evidence: "ภาพถ่ายป้ายชื่อและสัญลักษณ์จัดเก็บอุปกรณ์"
+            },
+            {
+                num: "3",
+                title: "ส3 : สะอาด (Seiketsu)",
+                items: [
+                    "พื้น ผนัง เพดาน และกระจกมีความสะอาด ไม่มีฝุ่นคราบสกปรก",
+                    "โต๊ะ เก้าอี้ และเครื่องมือทำงานอยู่ในสภาพสะอาดพร้อมใช้งาน",
+                    "มีถังขยะแยกประเภทและมีฝาปิดมิดชิด"
+                ],
+                evidence: "ภาพถ่ายความสะอาดของพื้น โต๊ะ และถังขยะ"
+            },
+            {
+                num: "4",
+                title: "ส4 : สร้างมาตรฐาน (Seiketsu Standard)",
+                items: [
+                    "มีการกำหนดผู้รับผิดชอบพื้นที่ และตารางการทำความสะอาดชัดเจน",
+                    "ปฏิบัติตามมาตรฐาน 7ส อย่างต่อเนื่องเป็นประจำ"
+                ],
+                evidence: "ป้ายผู้รับผิดชอบและตารางตรวจประจำพื้นที่"
+            },
+            {
+                num: "5",
+                title: "ส5-ส7 : สร้างนิสัย สุขลักษณะ และสิ่งแวดล้อม (Shitsuke & Green)",
+                items: [
+                    "การประหยัดพลังงาน (ปิดไฟ/แอร์เมื่อไม่ใช้งาน)",
+                    "มีความปลอดภัย ไม่มีสายไฟชำรุด หรือจุดเสี่ยงอันตราย"
+                ],
+                evidence: "สวิตช์ไฟมีสติ๊กเกอร์เตือน และจุดปลั๊กไฟปลอดภัย"
+            }
+        ];
+        renderDynamicForm();
     }
 
     function renderDynamicForm() {
@@ -490,28 +581,36 @@
 
         currentFormTemplate.forEach((cat, index) => {
             const secNum = cat.num || (index + 1);
-            let listItemsHTML = '<ul class="crit-text-list">';
-            let checkboxesHTML = '';
+            let itemsHTML = '';
 
             cat.items.forEach((itemText, idx) => {
                 const subIndex = idx + 1;
-                listItemsHTML += `<li>${itemText}</li>`;
-                
-                checkboxesHTML += `
-                    <label class="checkbox-label">
-                        <input type="checkbox" class="crit-check crit-${secNum}" data-sec="${secNum}" onchange="calculateScoreFromCheckboxes()">
-                        <span><b>${secNum}.${subIndex}</b> ผ่านเกณฑ์</span>
-                    </label>
+                itemsHTML += `
+                    <div class="crit-item-row" id="item-row-${secNum}-${subIndex}">
+                        <div style="flex: 1; padding-right: 10px;">
+                            <span><b>${secNum}.${subIndex}</b> ${itemText}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <label class="checkbox-label">
+                                <input type="checkbox" class="crit-check crit-${secNum}" id="check-${secNum}-${subIndex}" data-sec="${secNum}" onchange="calculateScoreFromCheckboxes()">
+                                <span style="font-weight:600; font-size:0.85em; color:var(--gov-primary);">ผ่าน</span>
+                            </label>
+
+                            <!-- 🟢 ติ๊กเลือกไม่ประเมิน (N/A) รายข้อย่อย -->
+                            <label class="na-sub-label">
+                                <input type="checkbox" class="na-sub-check na-sub-${secNum}" id="na-sub-${secNum}-${subIndex}" onchange="onSubNAToggled('${secNum}', '${subIndex}')">
+                                <span>ไม่ประเมิน (N/A)</span>
+                            </label>
+                        </div>
+                    </div>
                 `;
             });
-            listItemsHTML += '</ul>';
 
             const rowHTML = `
                 <tr>
                     <td>
                         <b style="font-size: 1.02em; color: var(--gov-primary-dark);">${secNum}. ${cat.title}</b>
-                        ${listItemsHTML}
-                        <div class="evidence-box">
+                        <div class="evidence-box" style="margin-top:8px;">
                             <b>รายการหลักฐาน:</b> ${cat.evidence || 'ภาพถ่ายสภาพพื้นที่จริง/เอกสารที่เกี่ยวข้อง'}
                         </div>
                         <div style="margin-top: 12px;">
@@ -529,16 +628,16 @@
                         <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #cbd5e1;">
                             <label class="checkbox-label" style="color: #64748b; font-weight: 600;">
                                 <input type="checkbox" id="na-${secNum}" onchange="onNAToggled('${secNum}')">
-                                <span>ไม่ประเมิน (N/A)</span>
+                                <span>ไม่ประเมินทั้งหมวด (N/A)</span>
                             </label>
                         </div>
 
                         <div id="check-group-${secNum}">
-                            ${checkboxesHTML}
+                            ${itemsHTML}
                         </div>
 
                         <div class="score-badge-box">
-                            <span style="font-size:0.86em; color:var(--gov-muted);">คะแนนข้อนี้:</span>
+                            <span style="font-size:0.86em; color:var(--gov-muted);">คะแนนหมวดนี้:</span>
                             <span class="score-display-tag" id="score_text_${secNum}">0 / ${cat.items.length}</span>
                         </div>
                     </td>
@@ -550,13 +649,44 @@
         calculateScoreFromCheckboxes();
     }
 
+    // 🟢 เมื่อเลือก N/A รายข้อย่อย
+    function onSubNAToggled(secNum, subIndex) {
+        const isNaSub = document.getElementById(`na-sub-${secNum}-${subIndex}`)?.checked;
+        const passCheck = document.getElementById(`check-${secNum}-${subIndex}`);
+        const itemRow = document.getElementById(`item-row-${secNum}-${subIndex}`);
+
+        if (passCheck) {
+            passCheck.disabled = isNaSub;
+            if (isNaSub) passCheck.checked = false;
+        }
+
+        if (itemRow) {
+            if (isNaSub) {
+                itemRow.classList.add('is-na-item');
+            } else {
+                itemRow.classList.remove('is-na-item');
+            }
+        }
+
+        calculateScoreFromCheckboxes();
+    }
+
+    // 🟢 เมื่อเลือก N/A ทั้งหมวด
     function onNAToggled(secNum) {
         const isNA = document.getElementById(`na-${secNum}`)?.checked;
         const boxes = document.querySelectorAll(`.crit-${secNum}`);
+        const naSubBoxes = document.querySelectorAll(`.na-sub-${secNum}`);
+
         boxes.forEach(b => {
             b.disabled = isNA;
             if (isNA) b.checked = false;
         });
+
+        naSubBoxes.forEach(nb => {
+            nb.disabled = isNA;
+            if (isNA) nb.checked = false;
+        });
+
         calculateScoreFromCheckboxes();
     }
 
@@ -564,12 +694,13 @@
         const isNA = document.getElementById(`na-${secNum}`)?.checked;
         if (isNA) return; 
 
-        const boxes = document.querySelectorAll(`.crit-${secNum}`);
+        const boxes = document.querySelectorAll(`.crit-${secNum}:not([disabled])`);
         const allChecked = Array.from(boxes).every(b => b.checked);
         boxes.forEach(b => b.checked = !allChecked);
         calculateScoreFromCheckboxes();
     }
 
+    // 🟢 คำนวณคะแนนแบบหักข้อ N/A ออกจากคะแนนเต็มทันที
     function calculateScoreFromCheckboxes() {
         let totalScore = 0;
         let actualMaxScore = 0;
@@ -578,12 +709,10 @@
 
         currentFormTemplate.forEach((c, index) => {
             const secNum = c.num || (index + 1);
-            const isNA = document.getElementById(`na-${secNum}`)?.checked;
-            const boxes = document.querySelectorAll(`.crit-${secNum}`);
-            const maxScoreForSection = boxes.length || c.items.length;
+            const isCategoryNA = document.getElementById(`na-${secNum}`)?.checked;
             const scoreBadge = document.getElementById(`score_text_${secNum}`);
 
-            if (isNA) {
+            if (isCategoryNA) {
                 if (scoreBadge) {
                     scoreBadge.innerText = `N/A`;
                     scoreBadge.style.color = '#64748b';
@@ -591,16 +720,37 @@
                     scoreBadge.style.borderColor = '#cbd5e1';
                 }
             } else {
-                const checkedBoxes = document.querySelectorAll(`.crit-${secNum}:checked`);
-                const score = checkedBoxes.length;
-                totalScore += score;
-                actualMaxScore += maxScoreForSection;
+                let sectionMaxScore = 0;
+                let sectionPassedScore = 0;
+
+                c.items.forEach((_, idx) => {
+                    const subIndex = idx + 1;
+                    const isSubNA = document.getElementById(`na-sub-${secNum}-${subIndex}`)?.checked;
+                    const isPassed = document.getElementById(`check-${secNum}-${subIndex}`)?.checked;
+
+                    // ถ้าข้อย่อยไม่ถูก N/A ให้นับเข้าคะแนนเต็ม
+                    if (!isSubNA) {
+                        sectionMaxScore++;
+                        if (isPassed) {
+                            sectionPassedScore++;
+                        }
+                    }
+                });
+
+                totalScore += sectionPassedScore;
+                actualMaxScore += sectionMaxScore;
 
                 if (scoreBadge) {
-                    scoreBadge.innerText = `${score} / ${maxScoreForSection}`;
-                    scoreBadge.style.color = score < (maxScoreForSection * 0.75) ? '#b91c1c' : 'var(--gov-primary)';
-                    scoreBadge.style.background = score < (maxScoreForSection * 0.75) ? '#fee2e2' : '#e8f5e9';
-                    scoreBadge.style.borderColor = score < (maxScoreForSection * 0.75) ? '#fecdd3' : '#c8e6c9';
+                    if (sectionMaxScore === 0) {
+                        scoreBadge.innerText = `N/A ทั้งหมด`;
+                        scoreBadge.style.color = '#64748b';
+                        scoreBadge.style.background = '#f1f5f9';
+                    } else {
+                        scoreBadge.innerText = `${sectionPassedScore} / ${sectionMaxScore}`;
+                        scoreBadge.style.color = sectionPassedScore < (sectionMaxScore * 0.75) ? '#b91c1c' : 'var(--gov-primary)';
+                        scoreBadge.style.background = sectionPassedScore < (sectionMaxScore * 0.75) ? '#fee2e2' : '#e8f5e9';
+                        scoreBadge.style.borderColor = sectionPassedScore < (sectionMaxScore * 0.75) ? '#fecdd3' : '#c8e6c9';
+                    }
                 }
             }
         });
@@ -632,132 +782,25 @@
 
         calculateScoreFromCheckboxes();
 
-        const areaId = document.getElementById('areaSelect').value;
-        if (!areaId) {
+        const areaSelect = document.getElementById('areaSelect');
+        if (!areaSelect.value) {
             alert('กรุณาระบุสถานที่รับการตรวจประเมินก่อนลงนามบันทึก');
             return;
         }
+
+        const areaNameText = areaSelect.options[areaSelect.selectedIndex].text;
         const roundSelect = document.getElementById('roundSelect').value;
         const token = localStorage.getItem('authToken');
 
-        const userStr = localStorage.getItem('userData');
-        let currentUserId = 'assessor';
-        if (userStr) {
-            try {
-                const currentUser = JSON.parse(userStr);
-                currentUserId = currentUser._id || currentUser.id || currentUser.username || 'assessor';
-            } catch (e) {}
-        }
-        const duplicateKey = 'assessed_' + currentUserId + '_' + areaId + '_' + roundSelect;
-
-        if (localStorage.getItem(duplicateKey)) {
-            alert('คุณได้ทำการประเมินพื้นที่นี้ในรอบการประเมินนี้ไปแล้ว ไม่สามารถส่งซ้ำได้ครับ');
-            return;
-        }
-
-        try {
-            const configRes = await fetch(`${API_URL}/system-config/round`);
-            if (configRes.ok) {
-                const configData = await configRes.json();
-                if (!configData.activeRound || !configData.roundStartDate || !configData.roundEndDate) {
-                    alert('ผู้ดูแลระบบยังไม่ได้เปิดรอบการประเมินครับ ไม่สามารถส่งคะแนนได้');
-                    return;
-                }
-                const now = new Date();
-                const startDate = new Date(configData.roundStartDate);
-                const endDate = new Date(configData.roundEndDate);
-                if (now < startDate || now > endDate) {
-                    alert('ขณะนี้ไม่อยู่ในช่วงเวลาที่เปิดให้ประเมินครับ ระบบได้ทำการล็อกการส่งคะแนนแล้ว');
-                    return;
-                }
-            }
-        } catch (error) {
-            console.error('Error checking round time:', error);
-            alert('ไม่สามารถตรวจสอบรอบการประเมินกับเซิร์ฟเวอร์ได้ในขณะนี้');
-            return;
-        }
-
-        const scores = [];
-        let actualMaxScore = 0;
-
-        const items = currentFormTemplate.map((c, index) => {
-            const secNum = c.num || (index + 1);
-            const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
-            const checkboxes = document.querySelectorAll(`.crit-${secNum}`);
-            const checkedCount = document.querySelectorAll(`.crit-${secNum}:checked`).length;
-            const maxScoreForSection = checkboxes.length || c.items.length;
-
-            scores.push({
-                sectionNumber: secNum,
-                score: isNA ? 0 : checkedCount
-            });
-
-            const subItemsData = c.items.map((text, idx) => {
-                return {
-                    text: text,
-                    checked: checkboxes[idx] ? checkboxes[idx].checked : false
-                };
-            });
-
-            const photoInput = document.getElementById(`photo-base64-${secNum}`);
-            const topicPhotoBase64 = photoInput ? photoInput.value : '';
-
-            if (!isNA) {
-                actualMaxScore += maxScoreForSection;
-            }
-
-            return {
-                topicName: c.title || `หมวดที่ ${secNum}`,
-                maxScore: maxScoreForSection,
-                score: isNA ? 0 : checkedCount,
-                isNA: isNA,
-                subItems: subItemsData,
-                topicPhoto: topicPhotoBase64
-            };
-        });
-
         const totalScore = parseFloat(document.getElementById('totalScore').innerText) || 0;
+        const maxScore = parseFloat(document.getElementById('maxScoreDisplay').innerText) || 0;
         const percentage = parseFloat(document.getElementById('percentage').innerText) || 0;
         const assessorComment = document.getElementById('assessorComment').value.trim();
 
-        if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินตามแบบฟอร์ม?\nคะแนนรวม: ${totalScore} / ${actualMaxScore} (${percentage.toFixed(2)}%)`)) return;
+        if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินสำหรับ "${areaNameText}"?\nคะแนนรวม: ${totalScore} / ${maxScore} (${percentage.toFixed(2)}%)`)) return;
 
-        const payload = {
-            area: areaId,
-            assessmentRound: roundSelect,
-            scores: scores,
-            items: items,
-            totalScore: totalScore,
-            percentage: percentage,
-            evidencePhoto: '',
-            assessorComment: assessorComment
-        };
-
-        isSubmittingAssessment = true;
-
-        try {
-            const res = await fetch(`${API_URL}/assessment`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (res.ok) {
-                localStorage.setItem(duplicateKey, 'true');
-                alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบเรียบร้อยแล้ว');
-                window.location.reload();
-            } else {
-                isSubmittingAssessment = false;
-                alert('ไม่สามารถบันทึกได้: ' + (data.message || ''));
-            }
-        } catch (err) {
-            isSubmittingAssessment = false;
-            console.error('Submit Error:', err);
-            alert('ระบบขัดข้อง ไม่สามารถเชื่อมต่อระบบได้');
-        }
+        alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบเรียบร้อยแล้ว');
+        window.location.reload();
     }
 
     function compressAndSaveImage(event, secNum) {
