@@ -321,6 +321,7 @@
             transition: background 0.2s;
         }
         .btn-submit-doc:hover { background: var(--gov-primary-dark); }
+        .btn-submit-doc:disabled { background: #cbd5e1; cursor: not-allowed; }
 
         /* 📱 Responsive Mobile & iPad */
         @media (max-width: 768px) {
@@ -374,6 +375,10 @@
             <p id="formTitleDisplay">ตารางแบบตรวจประเมินมาตรฐานตามเกณฑ์ข้อกำหนด วิทยาลัยรัตภูมิ</p>
         </div>
 
+        <div id="roundAlertBanner" style="display:none; background:#fef2f2; border:1px solid #fecdd3; border-left:5px solid #dc2626; padding:12px; border-radius:4px; margin-bottom:15px; color:#991b1b; font-weight:bold;">
+            ⚠️ ระบบปิดรับการประเมินชั่วคราวจากส่วนกลาง
+        </div>
+
         <div class="form-grid">
             <div class="form-field">
                 <label>1. เลือกประเภทพื้นที่ (Category):</label>
@@ -396,14 +401,8 @@
                 </select>
             </div>
             <div class="form-field" style="grid-column: span 2;">
-                <label>รอบการตรวจประเมินตามแผนปฏิบัติราชการ:</label>
-                <select id="roundSelect" class="form-control">
-                    <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 1">ประเมินภายในระดับหน่วยงาน ครั้งที่ 1</option>
-                    <option value="ประเมินภายในระดับหน่วยงาน ครั้งที่ 2">ประเมินภายในระดับหน่วยงาน ครั้งที่ 2</option>
-                    <option value="ประเมินโดยมหาวิทยาลัย">ประเมินโดยมหาวิทยาลัย (คณะกรรมการแต่งตั้ง)</option>
-                    <option value="ประเมินตนเองครั้งที่ 1">ประเมินตนเองครั้งที่ 1</option>
-                    <option value="ประเมินตนเองครั้งที่ 2">ประเมินตนเองครั้งที่ 2</option>
-                </select>
+                <label>รอบการตรวจประเมินและปีการศึกษาที่เปิดรับ:</label>
+                <input type="text" id="roundDisplay" class="form-control" value="กำลังโหลดรอบประเมิน..." readonly style="font-weight: bold; color: var(--gov-primary-dark); background:#e2e8f0;">
             </div>
         </div>
 
@@ -451,7 +450,7 @@
             <textarea id="assessorComment" placeholder="ระบุข้อเสนอแนะ เช่น จุดที่ต้องจัดเก็บให้เป็นระเบียบ สิ่งที่ต้องทำความสะอาด..." class="form-control" style="height: 85px;"></textarea>
         </div>
 
-        <button onclick="submitAssessment()" class="btn-submit-doc">💾 บันทึกผลการตรวจประเมินอย่างเป็นทางการ</button>
+        <button onclick="submitAssessment()" id="btnSubmitDoc" class="btn-submit-doc">💾 บันทึกผลการตรวจประเมินอย่างเป็นทางการ</button>
     </div>
 </main>
 
@@ -541,6 +540,7 @@
     let allAreasData = [];
     let currentFormTemplate = [];
     let isSubmittingAssessment = false;
+    let currentActiveRoundText = '';
 
     window.onload = function() {
         const token = localStorage.getItem('authToken');
@@ -557,8 +557,35 @@
             document.getElementById('btnSwitchToOwner').style.display = 'inline-block';
         }
 
-        loadAreasAndInitUser(user);
+        loadRoundConfigAndInit(user);
     };
+
+    async function loadRoundConfigAndInit(user) {
+        try {
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`${API_URL}/system-config/round`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const config = await res.json();
+                if (config.activeRound) {
+                    currentActiveRoundText = `${config.activeRound} ${config.academicYear ? '(ปีการศึกษา ' + config.academicYear + ')' : ''}`;
+                    document.getElementById('roundDisplay').value = currentActiveRoundText;
+                } else {
+                    currentActiveRoundText = 'ปิดรับการประเมินชั่วคราว';
+                    document.getElementById('roundDisplay').value = '-- ปิดรับการประเมินชั่วคราว --';
+                    document.getElementById('roundAlertBanner').style.display = 'block';
+                    document.getElementById('btnSubmitDoc').disabled = true;
+                }
+            } else {
+                document.getElementById('roundDisplay').value = 'ประเมินรอบปกติ';
+            }
+        } catch (e) {
+            document.getElementById('roundDisplay').value = 'ประเมินรอบปกติ';
+        }
+
+        loadAreasAndInitUser(user);
+    }
 
     async function loadAreasAndInitUser(user) {
         try {
@@ -1007,11 +1034,80 @@
         const totalScore = parseFloat(document.getElementById('totalScore').innerText) || 0;
         const maxScore = parseFloat(document.getElementById('maxScoreDisplay').innerText) || 0;
         const percentage = parseFloat(document.getElementById('percentage').innerText) || 0;
+        const assessorComment = document.getElementById('assessorComment').value.trim();
+
+        const dbArea = allAreasData.find(a => a.areaName === areaNameText);
+        const areaTarget = dbArea ? dbArea._id : areaNameText;
 
         if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินสำหรับ "${areaNameText}"?\nคะแนนรวม: ${totalScore} / ${maxScore} (${percentage.toFixed(2)}%)`)) return;
 
-        alert('บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบเรียบร้อยแล้ว');
-        window.location.reload();
+        const items = currentFormTemplate.map((cat, index) => {
+            const secNum = cat.num || (index + 1);
+            const isNA = document.getElementById(`na-${secNum}`)?.checked || false;
+            
+            const subItems = cat.items.map((itemText, idx) => {
+                const subIdx = idx + 1;
+                return {
+                    text: itemText,
+                    checked: document.getElementById(`check-${secNum}-${subIdx}`)?.checked || false,
+                    isNA: document.getElementById(`na-sub-${secNum}-${subIdx}`)?.checked || false
+                };
+            });
+
+            const topicPhoto = document.getElementById(`photo-base64-${secNum}`)?.value || '';
+            const checkedCount = subItems.filter(s => s.checked && !s.isNA).length;
+            const itemMaxScore = subItems.filter(s => !s.isNA).length;
+
+            return {
+                topicName: `${secNum}. ${cat.title}`,
+                maxScore: itemMaxScore,
+                score: isNA ? 0 : checkedCount,
+                isNA: isNA,
+                subItems: subItems,
+                topicPhoto: topicPhoto
+            };
+        });
+
+        const token = localStorage.getItem('authToken');
+        const submitBtn = document.getElementById('btnSubmitDoc');
+        
+        isSubmittingAssessment = true;
+        submitBtn.disabled = true;
+        submitBtn.innerText = '⏳ กำลังบันทึกข้อมูลเข้าสู่ระบบ...';
+
+        try {
+            const res = await fetch(`${API_URL}/assessment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    area: areaTarget,
+                    assessmentRound: currentActiveRoundText || 'ประเมินรอบปกติ',
+                    items: items,
+                    totalScore: totalScore,
+                    percentage: percentage,
+                    status: percentage < 80 ? 'Needs Improvement' : 'Passed',
+                    assessorComment: assessorComment
+                })
+            });
+
+            if (res.ok) {
+                alert('✅ บันทึกผลการตรวจประเมินมาตรฐานเข้าสู่ระบบเรียบร้อยแล้ว');
+                window.location.reload();
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                alert('❌ ไม่สามารถบันทึกได้: ' + (errData.message || 'โปรดตรวจสอบการเชื่อมต่อ'));
+            }
+        } catch (err) {
+            console.error('Submit error:', err);
+            alert('❌ เกิดข้อผิดพลาดทางเครือข่าย ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
+        } finally {
+            isSubmittingAssessment = false;
+            submitBtn.disabled = false;
+            submitBtn.innerText = '💾 บันทึกผลการตรวจประเมินอย่างเป็นทางการ';
+        }
     }
 
     function logout() {

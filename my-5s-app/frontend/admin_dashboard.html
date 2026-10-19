@@ -726,7 +726,6 @@
         }
     }
 
-    /* 📊 ฟังก์ชันการคำนวณและสร้างกราฟแดชบอร์ด Admin */
     function initAdminDashboard(data) {
         const yearSelect = document.getElementById('adminYearFilter');
         const areaSelect = document.getElementById('adminAreaFilter');
@@ -828,7 +827,6 @@
             diffEl.innerText = '-';
         }
 
-        // 📈 กราฟที่ 1: Line Chart แนวโน้มรายเดือน
         const ctxLine = document.getElementById('adminMonthlyLineChart').getContext('2d');
         if (adminLineChartInstance) adminLineChartInstance.destroy();
 
@@ -867,7 +865,6 @@
             }
         });
 
-        // 📊 กราฟที่ 2: Bar Chart คะแนนเฉลี่ยจำแนกตามห้อง/สถานที่
         const areaStatsMap = new Map();
         rawAdminData.forEach(item => {
             if (!item.createdAt) return;
@@ -1378,10 +1375,27 @@
     function openRoundSettingModal() {
         document.getElementById('roundSettingModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
+        loadRoundConfig();
     }
 
     function closeRoundSettingModal() {
         document.getElementById('roundSettingModal').style.display = 'none';
+    }
+
+    async function loadRoundConfig() {
+        const token = localStorage.getItem('authToken');
+        try {
+            const res = await fetch(`${API_URL}/system-config/round`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const config = await res.json();
+                document.getElementById('configRoundName').value = config.activeRound || '';
+                document.getElementById('configAcademicYear').value = config.academicYear || '';
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     async function saveRoundConfig() {

@@ -406,6 +406,7 @@
 </div>
 
 <script>
+    const API_URL = 'https://my-7s-app.onrender.com/api';
     let activeTaskId = null;
     let ownerFixPhotoBase64 = '';
     let currentTasksList = [];
@@ -431,7 +432,7 @@
     async function loadOwnerTasks() {
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/assessment/pending', {
+            const res = await fetch(`${API_URL}/assessment/pending`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -518,7 +519,6 @@
         }
     }
 
-    /* 📊 ฟังก์ชันคำนวณและวาดกราฟแดชบอร์ดฝั่งเจ้าของห้อง */
     function initOwnerDashboard(data) {
         const yearSelect = document.getElementById('ownerYearFilter');
         const currentYearBE = new Date().getFullYear() + 543;
@@ -698,7 +698,7 @@
 
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${activeTaskId}/resolve`, {
+            const res = await fetch(`${API_URL}/assessment/${activeTaskId}/resolve`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
