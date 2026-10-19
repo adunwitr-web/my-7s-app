@@ -98,11 +98,6 @@
             font-size: 0.95em;
             background: #ffffff;
         }
-        .form-control:disabled {
-            background-color: #e2e8f0;
-            cursor: not-allowed;
-            color: #475569;
-        }
 
         .doc-table {
             width: 100%;
@@ -122,58 +117,71 @@
             text-align: center;
         }
 
-        .crit-item-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            padding: 6px 8px;
-            border-radius: 4px;
-            background: #f8fafc;
-            border: 1px solid #f1f5f9;
+        /* 🎨 สไตล์รายการข้อย่อยให้ดูสะอาด สวยงาม */
+        .sub-item-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
         }
-        .crit-item-row.is-na-item {
-            opacity: 0.5;
-            background: #f1f5f9;
+        .sub-item-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 0.92em;
+        }
+        .sub-item-row:last-child { border-bottom: none; }
+        .sub-item-row.is-na {
+            opacity: 0.45;
             text-decoration: line-through;
+        }
+        .sub-item-title {
+            padding-right: 12px;
+            line-height: 1.5;
+        }
+
+        .sub-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
+        }
+
+        .checkbox-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 0.88em;
+            color: var(--gov-text);
+            user-select: none;
+        }
+        .checkbox-inline input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--gov-primary);
+            cursor: pointer;
+            margin: 0;
+        }
+        .checkbox-inline.na-check input[type="checkbox"] {
+            accent-color: #dc2626;
+        }
+
+        .evidence-box {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: var(--gov-muted);
         }
 
         .checklist-cell {
             background: #fafbfc;
             width: 320px;
             border-left: 2px solid #e2e8f0;
-        }
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-            color: var(--gov-text);
-            margin: 0;
-        }
-        .checkbox-label input[type="checkbox"] {
-            width: 17px;
-            height: 17px;
-            accent-color: var(--gov-primary);
-            cursor: pointer;
-            margin: 0;
-        }
-
-        .na-sub-label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.8em;
-            color: #64748b;
-            cursor: pointer;
-            background: #ffffff;
-            padding: 2px 6px;
-            border-radius: 3px;
-            border: 1px solid #cbd5e1;
-        }
-        .na-sub-label input[type="checkbox"] {
-            accent-color: #dc2626;
         }
 
         .btn-quick-pass {
@@ -301,18 +309,17 @@
         <div style="font-size: 0.92em; line-height: 1.8; margin-bottom: 15px;">
             <span><b>หัวหน้างาน/ผู้รับผิดชอบพื้นที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
             <span><b>ประเภทพื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
-            <span id="lockNoticeDisplay" style="color: #b91c1c; font-weight: bold; margin-left: 10px; display: none;">🔒 (ล็อคสถานที่ตามสิทธิ์ผู้ใช้งาน)</span>
         </div>
 
         <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 4px; font-size: 0.88em; border-left: 4px solid var(--gov-primary); margin-bottom: 10px;">
-            <b>คำชี้แจงการให้คะแนน:</b> ติ๊กเลือกข้อกำหนดที่ดำเนินการถูกต้อง หากข้อย่อยใดในห้องไม่มีของจริง ให้ติ๊ก <b>"ไม่ประเมิน (N/A)" ที่ข้อย่อยนั้น</b> ระบบจะตัดข้อนั้นออกและไม่นำคะแนนไปนับรวมในผลประเมิน
+            <b>คำชี้แจงการให้คะแนน:</b> ติ๊กเลือกข้อกำหนดที่ดำเนินการถูกต้อง หากข้อย่อยใดในห้องไม่มีของจริง ให้ติ๊ก <b>"ไม่ประเมิน (N/A)"</b> ที่ข้อย่อยนั้น ระบบจะตัดคะแนนเต็มข้อนั้นออกให้อัตโนมัติ
         </div>
 
         <table class="doc-table">
             <thead>
                 <tr>
                     <th style="width: 55%;">รายละเอียด / เกณฑ์การประเมิน</th>
-                    <th style="width: 45%;">ผลการตรวจสอบและสิทธิ์การเลือก N/A รายข้อ</th>
+                    <th style="width: 45%;">ผลการตรวจสอบตามเกณฑ์</th>
                 </tr>
             </thead>
             <tbody id="evaluationItems">
@@ -448,10 +455,10 @@
             document.getElementById('btnSwitchToOwner').style.display = 'inline-block';
         }
 
-        loadAreasAndApplyUserLock(user);
+        loadAreasAndInitUser(user);
     };
 
-    async function loadAreasAndApplyUserLock(user) {
+    async function loadAreasAndInitUser(user) {
         try {
             const token = localStorage.getItem('authToken');
             let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -459,11 +466,9 @@
             if (res.ok) {
                 allAreasData = await res.json();
             }
-        } catch (err) {
-            console.log("Using local excel categories");
-        }
+        } catch (err) {}
 
-        // 🔒 ตรวจสอบสิทธิ์ว่า User ถูกล็อกห้องรับผิดชอบไว้หรือไม่
+        // ถ้า User มีห้องผูกไว้ ให้เลือก Category และห้องนั้นให้เป็น Default แต่ยังกดเลือกลิสต์ได้อยู่
         if (user && user.assignedArea) {
             const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
             const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea || a.areaName === user.assignedArea.areaName);
@@ -480,12 +485,11 @@
             }
 
             if (categoryName && areaName) {
-                lockFormToUserArea(categoryName, areaName);
+                setDefaultUserArea(categoryName, areaName);
             }
         }
     }
 
-    // ฟังก์ชันค้นหา Category จากชื่อห้อง
     function getCategoryByRoomName(roomName) {
         for (const [cat, rooms] of Object.entries(rattaData)) {
             if (rooms.some(r => r.includes(roomName) || roomName.includes(r))) {
@@ -495,25 +499,20 @@
         return "สำนักงาน";
     }
 
-    // 🔒 ทำการล็อกช่องเลือก Category และห้องอัตโนมัติ
-    function lockFormToUserArea(cat, roomName) {
+    // กำหนดค่าตั้งต้นให้ User
+    function setDefaultUserArea(cat, roomName) {
         const catSelect = document.getElementById('categorySelect');
         const areaSelect = document.getElementById('areaSelect');
 
         catSelect.value = cat;
-        catSelect.disabled = true; // ปิดการกดเลือก Category
         onCategoryChanged();
 
-        // ค้นหาและเลือกห้องใน Dropdown
         for (let i = 0; i < areaSelect.options.length; i++) {
             if (areaSelect.options[i].text.includes(roomName) || roomName.includes(areaSelect.options[i].text)) {
                 areaSelect.selectedIndex = i;
                 break;
             }
         }
-        areaSelect.disabled = true; // ปิดการกดเลือกห้อง
-        document.getElementById('lockNoticeDisplay').style.display = 'inline';
-
         onAreaChanged();
     }
 
@@ -577,7 +576,7 @@
             }
         } catch (err) {}
 
-        // 🟢 แบบฟอร์มมาตรฐานสำรอง 5 หมวดหลัก (7ส.)
+        // แบบฟอร์มมาตรฐาน 7ส.
         currentFormTemplate = [
             {
                 num: "1",
@@ -642,39 +641,39 @@
 
         currentFormTemplate.forEach((cat, index) => {
             const secNum = cat.num || (index + 1);
-            let itemsHTML = '';
+            let subRowsHTML = '<div class="sub-item-list">';
 
             cat.items.forEach((itemText, idx) => {
                 const subIndex = idx + 1;
-                itemsHTML += `
-                    <div class="crit-item-row" id="item-row-${secNum}-${subIndex}">
-                        <div style="flex: 1; padding-right: 10px;">
-                            <span><b>${secNum}.${subIndex}</b> ${itemText}</span>
+                subRowsHTML += `
+                    <div class="sub-item-row" id="item-row-${secNum}-${subIndex}">
+                        <div class="sub-item-title">
+                            <b>${secNum}.${subIndex}</b> ${itemText}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <label class="checkbox-label">
-                                <input type="checkbox" class="crit-check crit-${secNum}" id="check-${secNum}-${subIndex}" data-sec="${secNum}" onchange="calculateScoreFromCheckboxes()">
-                                <span style="font-weight:600; font-size:0.85em; color:var(--gov-primary);">ผ่าน</span>
+                        <div class="sub-item-actions">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" class="crit-check crit-${secNum}" id="check-${secNum}-${subIndex}" onchange="calculateScoreFromCheckboxes()">
+                                <span style="font-weight:600; color:var(--gov-primary);">ผ่าน</span>
                             </label>
-
-                            <!-- 🟢 ติ๊กเลือกไม่ประเมิน (N/A) รายข้อย่อย -->
-                            <label class="na-sub-label">
+                            <label class="checkbox-inline na-check">
                                 <input type="checkbox" class="na-sub-check na-sub-${secNum}" id="na-sub-${secNum}-${subIndex}" onchange="onSubNAToggled('${secNum}', '${subIndex}')">
-                                <span>ไม่ประเมิน (N/A)</span>
+                                <span style="color:#dc2626;">ไม่ประเมิน (N/A)</span>
                             </label>
                         </div>
                     </div>
                 `;
             });
+            subRowsHTML += '</div>';
 
             const rowHTML = `
                 <tr>
                     <td>
                         <b style="font-size: 1.02em; color: var(--gov-primary-dark);">${secNum}. ${cat.title}</b>
-                        <div class="evidence-box" style="margin-top:8px;">
+                        ${subRowsHTML}
+                        <div class="evidence-box">
                             <b>รายการหลักฐาน:</b> ${cat.evidence || 'ภาพถ่ายสภาพพื้นที่จริง/เอกสารที่เกี่ยวข้อง'}
                         </div>
-                        <div style="margin-top: 12px;">
+                        <div style="margin-top: 10px;">
                             <label style="font-size: 0.85em; font-weight: 600; display:block; margin-bottom:4px;">แนบรูปภาพหลักฐาน (ถ้ามี):</label>
                             <input type="file" accept="image/*" class="form-control" style="font-size: 0.85em;" onchange="compressAndSaveImage(event, '${secNum}')">
                             <input type="hidden" id="photo-base64-${secNum}" value="">
@@ -687,14 +686,10 @@
                         </div>
 
                         <div style="margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #cbd5e1;">
-                            <label class="checkbox-label" style="color: #64748b; font-weight: 600;">
+                            <label class="checkbox-inline na-check" style="font-weight: 600;">
                                 <input type="checkbox" id="na-${secNum}" onchange="onNAToggled('${secNum}')">
                                 <span>ไม่ประเมินทั้งหมวด (N/A)</span>
                             </label>
-                        </div>
-
-                        <div id="check-group-${secNum}">
-                            ${itemsHTML}
                         </div>
 
                         <div class="score-badge-box">
@@ -710,7 +705,6 @@
         calculateScoreFromCheckboxes();
     }
 
-    // 🟢 เมื่อเลือก N/A รายข้อย่อย
     function onSubNAToggled(secNum, subIndex) {
         const isNaSub = document.getElementById(`na-sub-${secNum}-${subIndex}`)?.checked;
         const passCheck = document.getElementById(`check-${secNum}-${subIndex}`);
@@ -722,17 +716,13 @@
         }
 
         if (itemRow) {
-            if (isNaSub) {
-                itemRow.classList.add('is-na-item');
-            } else {
-                itemRow.classList.remove('is-na-item');
-            }
+            if (isNaSub) itemRow.classList.add('is-na');
+            else itemRow.classList.remove('is-na');
         }
 
         calculateScoreFromCheckboxes();
     }
 
-    // 🟢 เมื่อเลือก N/A ทั้งหมวด
     function onNAToggled(secNum) {
         const isNA = document.getElementById(`na-${secNum}`)?.checked;
         const boxes = document.querySelectorAll(`.crit-${secNum}`);
@@ -761,7 +751,6 @@
         calculateScoreFromCheckboxes();
     }
 
-    // 🟢 คำนวณคะแนนแบบหักข้อ N/A ออกจากคะแนนเต็มทันที
     function calculateScoreFromCheckboxes() {
         let totalScore = 0;
         let actualMaxScore = 0;
@@ -789,12 +778,9 @@
                     const isSubNA = document.getElementById(`na-sub-${secNum}-${subIndex}`)?.checked;
                     const isPassed = document.getElementById(`check-${secNum}-${subIndex}`)?.checked;
 
-                    // ถ้าข้อย่อยไม่ถูก N/A ให้นับเข้าคะแนนเต็ม
                     if (!isSubNA) {
                         sectionMaxScore++;
-                        if (isPassed) {
-                            sectionPassedScore++;
-                        }
+                        if (isPassed) sectionPassedScore++;
                     }
                 });
 
@@ -850,13 +836,9 @@
         }
 
         const areaNameText = areaSelect.options[areaSelect.selectedIndex].text;
-        const roundSelect = document.getElementById('roundSelect').value;
-        const token = localStorage.getItem('authToken');
-
         const totalScore = parseFloat(document.getElementById('totalScore').innerText) || 0;
         const maxScore = parseFloat(document.getElementById('maxScoreDisplay').innerText) || 0;
         const percentage = parseFloat(document.getElementById('percentage').innerText) || 0;
-        const assessorComment = document.getElementById('assessorComment').value.trim();
 
         if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินสำหรับ "${areaNameText}"?\nคะแนนรวม: ${totalScore} / ${maxScore} (${percentage.toFixed(2)}%)`)) return;
 
