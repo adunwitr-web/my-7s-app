@@ -98,6 +98,11 @@
             font-size: 0.95em;
             background: #ffffff;
         }
+        .form-control:disabled {
+            background-color: #e2e8f0;
+            cursor: not-allowed;
+            color: #475569;
+        }
 
         .doc-table {
             width: 100%;
@@ -296,6 +301,7 @@
         <div style="font-size: 0.92em; line-height: 1.8; margin-bottom: 15px;">
             <span><b>หัวหน้างาน/ผู้รับผิดชอบพื้นที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
             <span><b>ประเภทพื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
+            <span id="lockNoticeDisplay" style="color: #b91c1c; font-weight: bold; margin-left: 10px; display: none;">🔒 (ล็อคสถานที่ตามสิทธิ์ผู้ใช้งาน)</span>
         </div>
 
         <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 4px; font-size: 0.88em; border-left: 4px solid var(--gov-primary); margin-bottom: 10px;">
@@ -442,10 +448,10 @@
             document.getElementById('btnSwitchToOwner').style.display = 'inline-block';
         }
 
-        loadAreas();
+        loadAreasAndApplyUserLock(user);
     };
 
-    async function loadAreas() {
+    async function loadAreasAndApplyUserLock(user) {
         try {
             const token = localStorage.getItem('authToken');
             let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -456,6 +462,59 @@
         } catch (err) {
             console.log("Using local excel categories");
         }
+
+        // 🔒 ตรวจสอบสิทธิ์ว่า User ถูกล็อกห้องรับผิดชอบไว้หรือไม่
+        if (user && user.assignedArea) {
+            const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
+            const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea || a.areaName === user.assignedArea.areaName);
+
+            let areaName = "";
+            let categoryName = "";
+
+            if (assignedAreaObj) {
+                areaName = assignedAreaObj.areaName;
+                categoryName = assignedAreaObj.category || getCategoryByRoomName(areaName);
+            } else if (typeof user.assignedArea === 'string') {
+                areaName = user.assignedArea;
+                categoryName = getCategoryByRoomName(areaName);
+            }
+
+            if (categoryName && areaName) {
+                lockFormToUserArea(categoryName, areaName);
+            }
+        }
+    }
+
+    // ฟังก์ชันค้นหา Category จากชื่อห้อง
+    function getCategoryByRoomName(roomName) {
+        for (const [cat, rooms] of Object.entries(rattaData)) {
+            if (rooms.some(r => r.includes(roomName) || roomName.includes(r))) {
+                return cat;
+            }
+        }
+        return "สำนักงาน";
+    }
+
+    // 🔒 ทำการล็อกช่องเลือก Category และห้องอัตโนมัติ
+    function lockFormToUserArea(cat, roomName) {
+        const catSelect = document.getElementById('categorySelect');
+        const areaSelect = document.getElementById('areaSelect');
+
+        catSelect.value = cat;
+        catSelect.disabled = true; // ปิดการกดเลือก Category
+        onCategoryChanged();
+
+        // ค้นหาและเลือกห้องใน Dropdown
+        for (let i = 0; i < areaSelect.options.length; i++) {
+            if (areaSelect.options[i].text.includes(roomName) || roomName.includes(areaSelect.options[i].text)) {
+                areaSelect.selectedIndex = i;
+                break;
+            }
+        }
+        areaSelect.disabled = true; // ปิดการกดเลือกห้อง
+        document.getElementById('lockNoticeDisplay').style.display = 'inline';
+
+        onAreaChanged();
     }
 
     function onCategoryChanged() {
@@ -494,7 +553,9 @@
             const lName = dbArea.owner.lastName || "";
             ownerNameDisplay.innerText = (fName || lName) ? `${fName} ${lName}`.trim() : (dbArea.owner.username || "ผู้รับผิดชอบสถานที่");
         } else {
-            ownerNameDisplay.innerText = "เจ้าหน้าที่ผู้รับผิดชอบประจำห้อง";
+            const userStr = localStorage.getItem('userData');
+            const user = userStr ? JSON.parse(userStr) : null;
+            ownerNameDisplay.innerText = user ? (user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username) : "เจ้าหน้าที่ผู้รับผิดชอบประจำห้อง";
         }
     }
 
