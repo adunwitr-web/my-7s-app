@@ -526,12 +526,12 @@
 <div id="roundSettingModal" class="modal">
     <div class="modal-content" style="max-width: 500px;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
-            <h3 style="margin:0;">📅 กำหนดรอบการประเมินและระยะเวลา</h3>
+            <h3 style="margin:0;">📅 กำหนดรอบการประเมินและปีการศึกษา</h3>
             <button onclick="closeRoundSettingModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
         
         <div style="background:#e0f2fe; padding:12px; border-radius:4px; border-left:4px solid #0284c7; margin-bottom:15px;">
-            <p style="margin:0; font-size:0.9em; color:#0369a1;">เมื่อกำหนดรอบและเวลาแล้ว ระบบจะบังคับให้กรรมการตรวจประเมินได้เฉพาะในช่วงเวลาที่กำหนดเท่านั้น</p>
+            <p style="margin:0; font-size:0.9em; color:#0369a1;">เมื่อกำหนดรอบและปีการศึกษาแล้ว ระบบจะเปิดการประเมินให้กรรมการประเมินตามรอบและปีการศึกษาที่กำหนด</p>
         </div>
 
         <div style="margin-bottom:12px;">
@@ -545,15 +545,9 @@
             </select>
         </div>
 
-        <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-            <div style="flex:1; min-width: 180px;">
-                <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">วันที่เริ่มต้น:</label>
-                <input type="datetime-local" id="configStartDate" class="form-control">
-            </div>
-            <div style="flex:1; min-width: 180px;">
-                <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">วันที่สิ้นสุด (Deadline):</label>
-                <input type="datetime-local" id="configEndDate" class="form-control">
-            </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">ปีการศึกษา (พ.ศ.):</label>
+            <input type="number" id="configAcademicYear" class="form-control" placeholder="เช่น 2569" min="2500" max="2700">
         </div>
 
         <button onclick="saveRoundConfig()" class="btn-table" style="background:#0284c7; color:white; width:100%; padding:10px;">
@@ -1392,16 +1386,10 @@
 
     async function saveRoundConfig() {
         const roundName = document.getElementById('configRoundName').value;
-        const startDate = document.getElementById('configStartDate').value;
-        const endDate = document.getElementById('configEndDate').value;
+        const academicYear = document.getElementById('configAcademicYear').value.trim();
 
-        if (roundName && (!startDate || !endDate)) {
-            alert('กรุณากำหนดวันเริ่มต้นและวันสิ้นสุดให้ครบถ้วนครับ');
-            return;
-        }
-
-        if (startDate && endDate && (new Date(startDate) > new Date(endDate))) {
-            alert('วันที่สิ้นสุดต้องไม่มาก่อนวันที่เริ่มต้นครับ');
+        if (roundName && !academicYear) {
+            alert('กรุณาระบุปีการศึกษาให้ครบถ้วนครับ');
             return;
         }
 
@@ -1416,13 +1404,12 @@
                 },
                 body: JSON.stringify({ 
                     activeRound: roundName, 
-                    roundStartDate: startDate, 
-                    roundEndDate: endDate 
+                    academicYear: academicYear 
                 })
             });
 
             if (res.ok) {
-                alert('บันทึกรอบการประเมินและระยะเวลาสำเร็จ! ระบบผู้ตรวจจะถูกอัปเดตตามนี้');
+                alert('บันทึกรอบการประเมินและปีการศึกษาสำเร็จ! ระบบผู้ตรวจจะถูกอัปเดตตามนี้');
                 closeRoundSettingModal();
             } else {
                 alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
