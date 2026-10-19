@@ -98,6 +98,12 @@
             font-size: 0.95em;
             background: #ffffff;
         }
+        .form-control:disabled {
+            background-color: #e2e8f0;
+            color: #475569;
+            cursor: not-allowed;
+            font-weight: 600;
+        }
 
         .doc-table {
             width: 100%;
@@ -117,7 +123,6 @@
             text-align: center;
         }
 
-        /* 🎨 สไตล์รายการข้อย่อยให้ดูสะอาด สวยงาม */
         .sub-item-list {
             list-style: none;
             padding: 0;
@@ -276,7 +281,8 @@
         <div class="form-grid">
             <div class="form-field">
                 <label>1. เลือกประเภทพื้นที่ (Category):</label>
-                <select id="categorySelect" class="form-control" onchange="onCategoryChanged()">
+                <!-- 🔒 ล็อคเปลี่ยน Category ไม่ได้ -->
+                <select id="categorySelect" class="form-control" disabled onchange="onCategoryChanged()">
                     <option value="">-- โปรดเลือกประเภทพื้นที่ --</option>
                     <option value="สำนักงาน">สำนักงาน</option>
                     <option value="ห้องพักอาจารย์">ห้องพักอาจารย์</option>
@@ -290,8 +296,9 @@
             </div>
             <div class="form-field">
                 <label>2. เลือกห้อง/สถานที่รับการตรวจ:</label>
+                <!-- 🔓 เลือกห้องใน Category นั้นๆ ได้ปกติ -->
                 <select id="areaSelect" class="form-control" onchange="onAreaChanged()">
-                    <option value="">-- โปรดเลือกประเภทพื้นที่ก่อน --</option>
+                    <option value="">-- โปรดระบุห้องรับผิดชอบ --</option>
                 </select>
             </div>
             <div class="form-field" style="grid-column: span 2;">
@@ -307,8 +314,9 @@
         </div>
 
         <div style="font-size: 0.92em; line-height: 1.8; margin-bottom: 15px;">
-            <span><b>หัวหน้างาน/ผู้รับผิดชอบพื้นที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
+            <span><b>ผู้รับผิดชอบพื้นที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
             <span><b>ประเภทพื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
+            <span style="color: #b91c1c; font-weight: bold; margin-left: 10px;">🔒 (ล็อคประเภทพื้นที่ตามสิทธิ์ผู้ใช้งาน)</span>
         </div>
 
         <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 4px; font-size: 0.88em; border-left: 4px solid var(--gov-primary); margin-bottom: 10px;">
@@ -323,13 +331,13 @@
                 </tr>
             </thead>
             <tbody id="evaluationItems">
-                <tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกประเภทพื้นที่และสถานที่รับการตรวจด้านบน</td></tr>
+                <tr><td colspan="2" style="text-align:center; color: var(--gov-muted); padding: 25px;">กรุณาเลือกสถานที่รับการตรวจด้านบน</td></tr>
             </tbody>
         </table>
 
         <div class="summary-box">
             <div>
-                <div style="font-size: 0.9em; color: var(--gov-muted);">คะแนนรวมที่ได้</div>
+                <div style="font-size: 0.9e; color: var(--gov-muted);">คะแนนรวมที่ได้</div>
                 <div><span class="summary-num" id="totalScore">0</span> / <span id="maxScoreDisplay">0</span></div>
             </div>
             <div>
@@ -468,25 +476,41 @@
             }
         } catch (err) {}
 
-        // ถ้า User มีห้องผูกไว้ ให้เลือก Category และห้องนั้นให้เป็น Default แต่ยังกดเลือกลิสต์ได้อยู่
+        let userCategory = "สำนักงาน"; // Default
+        let userDefaultRoom = "";
+
+        // 🔒 ดึงข้อมูลสถานที่และประเภทที่ผูกกับ User
         if (user && user.assignedArea) {
             const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
             const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea || a.areaName === user.assignedArea.areaName);
 
-            let areaName = "";
-            let categoryName = "";
-
             if (assignedAreaObj) {
-                areaName = assignedAreaObj.areaName;
-                categoryName = assignedAreaObj.category || getCategoryByRoomName(areaName);
+                userDefaultRoom = assignedAreaObj.areaName;
+                userCategory = assignedAreaObj.category || getCategoryByRoomName(userDefaultRoom);
             } else if (typeof user.assignedArea === 'string') {
-                areaName = user.assignedArea;
-                categoryName = getCategoryByRoomName(areaName);
+                userDefaultRoom = user.assignedArea;
+                userCategory = getCategoryByRoomName(userDefaultRoom);
             }
+        }
 
-            if (categoryName && areaName) {
-                setDefaultUserArea(categoryName, areaName);
+        // 🟢 ล็อคประเภทพื้นที่ (Category)
+        const catSelect = document.getElementById('categorySelect');
+        catSelect.value = userCategory;
+        catSelect.disabled = true; // บล็อกเลือกประเภทพื้นที่
+        
+        // 🔓 โหลดรายการห้องทั้งหมดใน Category เดียวกันมาให้เลือก
+        onCategoryChanged();
+
+        // เลือกห้อง Default ของ User ไว้ให้
+        if (userDefaultRoom) {
+            const areaSelect = document.getElementById('areaSelect');
+            for (let i = 0; i < areaSelect.options.length; i++) {
+                if (areaSelect.options[i].text.includes(userDefaultRoom) || userDefaultRoom.includes(areaSelect.options[i].text)) {
+                    areaSelect.selectedIndex = i;
+                    break;
+                }
             }
+            onAreaChanged();
         }
     }
 
@@ -499,23 +523,6 @@
         return "สำนักงาน";
     }
 
-    // กำหนดค่าตั้งต้นให้ User
-    function setDefaultUserArea(cat, roomName) {
-        const catSelect = document.getElementById('categorySelect');
-        const areaSelect = document.getElementById('areaSelect');
-
-        catSelect.value = cat;
-        onCategoryChanged();
-
-        for (let i = 0; i < areaSelect.options.length; i++) {
-            if (areaSelect.options[i].text.includes(roomName) || roomName.includes(areaSelect.options[i].text)) {
-                areaSelect.selectedIndex = i;
-                break;
-            }
-        }
-        onAreaChanged();
-    }
-
     function onCategoryChanged() {
         const cat = document.getElementById('categorySelect').value;
         const areaSelect = document.getElementById('areaSelect');
@@ -526,6 +533,7 @@
             return;
         }
 
+        // 🟢 โหลดห้องทั้งหมดที่สังกัด Category นี้ใส่เข้าไปใน Dropdown
         const rooms = rattaData[cat] || [];
         rooms.forEach((r, idx) => {
             areaSelect.innerHTML += `<option value="${cat}_${idx}">${r}</option>`;
