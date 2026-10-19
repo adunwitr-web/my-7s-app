@@ -365,13 +365,21 @@
             const data = await res.json();
             allAreasData = data;
             let areasData = data;
+            let isAreaLocked = false;
 
             const userStr = localStorage.getItem('userData');
             const user = userStr ? JSON.parse(userStr) : null;
-            if (user && user.role && user.role.includes('Assessor') && user.assignedArea) {
+            
+            // 🔒 เช็กว่า User มีสถานที่ผูกไว้หรือไม่ (รองรับทั้ง Assessor ปกติ และ Assessor & Area Owner)
+            if (user && user.assignedArea) {
                 const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
-                const filtered = data.filter(area => area._id === assignedId);
-                if (filtered.length > 0) areasData = filtered;
+                if (assignedId) {
+                    const filtered = data.filter(area => area._id === assignedId);
+                    if (filtered.length > 0) {
+                        areasData = filtered;
+                        isAreaLocked = true;
+                    }
+                }
             }
 
             const select = document.getElementById('areaSelect');
@@ -380,7 +388,17 @@
                 select.innerHTML += `<option value="${area._id}">${area.areaName} (${area.category || 'ทั่วไป'})</option>`;
             });
 
-            if (areasData.length === 1) {
+            // 🔒 ถ้าถูกล็อกห้อง ให้เลือกค่าอัตโนมัติแล้วทำการปิดการเลือก (Disabled)
+            if (isAreaLocked && areasData.length > 0) {
+                select.value = areasData[0]._id;
+                select.disabled = true; // ล็อคไม่ให้เลือกเปลี่ยนห้องอื่น
+                
+                const ownerDisplay = document.getElementById('ownerNameDisplay');
+                if (ownerDisplay) {
+                    ownerDisplay.innerHTML += ` <span style="color:#b91c1c; font-size:0.85em;">(🔒 ล็อคตามสิทธิ์ผู้ใช้งาน)</span>`;
+                }
+                onAreaChanged();
+            } else if (areasData.length === 1) {
                 select.value = areasData[0]._id;
                 onAreaChanged();
             }
