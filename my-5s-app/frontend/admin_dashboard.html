@@ -665,7 +665,7 @@
     async function loadAdminData() {
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/assessment', {
+            const res = await fetch(`${API_URL}/assessment`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -937,7 +937,7 @@
         document.getElementById('detailsModal').style.display = 'flex';
 
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${id}`, {
+            const res = await fetch(`${API_URL}/assessment/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -986,7 +986,7 @@
         if (!confirm('ยืนยันการรับรองผลการประเมินมาตรฐานสถานที่อย่างเป็นทางการ?')) return;
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${id}/approve`, {
+            const res = await fetch(`${API_URL}/assessment/${id}/approve`, {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1004,7 +1004,7 @@
         if (!reason || !reason.trim()) return;
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/assessment/${id}/reject`, {
+            const res = await fetch(`${API_URL}/assessment/${id}/reject`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ reason: reason })
@@ -1033,7 +1033,7 @@
     async function loadUsers() {
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/user', {
+            const res = await fetch(`${API_URL}/user`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const users = await res.json();
@@ -1063,8 +1063,8 @@
     async function loadAreasForSelect() {
         try {
             const token = localStorage.getItem('authToken');
-            let res = await fetch('https://my-7s-app.onrender.com/api/areas', { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) res = await fetch('https://my-7s-app.onrender.com/api/area', { headers: { 'Authorization': `Bearer ${token}` } });
+            let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (res.ok) {
                 const areas = await res.json();
                 let optionsHtml = '<option value="">-- โปรดระบุสถานที่รับผิดชอบ --</option>';
@@ -1107,7 +1107,7 @@
 
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/user/${editUserId}`, {
+            const res = await fetch(`${API_URL}/user/${editUserId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
@@ -1157,7 +1157,7 @@
 
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/user', {
+            const res = await fetch(`${API_URL}/user`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 
@@ -1191,7 +1191,7 @@
         if (!confirm(`ยืนยันการลบบัญชีผู้ใช้: ${username} ออกจากทะเบียนถาวร?`)) return;
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/user/${id}`, {
+            const res = await fetch(`${API_URL}/user/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1210,7 +1210,7 @@
 
     async function loadSettings() {
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/systemConfig');
+            const res = await fetch(`${API_URL}/systemConfig`);
             const data = await res.json();
             document.getElementById('settingAdminEmail').value = data.adminEmail || '';
             document.getElementById('settingAppPassword').value = '';
@@ -1223,7 +1223,7 @@
         const adminEmail = document.getElementById('settingAdminEmail').value.trim();
         const appPassword = document.getElementById('settingAppPassword').value.trim();
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/systemConfig', {
+            const res = await fetch(`${API_URL}/systemConfig`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ adminEmail, appPassword })
@@ -1250,7 +1250,7 @@
 
         try {
             const token = localStorage.getItem('authToken');
-            const fetchUrl = `https://my-7s-app.onrender.com/api/assessment/${assessmentId}`;
+            const fetchUrl = `${API_URL}/assessment/${assessmentId}`;
             
             const res = await fetch(fetchUrl, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -1408,7 +1408,7 @@
         const token = localStorage.getItem('authToken');
         
         try {
-            const res = await fetch('https://my-7s-app.onrender.com/api/system-config/round', {
+            const res = await fetch(`${API_URL}/system-config/round`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -1745,7 +1745,7 @@
         const token = localStorage.getItem('authToken');
         
         const isEdit = currentEditFormId !== null;
-        const url = isEdit ? `https://my-7s-app.onrender.com/api/forms/${currentEditFormId}` : 'https://my-7s-app.onrender.com/api/forms/upload';
+        const url = isEdit ? `${API_URL}/forms/${currentEditFormId}` : `${API_URL}/forms/upload`;
         const method = isEdit ? 'PUT' : 'POST';
 
         fetch(url, {
@@ -1781,7 +1781,7 @@
     async function loadAdminForms() {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch('https://my-7s-app.onrender.com/api/forms/all', {
+            const res = await fetch(`${API_URL}/forms/all`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             
@@ -1839,8 +1839,9 @@
         if(!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบแบบฟอร์มนี้? (ไม่สามารถกู้คืนได้)')) return;
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/forms/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
+            const res = await fetch(`${API_URL}/forms/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
             if(res.ok) { alert('ลบแบบฟอร์มสำเร็จ'); loadAdminForms(); }
+            else { alert('ไม่สามารถลบแบบฟอร์มได้'); }
         } catch (err) { alert('ระบบขัดข้อง ลบไม่สำเร็จ'); }
     }
 
@@ -1848,8 +1849,9 @@
         if(!confirm('ต้องการเปิดใช้งานแบบฟอร์มนี้ให้ผู้ประเมินเห็นทันทีใช่หรือไม่?')) return;
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/forms/${id}/publish`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` }});
+            const res = await fetch(`${API_URL}/forms/${id}/publish`, { method: 'PATCH', headers: { 'Authorization': `Bearer ${token}` }});
             if(res.ok) { alert('เปิดใช้งานสำเร็จ!'); loadAdminForms(); }
+            else { alert('ไม่สามารถเปิดใช้งานได้'); }
         } catch (err) { alert('ระบบขัดข้อง'); }
     }
 
@@ -1857,7 +1859,7 @@
         if(!confirm('ต้องการพักการใช้งานแบบฟอร์มนี้ใช่หรือไม่?\n(ผู้ประเมินจะไม่เห็นฟอร์มนี้ จนกว่าคุณจะกดเปิดใช้งานอีกครั้ง)')) return;
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`https://my-7s-app.onrender.com/api/forms/${id}/pause`, { 
+            const res = await fetch(`${API_URL}/forms/${id}/pause`, { 
                 method: 'PATCH', 
                 headers: { 'Authorization': `Bearer ${token}` }
             });
