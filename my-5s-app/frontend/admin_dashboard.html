@@ -249,12 +249,12 @@
 
     <section class="doc-panel" style="border-top: 4px solid #1b5e20;">
         <div class="doc-panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-            <h2 style="color: var(--gov-primary-dark); margin: 0;">📊 แดชบอร์ดสรุปเปอร์เซ็นต์คะแนนประเมินภาพรวมและรายห้อง</h2>
+            <h2 style="color: var(--gov-primary-dark); margin: 0;">📊 แดชบอร์ดสรุปเปอร์เซ็นต์คะแนนประเมินภาพรวมและรายหมวดหมู่</h2>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                 <div>
-                    <label style="font-weight: 600; font-size: 0.85em;">เลือกสถานที่:</label>
+                    <label style="font-weight: 600; font-size: 0.85em;">เลือกหมวดหมู่หลัก:</label>
                     <select id="adminAreaFilter" class="form-control" style="width: auto; display: inline-block; padding: 4px 8px;" onchange="updateAdminDashboard()">
-                        <option value="ALL">-- ภาพรวมทุกสถานที่ --</option>
+                        <option value="ALL">-- ภาพรวมทุกหมวดหมู่ --</option>
                     </select>
                 </div>
                 <div>
@@ -292,7 +292,7 @@
                 </div>
             </div>
             <div style="background: #ffffff; padding: 15px; border: 1px solid var(--gov-border); border-radius: 6px;">
-                <h4 style="margin: 0 0 12px 0; color: var(--gov-primary-dark); font-size: 0.95em;">📊 คะแนนเฉลี่ยจำแนกตามประเภทพื้นที่/ห้อง</h4>
+                <h4 style="margin: 0 0 12px 0; color: var(--gov-primary-dark); font-size: 0.95em;">📊 คะแนนเฉลี่ยจำแนกตามหมวดหมู่หลัก</h4>
                 <div style="position: relative; height: 280px; width: 100%;">
                     <canvas id="adminAreaBarChart"></canvas>
                 </div>
@@ -309,7 +309,7 @@
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
-                    <tr><th>วันที่มีการตรวจ</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+                    <tr><th>วันที่มีการตรวจ</th><th>หมวดหมู่หลักรับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
                 </thead>
                 <tbody id="tableNeedsImprovement"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการต้องปรับปรุง</td></tr></tbody>
             </table>
@@ -319,7 +319,7 @@
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
-                    <tr><th>วันที่มีการตรวจ</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+                    <tr><th>วันที่มีการตรวจ</th><th>หมวดหมู่หลักรับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
                 </thead>
                 <tbody id="tablePendingPass"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr></tbody>
             </table>
@@ -329,7 +329,7 @@
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
-                    <tr><th>วันที่ส่งรายงาน</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+                    <tr><th>วันที่ส่งรายงาน</th><th>หมวดหมู่หลักรับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
                 </thead>
                 <tbody id="tablePendingReview"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr></tbody>
             </table>
@@ -344,7 +344,7 @@
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
-                    <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
+                    <tr><th>วันที่รับรอง</th><th>หมวดหมู่หลักรับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
                 </thead>
                 <tbody id="tableHistoryDirectPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
             </table>
@@ -354,7 +354,7 @@
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
-                    <tr><th>วันที่รับรอง</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
+                    <tr><th>วันที่รับรอง</th><th>หมวดหมู่หลักรับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>ผลการพิจารณา</th><th>บันทึกตรวจ</th></tr>
                 </thead>
                 <tbody id="tableHistoryCorrectedPass"><tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr></tbody>
             </table>
@@ -405,7 +405,7 @@
                 <tr>
                     <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 15%;">วันที่สร้าง</th>
                     <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 35%;">ชื่อแบบฟอร์ม</th>
-                    <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 25%;">ประเภทพื้นที่รองรับ</th>
+                    <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 25%;">หมวดหมู่หลักรองรับ</th>
                     <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 15%;">สถานะ</th>
                     <th style="padding: 12px; border-bottom: 2px solid #cbd5e1; width: 10%; text-align: center;">จัดการ</th>
                 </tr>
@@ -435,12 +435,12 @@
                 <select id="newRole" class="form-control">
                     <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
                     <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
-                    <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบสถานที่</option>
-                    <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบสถานที่</option>
-                    <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบสถานที่</option>
+                    <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบหมวดหมู่</option>
+                    <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบหมวดหมู่</option>
+                    <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
                 </select>
                 <select id="newAssignedArea" class="form-control">
-                    <option value="">-- โปรดระบุประเภทพื้นที่/สถานที่รับผิดชอบ --</option>
+                    <option value="">-- โปรดเลือกหมวดหมู่หลัก --</option>
                 </select>
             </div>
             <button onclick="createUser()" class="btn-table" style="background: var(--gov-primary); color:white; margin-top:12px; padding:8px 20px;">
@@ -451,7 +451,7 @@
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
-                    <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>สถานที่รับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
+                    <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>หมวดหมู่หลักรับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
                 </thead>
                 <tbody id="userTableBody"></tbody>
             </table>
@@ -488,15 +488,15 @@
             <select id="editRole" class="form-control">
                 <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
                 <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
-                <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบสถานที่</option>
-                <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบสถานที่</option>
-                <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบสถานที่</option>
+                <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบหมวดหมู่</option>
+                <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบหมวดหมู่</option>
+                <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
             </select>
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">สถานที่รับผิดชอบ:</label>
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">หมวดหมู่หลักรับผิดชอบ:</label>
             <select id="editAssignedArea" class="form-control">
-                <option value="">-- โปรดระบุประเภทพื้นที่/สถานที่รับผิดชอบ --</option>
+                <option value="">-- โปรดเลือกหมวดหมู่หลัก --</option>
             </select>
         </div>
         <div style="background:#fff1f2; padding:12px; border-radius:4px; border-left:4px solid #b91c1c; margin-bottom:15px;">
@@ -569,10 +569,10 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
         <div>
             <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ชื่อแบบฟอร์มนี้:</label>
-            <input type="text" id="previewFormName" placeholder="เช่น แบบตรวจประเมิน 7s Plus. สำหรับห้องเรียน" class="form-control">
+            <input type="text" id="previewFormName" placeholder="เช่น แบบตรวจประเมิน 7s Plus. สำหรับหมวดหมู่" class="form-control">
         </div>
         <div>
-            <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ประเภทพื้นที่ที่ใช้ฟอร์มนี้:</label>
+            <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">หมวดหมู่หลักที่ใช้ฟอร์มนี้:</label>
             <select id="previewTargetAreas" class="form-control">
                 <option value="สำนักงานฯ - ห้องพักอาจารย์">สำนักงานฯ - ห้องพักอาจารย์</option>
                 <option value="ห้องเรียน">ห้องเรียน</option>
@@ -641,7 +641,6 @@
     const API_URL = 'https://my-7s-app.onrender.com/api';
     let rawAdminData = [];
     let allUsersData = [];
-    let allAreasList = [];
     let editUserId = '';
     let adminLineChartInstance = null;
     let adminBarChartInstance = null;
@@ -719,7 +718,7 @@
 
             data.forEach(item => {
                 const date = new Date(item.createdAt).toLocaleDateString('th-TH');
-                const location = item.area ? (item.area.areaName || item.area) : 'ไม่ระบุ';
+                const location = item.area ? (typeof item.area === 'object' ? (item.area.areaName || item.area.category || 'ไม่ระบุ') : item.area) : 'ไม่ระบุ';
                 const assessor = item.assessor ? `${item.assessor.firstName || ''} ${item.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
 
                 const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">ดูบันทึกตรวจ</button>`;
@@ -762,25 +761,20 @@
         const currentYearBE = new Date().getFullYear() + 543;
 
         const years = new Set([currentYearBE, currentYearBE - 1]);
-        const areasSet = new Set();
 
         data.forEach(item => {
             if (item.createdAt) {
                 const yrBE = new Date(item.createdAt).getFullYear() + 543;
                 years.add(yrBE);
             }
-            if (item.area) {
-                const areaName = typeof item.area === 'object' ? item.area.areaName : item.area;
-                if (areaName) areasSet.add(areaName);
-            }
         });
 
         const sortedYears = Array.from(years).sort((a, b) => b - a);
         yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">ปี พ.ศ. ${y}</option>`).join('');
 
-        let areaOptions = '<option value="ALL">-- ภาพรวมทุกสถานที่ --</option>';
-        Array.from(areasSet).sort().forEach(name => {
-            areaOptions += `<option value="${name}">${name}</option>`;
+        let areaOptions = '<option value="ALL">-- ภาพรวมทุกหมวดหมู่ --</option>';
+        categoriesList.forEach(cat => {
+            areaOptions += `<option value="${cat}">${cat}</option>`;
         });
         areaSelect.innerHTML = areaOptions;
 
@@ -798,7 +792,7 @@
         let filteredData = rawAdminData;
         if (selectedArea !== 'ALL') {
             filteredData = rawAdminData.filter(item => {
-                const areaName = item.area ? (typeof item.area === 'object' ? item.area.areaName : item.area) : '';
+                const areaName = item.area ? (typeof item.area === 'object' ? (item.area.areaName || item.area.category || '') : item.area) : '';
                 return areaName === selectedArea;
             });
         }
@@ -896,33 +890,35 @@
         });
 
         const areaStatsMap = new Map();
+        categoriesList.forEach(cat => areaStatsMap.set(cat, { sum: 0, count: 0 }));
+
         rawAdminData.forEach(item => {
             if (!item.createdAt) return;
             const d = new Date(item.createdAt);
             const yrBE = d.getFullYear() + 543;
             if (yrBE !== selectedYearBE) return;
 
-            const areaName = item.area ? (typeof item.area === 'object' ? item.area.areaName : item.area) : 'ไม่ระบุ';
+            const areaName = item.area ? (typeof item.area === 'object' ? (item.area.areaName || item.area.category || '') : item.area) : '';
             const pct = parseFloat(item.percentage) || 0;
 
-            if (!areaStatsMap.has(areaName)) {
-                areaStatsMap.set(areaName, { sum: 0, count: 0 });
+            if (areaStatsMap.has(areaName)) {
+                const stat = areaStatsMap.get(areaName);
+                stat.sum += pct;
+                stat.count++;
             }
-            const stat = areaStatsMap.get(areaName);
-            stat.sum += pct;
-            stat.count++;
         });
 
         const barLabels = [];
         const barData = [];
         const barColors = [];
 
-        areaStatsMap.forEach((stat, name) => {
-            const avg = (stat.sum / stat.count).toFixed(2);
+        categoriesList.forEach(name => {
+            const stat = areaStatsMap.get(name);
+            const avg = stat.count > 0 ? (stat.sum / stat.count).toFixed(2) : 0;
             const shortName = name.length > 18 ? name.substring(0, 16) + '...' : name;
             barLabels.push(shortName);
             barData.push(avg);
-            barColors.push(avg >= 80 ? '#2e7d32' : (avg >= 60 ? '#f59e0b' : '#dc2626'));
+            barColors.push(avg >= 80 ? '#2e7d32' : (avg > 0 ? '#f59e0b' : '#cbd5e1'));
         });
 
         const ctxBar = document.getElementById('adminAreaBarChart').getContext('2d');
@@ -931,11 +927,11 @@
         adminBarChartInstance = new Chart(ctxBar, {
             type: 'bar',
             data: {
-                labels: barLabels.length > 0 ? barLabels : ['ไม่มีข้อมูลปีนี้'],
+                labels: barLabels,
                 datasets: [{
                     label: `คะแนนเฉลี่ยปี ${selectedYearBE} (%)`,
-                    data: barData.length > 0 ? barData : [0],
-                    backgroundColor: barColors.length > 0 ? barColors : ['#cbd5e1'],
+                    data: barData,
+                    backgroundColor: barColors,
                     borderRadius: 4
                 }]
             },
@@ -945,7 +941,7 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     y: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
-                    x: { ticks: { font: { size: 10 } } }
+                    x: { ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 } }
                 }
             }
         });
@@ -962,7 +958,7 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            const location = data.area ? (data.area.areaName || data.area) : 'ไม่ระบุ';
+            const location = data.area ? (typeof data.area === 'object' ? (data.area.areaName || data.area.category || 'ไม่ระบุ') : data.area) : 'ไม่ระบุ';
             const assessor = data.assessor ? `${data.assessor.firstName || ''} ${data.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
 
             let assessorEvidenceHTML = '';
@@ -980,7 +976,7 @@
             if (data.correctionData && data.correctionData.detail) {
                 feedbackHTML = `
                     <div style="background:#f0fdf4; border-left:4px solid var(--gov-primary); padding:12px; border-radius:4px; margin-top:14px;">
-                        <h4 style="margin:0 0 6px 0; color:var(--gov-primary-dark);">🛠 รายงานผลการปรับปรุง (จากผู้รับผิดชอบสถานที่)</h4>
+                        <h4 style="margin:0 0 6px 0; color:var(--gov-primary-dark);">🛠 รายงานผลการปรับปรุง (จากผู้รับผิดชอบหมวดหมู่)</h4>
                         <p style="margin:0;">การดำเนินงาน: ${data.correctionData.detail}</p>
                         <p style="margin:4px 0 0 0; font-size:0.8em; color:var(--gov-muted);">ส่งเมื่อ: ${new Date(data.correctionData.submittedAt).toLocaleString('th-TH')}</p>
                         ${data.correctionData.photoUrl ? `<img src="${data.correctionData.photoUrl}" style="max-width:100%; max-height:220px; border-radius:4px; margin-top:6px;">` : ''}
@@ -990,7 +986,7 @@
 
             modalBody.innerHTML = `
                 <div style="background:#f8fafc; padding:14px; border:1px solid var(--gov-border); border-radius:4px; font-size:0.92em; line-height:1.7;">
-                    <div><strong>สถานที่รับการตรวจ:</strong> ${location}</div>
+                    <div><strong>หมวดหมู่หลักรับการตรวจ:</strong> ${location}</div>
                     <div><strong>รอบการประเมิน:</strong> ${data.assessmentRound || '-'}</div>
                     <div><strong>คณะกรรมการผู้ตรวจ:</strong> ${assessor}</div>
                     <div><strong>ผลการประเมิน:</strong> ร้อยละ ${data.percentage}% (${data.totalScore || 0} คะแนน)</div>
@@ -1004,7 +1000,7 @@
     }
 
     async function approveCorrection(id) {
-        if (!confirm('ยืนยันการรับรองผลการประเมินมาตรฐานสถานที่อย่างเป็นทางการ?')) return;
+        if (!confirm('ยืนยันการรับรองผลการประเมินมาตรฐานอย่างเป็นทางการ?')) return;
         const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`${API_URL}/assessment/${id}/approve`, {
@@ -1044,41 +1040,17 @@
     function openUserModal() {
         document.getElementById('userModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
-        loadAreasForSelect().then(() => {
-            loadUsers();
-        });
+        loadAreasForSelect();
+        loadUsers();
     }
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    async function loadAreasForSelect() {
-        const token = localStorage.getItem('authToken');
-        try {
-            let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (res.ok) {
-                allAreasList = await res.json();
-            }
-        } catch (err) {
-            console.error('Error fetching areas:', err);
-        }
-
-        let optionsHtml = '<option value="">-- ไม่ระบุ / พื้นที่ส่วนกลาง --</option>';
-        
-        optionsHtml += '<optgroup label="📂 เลือกตามหมวดหมู่หลัก (11 หมวดมาตรฐาน)">';
+    function loadAreasForSelect() {
+        let optionsHtml = '<option value="">-- กรุณาเลือกหมวดหมู่หลัก --</option>';
         categoriesList.forEach(cat => {
             optionsHtml += `<option value="${cat}">${cat}</option>`;
         });
-        optionsHtml += '</optgroup>';
-
-        if (allAreasList && allAreasList.length > 0) {
-            optionsHtml += '<optgroup label="🏢 เลือกตามห้อง/สถานที่เจาะจง">';
-            allAreasList.forEach(area => {
-                const catStr = area.category ? ` [${area.category}]` : '';
-                optionsHtml += `<option value="${area._id}">${area.areaName}${catStr}</option>`;
-            });
-            optionsHtml += '</optgroup>';
-        }
 
         const newSelect = document.getElementById('newAssignedArea');
         const editSelect = document.getElementById('editAssignedArea');
@@ -1099,12 +1071,7 @@
             users.forEach(u => {
                 let areaDisplay = '-';
                 if (u.assignedArea) {
-                    if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
-                        areaDisplay = u.assignedArea.areaName || u.assignedArea.category || u.assignedArea._id || '-';
-                    } else if (typeof u.assignedArea === 'string') {
-                        const foundArea = allAreasList.find(a => a._id === u.assignedArea || a.areaName === u.assignedArea);
-                        areaDisplay = foundArea ? foundArea.areaName : u.assignedArea;
-                    }
+                    areaDisplay = typeof u.assignedArea === 'object' ? (u.assignedArea.areaName || u.assignedArea.category || '-') : u.assignedArea;
                 }
                 tbody.innerHTML += `
                     <tr>
@@ -1187,15 +1154,11 @@
         document.getElementById('editRole').value = user.role || 'Internal Assessor';
         document.getElementById('editPassword').value = '';
 
-        let currentAreaId = "";
+        let currentArea = "";
         if (user.assignedArea) {
-            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                currentAreaId = user.assignedArea._id || user.assignedArea.category || "";
-            } else if (typeof user.assignedArea === 'string') {
-                currentAreaId = user.assignedArea;
-            }
+            currentArea = typeof user.assignedArea === 'object' ? (user.assignedArea.category || user.assignedArea.areaName || '') : user.assignedArea;
         }
-        document.getElementById('editAssignedArea').value = currentAreaId;
+        document.getElementById('editAssignedArea').value = currentArea;
         document.getElementById('editUserModal').style.display = 'flex';
     }
 
@@ -1318,7 +1281,7 @@
 
             alert('กำลังเตรียมเอกสาร PDF...');
 
-            const areaText = typeof data.area === 'object' && data.area !== null ? (data.area.areaName || data.area.name || 'ไม่ระบุ') : (data.area || 'ไม่ระบุ');
+            const areaText = typeof data.area === 'object' && data.area !== null ? (data.area.areaName || data.area.category || 'ไม่ระบุ') : (data.area || 'ไม่ระบุ');
             const assessorText = typeof data.assessor === 'object' && data.assessor !== null ? (data.assessor.fullName || data.assessor.firstName || 'คณะกรรมการ') : (data.assessor || 'คณะกรรมการ');
 
             let contentHtml = `
@@ -1328,7 +1291,7 @@
                 </div>
                 <table style="width: 100%; margin-bottom: 20px; font-size: 14px; line-height: 1.8;">
                     <tr>
-                        <td style="width: 50%;"><b>สถานที่รับการตรวจ:</b> ${areaText}</td>
+                        <td style="width: 50%;"><b>หมวดหมู่หลักรับการตรวจ:</b> ${areaText}</td>
                         <td style="width: 50%;"><b>วันที่ตรวจประเมิน:</b> ${data.createdAt ? new Date(data.createdAt).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
                     </tr>
                     <tr>
