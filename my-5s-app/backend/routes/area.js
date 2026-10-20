@@ -8,7 +8,6 @@ const auth = typeof authModule === 'function'
     ? authModule 
     : (authModule.auth || authModule.protect || authModule.verifyToken || ((req, res, next) => next()));
 
-// ฟังก์ชันช่วย Escape เครื่องหมายพิเศษสำหรับ Regex
 function escapeRegex(text) {
     if (!text || typeof text !== 'string') return '';
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -20,25 +19,26 @@ router.get('/', auth, async (req, res) => {
         const { category } = req.query;
         let query = {};
 
-        // 1. กรองตาม Category (ถ้ามีการส่งมาจาก Frontend)
+        // 1. กรองตาม Category (ถ้าส่งมาจาก Frontend)
         if (category && typeof category === 'string' && category.trim()) {
             query.category = { $regex: new RegExp(escapeRegex(category.trim()), 'i') };
         }
 
-        // 2. ป้องกัน req.user.role เป็น undefined / null
+        // 2. ตรวจสอบสิทธิ์ User
         const userRole = (req.user && req.user.role) ? String(req.user.role) : '';
         const isAdminOrAssessor = userRole === 'Admin' || userRole.includes('Assessor');
 
-        // ถ้าไม่ใช่ Admin หรือ Assessor ให้แสดงเฉพาะห้องที่ตนเองรับผิดชอบ
         if (req.user && !isAdminOrAssessor) {
+            // รองรับโครงสร้าง User ID ทุกแบบ (_id, id, userId)
+            const userId = req.user._id || req.user.id || req.user.userId;
             const userName = req.user.firstName || req.user.fullName || req.user.username || '';
             const firstName = String(userName).split(' ')[0].replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
 
             const orConditions = [];
 
-            if (req.user._id) {
-                orConditions.push({ assignedUsers: req.user._id });
-                orConditions.push({ owner: req.user._id });
+            if (userId) {
+                orConditions.push({ assignedUsers: userId });
+                orConditions.push({ owner: userId });
             }
 
             if (firstName.length > 0) {
@@ -50,14 +50,27 @@ router.get('/', auth, async (req, res) => {
             }
         }
 
-        const areas = await Area.find(query)
-            .populate('owner', 'username firstName lastName email')
-            .populate('assignedUsers', 'username firstName lastName email');
+        // ค้นหาข้อมูลแบบปลอดภัย เช็ก Schema ก่อนสั่ง populate
+        let areasQuery = Area.find(query);
 
-        res.json(areas);
+        if (Area.schema && Area.schema.paths) {
+            if (Area.schema.paths.owner) {
+                areasQuery = areasQuery.populate('owner', 'username firstName lastName email');
+            }
+            if (Area.schema.paths.assignedUsers) {
+                areasQuery = areasQuery.populate('assignedUsers', 'username firstName lastName email');
+            }
+        }
+
+        const areas = await areasQuery.exec();
+        return res.json(areas);
+
     } catch (err) {
-        console.error('Error fetching areas:', err);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่', error: err.message });
+        console.error('❌ Error fetching areas:', err);
+        return res.status(500).json({ 
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่', 
+            error: err.message 
+        });
     }
 });
 
