@@ -132,11 +132,7 @@
             text-align: center;
         }
 
-        .sub-item-list {
-            list-style: none;
-            padding: 0;
-            margin: 8px 0;
-        }
+        .sub-item-list { list-style: none; padding: 0; margin: 8px 0; }
         .sub-item-row {
             display: flex;
             align-items: flex-start;
@@ -146,21 +142,9 @@
             font-size: 0.92em;
         }
         .sub-item-row:last-child { border-bottom: none; }
-        .sub-item-row.is-na {
-            opacity: 0.45;
-            text-decoration: line-through;
-        }
-        .sub-item-title {
-            padding-right: 12px;
-            line-height: 1.5;
-        }
-
-        .sub-item-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            white-space: nowrap;
-        }
+        .sub-item-row.is-na { opacity: 0.45; text-decoration: line-through; }
+        .sub-item-title { padding-right: 12px; line-height: 1.5; }
+        .sub-item-actions { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
 
         .checkbox-inline {
             display: inline-flex;
@@ -178,9 +162,7 @@
             cursor: pointer;
             margin: 0;
         }
-        .checkbox-inline.na-check input[type="checkbox"] {
-            accent-color: #dc2626;
-        }
+        .checkbox-inline.na-check input[type="checkbox"] { accent-color: #dc2626; }
 
         .evidence-box {
             background: #f8fafc;
@@ -192,12 +174,7 @@
             color: var(--gov-muted);
         }
 
-        .upload-btn-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 6px;
-            flex-wrap: wrap;
-        }
+        .upload-btn-group { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
         .btn-upload-action {
             display: inline-flex;
             align-items: center;
@@ -212,31 +189,12 @@
             color: var(--gov-text);
             transition: all 0.2s;
         }
-        .btn-upload-action:hover {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
-        .btn-upload-camera {
-            background: #e0f2fe;
-            color: #0369a1;
-            border-color: #bae6fd;
-        }
-        .btn-upload-camera:hover {
-            background: #bae6fd;
-        }
-        .img-preview-box {
-            display: none;
-            margin-top: 8px;
-            position: relative;
-            max-width: 140px;
-        }
-        .img-preview-box img {
-            width: 100%;
-            height: 90px;
-            object-fit: cover;
-            border-radius: 4px;
-            border: 1px solid var(--gov-border);
-        }
+        .btn-upload-action:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .btn-upload-camera { background: #e0f2fe; color: #0369a1; border-color: #bae6fd; }
+        .btn-upload-camera:hover { background: #bae6fd; }
+        
+        .img-preview-box { display: none; margin-top: 8px; position: relative; max-width: 140px; }
+        .img-preview-box img { width: 100%; height: 90px; object-fit: cover; border-radius: 4px; border: 1px solid var(--gov-border); }
         .btn-remove-img {
             position: absolute;
             top: -6px;
@@ -255,11 +213,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
-        .checklist-cell {
-            background: #fafbfc;
-            width: 320px;
-            border-left: 2px solid #e2e8f0;
-        }
+        .checklist-cell { background: #fafbfc; width: 320px; border-left: 2px solid #e2e8f0; }
 
         .btn-quick-pass {
             background: #ffffff;
@@ -324,24 +278,14 @@
         .btn-submit-doc:disabled { background: #cbd5e1; cursor: not-allowed; }
 
         @media (max-width: 768px) {
-            .gov-header {
-                padding: 12px 16px;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .gov-user-panel {
-                width: 100%;
-                justify-content: space-between;
-            }
+            .gov-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
+            .gov-user-panel { width: 100%; justify-content: space-between; }
             .container { padding: 0 10px; margin: 15px auto; }
             .doc-paper { padding: 18px 16px; }
             .form-grid { grid-template-columns: 1fr; padding: 12px; }
-            .form-field[style*="span 2"] { grid-column: span 1 !important; }
             .sub-item-row { flex-direction: column; gap: 6px; }
             .sub-item-actions { width: 100%; justify-content: flex-start; }
             .summary-box { flex-direction: column; align-items: stretch; }
-            .summary-box > div { border-bottom: 1px dashed var(--gov-border); padding-bottom: 10px; }
-            .summary-box > div:last-child { border-bottom: none; padding-bottom: 0; }
         }
     </style>
 </head>
@@ -381,7 +325,7 @@
         <div class="form-grid">
             <div class="form-field">
                 <label>1. เลือกประเภทพื้นที่ (Category):</label>
-                <select id="categorySelect" class="form-control" disabled onchange="onCategoryChanged()">
+                <select id="categorySelect" class="form-control" onchange="onCategoryChanged()">
                     <option value="">-- โปรดเลือกประเภทพื้นที่ --</option>
                     <option value="สำนักงาน">สำนักงาน</option>
                     <option value="ห้องพักอาจารย์">ห้องพักอาจารย์</option>
@@ -408,7 +352,7 @@
         <div style="font-size: 0.92em; line-height: 1.8; margin-bottom: 15px;">
             <span><b>ผู้รับผิดชอบพื้นที่:</b> <span id="ownerNameDisplay" style="color: var(--gov-primary); font-weight: 600;">-</span></span> &nbsp;|&nbsp;
             <span><b>ประเภทพื้นที่:</b> <span id="areaCategoryDisplay" style="font-weight: 600;">-</span></span>
-            <span style="color: #b91c1c; font-weight: bold; margin-left: 10px; display: inline-block;">🔒 (ล็อคประเภทพื้นที่ตามสิทธิ์ผู้ใช้งาน)</span>
+            <span id="lockNoticeTag" style="color: #b91c1c; font-weight: bold; margin-left: 10px; display: none;">🔒 (ล็อคพื้นที่รับผิดชอบตามสิทธิ์ผู้ใช้งาน)</span>
         </div>
 
         <div style="background: #e8f5e9; padding: 10px 14px; border-radius: 4px; font-size: 0.88em; border-left: 4px solid var(--gov-primary); margin-bottom: 10px;">
@@ -455,8 +399,7 @@
 
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
-    
-    // 🟢 รวมรายชื่อห้องแยกตาม 8 หมวดหมู่หลักตามรูปภาพครบถ้วน 62 รายการ
+
     const rattaData = {
         "สำนักงาน": [
             "1. งานทะเบียนและวัดผล (MS 9105)",
@@ -589,9 +532,6 @@
     }
 
     async function loadAreasAndInitUser(user) {
-        let userCategory = "สำนักงาน"; 
-        let userDefaultRoom = "";
-
         try {
             const token = localStorage.getItem('authToken');
             let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -604,53 +544,93 @@
         }
 
         const catSelect = document.getElementById('categorySelect');
-        const lockTag = document.querySelector('span[style*="🔒"]');
+        const areaSelect = document.getElementById('areaSelect');
+        const lockNoticeTag = document.getElementById('lockNoticeTag');
 
-        const isGlobalUser = user && (user.role === 'Admin' || (user.role.includes('Assessor') && !user.assignedArea));
+        let assignedAreaObj = null;
+        let assignedCategoryStr = null;
 
-        if (isGlobalUser) {
-            if (catSelect) catSelect.disabled = false;
-            if (lockTag) lockTag.style.display = 'none';
-        } else {
-            if (user && user.assignedArea) {
-                if (typeof user.assignedArea === 'string') {
-                    const isCategoryName = Object.keys(rattaData).includes(user.assignedArea) || 
-                                           allAreasData.some(a => a.category === user.assignedArea);
-                    
-                    if (isCategoryName) {
-                        userCategory = user.assignedArea;
-                    } else {
-                        userDefaultRoom = user.assignedArea;
-                        userCategory = getCategoryByRoomName(userDefaultRoom);
-                    }
-                } else if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                    userDefaultRoom = user.assignedArea.areaName || "";
-                    userCategory = user.assignedArea.category || getCategoryByRoomName(userDefaultRoom);
+        if (user && user.assignedArea) {
+            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
+                assignedAreaObj = user.assignedArea;
+            } else if (typeof user.assignedArea === 'string') {
+                assignedAreaObj = allAreasData.find(a => a._id === user.assignedArea || a.areaName === user.assignedArea);
+                if (!assignedAreaObj) {
+                    assignedCategoryStr = user.assignedArea;
                 }
             }
-
-            if (catSelect) catSelect.disabled = true;
-            if (lockTag) lockTag.style.display = 'inline-block';
         }
 
-        if (catSelect) catSelect.value = userCategory;
-        onCategoryChanged();
+        const isAdmin = user && user.role === 'Admin';
+        const isAssessorOnly = user && user.role && user.role.includes('Assessor') && !user.role.includes('Area Owner');
 
-        if (userDefaultRoom) {
-            const areaSelect = document.getElementById('areaSelect');
+        if (isAdmin || (isAssessorOnly && !assignedAreaObj && !assignedCategoryStr)) {
+            if (catSelect) catSelect.disabled = false;
+            if (areaSelect) areaSelect.disabled = false;
+            if (lockNoticeTag) lockNoticeTag.style.display = 'none';
+
+            if (catSelect && !catSelect.value) catSelect.value = "สำนักงาน";
+            onCategoryChanged();
+        } else if (assignedAreaObj) {
+            const targetCategory = assignedAreaObj.category || getCategoryByRoomName(assignedAreaObj.areaName);
+
+            if (catSelect) {
+                catSelect.value = targetCategory;
+                catSelect.disabled = true; 
+            }
+
+            onCategoryChanged();
+
             if (areaSelect) {
+                let foundIndex = -1;
                 for (let i = 0; i < areaSelect.options.length; i++) {
-                    if (areaSelect.options[i].text.includes(userDefaultRoom) || userDefaultRoom.includes(areaSelect.options[i].text)) {
-                        areaSelect.selectedIndex = i;
+                    const opt = areaSelect.options[i];
+                    if (opt.value === assignedAreaObj._id || opt.text === assignedAreaObj.areaName || opt.text.includes(assignedAreaObj.areaName)) {
+                        foundIndex = i;
                         break;
                     }
                 }
+
+                if (foundIndex !== -1) {
+                    areaSelect.selectedIndex = foundIndex;
+                }
+
+                areaSelect.disabled = true; 
                 onAreaChanged();
             }
+
+            if (lockNoticeTag) {
+                lockNoticeTag.style.display = 'inline-block';
+                lockNoticeTag.innerText = `🔒 (ล็อคพื้นที่รับผิดชอบ: ${assignedAreaObj.areaName || targetCategory})`;
+            }
+        } else if (assignedCategoryStr) {
+            if (catSelect) {
+                catSelect.value = assignedCategoryStr;
+                catSelect.disabled = true;
+            }
+
+            onCategoryChanged();
+
+            if (areaSelect) {
+                areaSelect.disabled = false;
+            }
+
+            if (lockNoticeTag) {
+                lockNoticeTag.style.display = 'inline-block';
+                lockNoticeTag.innerText = `🔒 (ล็อคหมวดพื้นที่: ${assignedCategoryStr})`;
+            }
+        } else {
+            if (catSelect) catSelect.disabled = false;
+            if (areaSelect) areaSelect.disabled = false;
+            if (lockNoticeTag) lockNoticeTag.style.display = 'none';
+
+            if (catSelect && !catSelect.value) catSelect.value = "สำนักงาน";
+            onCategoryChanged();
         }
     }
 
     function getCategoryByRoomName(roomName) {
+        if (!roomName) return "สำนักงาน";
         for (const [cat, rooms] of Object.entries(rattaData)) {
             if (rooms.some(r => r.includes(roomName) || roomName.includes(r))) {
                 return cat;
@@ -687,17 +667,18 @@
     }
 
     function onAreaChanged() {
-        const selectedVal = document.getElementById('areaSelect').value;
-        const ownerNameDisplay = document.getElementById('ownerNameDisplay');
         const areaSelect = document.getElementById('areaSelect');
+        const selectedVal = areaSelect.value;
+        const ownerNameDisplay = document.getElementById('ownerNameDisplay');
 
         if (!selectedVal) {
             ownerNameDisplay.innerText = "-";
             return;
         }
 
-        const selectedText = areaSelect.options[areaSelect.selectedIndex].text;
+        const selectedText = areaSelect.options[areaSelect.selectedIndex] ? areaSelect.options[areaSelect.selectedIndex].text : "";
         const dbArea = allAreasData.find(a => a.areaName === selectedText || a._id === selectedVal);
+        
         if (dbArea && dbArea.owner) {
             const fName = dbArea.owner.firstName || "";
             const lName = dbArea.owner.lastName || "";
@@ -826,7 +807,6 @@
                         
                         <div style="margin-top: 10px;">
                             <label style="font-size: 0.85em; font-weight: 600; display:block; margin-bottom:4px;">แนบรูปภาพหลักฐาน (ถ้ามี):</label>
-                            
                             <input type="file" id="file-input-${secNum}" accept="image/*" style="display:none;" onchange="handleImageSelected(event, '${secNum}')">
                             <input type="file" id="camera-input-${secNum}" accept="image/*" capture="environment" style="display:none;" onchange="handleImageSelected(event, '${secNum}')">
                             <input type="hidden" id="photo-base64-${secNum}" value="">

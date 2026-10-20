@@ -440,7 +440,7 @@
                     <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบสถานที่</option>
                 </select>
                 <select id="newAssignedArea" class="form-control">
-                    <option value="">-- โปรดระบุประเภทพื้นที่รับผิดชอบ --</option>
+                    <option value="">-- โปรดระบุห้อง/สถานที่รับผิดชอบ --</option>
                 </select>
             </div>
             <button onclick="createUser()" class="btn-table" style="background: var(--gov-primary); color:white; margin-top:12px; padding:8px 20px;">
@@ -496,7 +496,7 @@
         <div style="margin-bottom:15px;">
             <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">สถานที่รับผิดชอบ:</label>
             <select id="editAssignedArea" class="form-control">
-                <option value="">-- โปรดระบุประเภทพื้นที่รับผิดชอบ --</option>
+                <option value="">-- โปรดระบุห้อง/สถานที่รับผิดชอบ --</option>
             </select>
         </div>
         <div style="background:#fff1f2; padding:12px; border-radius:4px; border-left:4px solid #b91c1c; margin-bottom:15px;">
@@ -637,6 +637,9 @@
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
     let rawAdminData = [];
+    let allUsersData = [];
+    let allAreasList = [];
+    let editUserId = '';
     let adminLineChartInstance = null;
     let adminBarChartInstance = null;
 
@@ -942,7 +945,7 @@
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
-            const location = data.area ? data.area.areaName : 'ไม่ระบุ';
+            const location = data.area ? (data.area.areaName || data.area) : 'ไม่ระบุ';
             const assessor = data.assessor ? `${data.assessor.firstName || ''} ${data.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
 
             let assessorEvidenceHTML = '';
@@ -1020,16 +1023,57 @@
     }
 
     function closeModal() { document.getElementById('detailsModal').style.display = 'none'; }
+
     function openUserModal() {
         document.getElementById('userModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
-        loadUsers();
-        loadAreasForSelect();
+        loadAreasForSelect().then(() => {
+            loadUsers();
+        });
     }
+
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    let allUsersData = [];
-    let editUserId = '';
+    async function loadAreasForSelect() {
+        const token = localStorage.getItem('authToken');
+        try {
+            let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+                allAreasList = await res.json();
+            }
+        } catch (err) {
+            console.error('Error fetching areas:', err);
+        }
+
+        let optionsHtml = '<option value="">-- ไม่ระบุ / พื้นที่ส่วนกลาง --</option>';
+        
+        if (allAreasList && allAreasList.length > 0) {
+            allAreasList.forEach(area => {
+                const catStr = area.category ? ` [${area.category}]` : '';
+                optionsHtml += `<option value="${area._id}">${area.areaName}${catStr}</option>`;
+            });
+        } else {
+            const categories = [
+                "สำนักงาน",
+                "ห้องพักอาจารย์",
+                "ห้องเรียน",
+                "ห้องปฏิบัติการ",
+                "อาคารและโรงฝึกงาน",
+                "ห้องสมุด",
+                "สภาพแวดล้อมภายในอาคาร",
+                "สภาพแวดล้อมภายนอกอาคาร"
+            ];
+            categories.forEach(cat => {
+                optionsHtml += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+
+        const newSelect = document.getElementById('newAssignedArea');
+        const editSelect = document.getElementById('editAssignedArea');
+        if (newSelect) newSelect.innerHTML = optionsHtml;
+        if (editSelect) editSelect.innerHTML = optionsHtml;
+    }
 
     async function loadUsers() {
         const token = localStorage.getItem('authToken');
@@ -1045,9 +1089,10 @@
                 let areaDisplay = '-';
                 if (u.assignedArea) {
                     if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
-                        areaDisplay = u.assignedArea.category || u.assignedArea.areaName || u.assignedArea._id || '-';
+                        areaDisplay = u.assignedArea.areaName || u.assignedArea.category || u.assignedArea._id || '-';
                     } else if (typeof u.assignedArea === 'string') {
-                        areaDisplay = u.assignedArea;
+                        const foundArea = allAreasList.find(a => a._id === u.assignedArea || a.areaName === u.assignedArea);
+                        areaDisplay = foundArea ? foundArea.areaName : u.assignedArea;
                     }
                 }
                 tbody.innerHTML += `
@@ -1055,7 +1100,7 @@
                         <td><b>${u.username}</b></td>
                         <td>${u.firstName || ''} ${u.lastName || ''}</td>
                         <td>${u.role}</td>
-                        <td>${areaDisplay}</td>
+                        <td><b style="color:var(--gov-primary-dark);">${areaDisplay}</b></td>
                         <td>
                             <button onclick="openEditModal('${u._id}')" class="btn-table" style="background:#fed7aa; color:#9a3412;">ปรับปรุง/รหัส</button>
                             <button onclick="deleteUser('${u._id}', '${u.username}')" class="btn-table" style="background:#fee2e2; color:#b91c1c;">ลบ</button>
@@ -1066,29 +1111,6 @@
         } catch (err) {
             console.error(err);
         }
-    }
-
-    async function loadAreasForSelect() {
-        const categories = [
-            "สำนักงาน",
-            "ห้องพักอาจารย์",
-            "ห้องเรียน",
-            "ห้องปฏิบัติการ",
-            "อาคารและโรงฝึกงาน",
-            "ห้องสมุด",
-            "สภาพแวดล้อมภายในอาคาร",
-            "สภาพแวดล้อมภายนอกอาคาร"
-        ];
-
-        let optionsHtml = '<option value="">-- โปรดระบุประเภทพื้นที่รับผิดชอบ --</option>';
-        categories.forEach(cat => {
-            optionsHtml += `<option value="${cat}">${cat}</option>`;
-        });
-
-        const newSelect = document.getElementById('newAssignedArea');
-        const editSelect = document.getElementById('editAssignedArea');
-        if (newSelect) newSelect.innerHTML = optionsHtml;
-        if (editSelect) editSelect.innerHTML = optionsHtml;
     }
 
     async function createUser() {
@@ -1154,15 +1176,15 @@
         document.getElementById('editRole').value = user.role || 'Internal Assessor';
         document.getElementById('editPassword').value = '';
 
-        let currentArea = "";
+        let currentAreaId = "";
         if (user.assignedArea) {
             if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                currentArea = user.assignedArea.category || user.assignedArea.areaName || user.assignedArea._id || "";
+                currentAreaId = user.assignedArea._id || user.assignedArea.category || "";
             } else if (typeof user.assignedArea === 'string') {
-                currentArea = user.assignedArea;
+                currentAreaId = user.assignedArea;
             }
         }
-        document.getElementById('editAssignedArea').value = currentArea;
+        document.getElementById('editAssignedArea').value = currentAreaId;
         document.getElementById('editUserModal').style.display = 'flex';
     }
 
