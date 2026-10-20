@@ -587,6 +587,10 @@
     }
 
     async function loadAreasAndInitUser(user) {
+        // 🟢 ประกาศตัวแปรไว้ด้านบนสุดของฟังก์ชัน ป้องกัน ReferenceError
+        let userCategory = "สำนักงาน"; 
+        let userDefaultRoom = "";
+
         try {
             const token = localStorage.getItem('authToken');
             let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -594,49 +598,55 @@
             if (res.ok) {
                 allAreasData = await res.json();
             }
-        } catch (err) {}
+        } catch (err) {
+            console.error('Error fetching areas:', err);
+        }
 
         const catSelect = document.getElementById('categorySelect');
         const lockTag = document.querySelector('span[style*="🔒"]');
 
-        // ถ้าผู้ใช้เป็น Admin หรือ กรรมการประเมินที่ไม่มีการล็อกห้องเฉพาะ ให้ปลดล็อก Category ให้เลือกได้อิสระ
-        const isGlobalUser = user.role === 'Admin' || (user.role.includes('Assessor') && !user.assignedArea);
+        // เช็กว่าเป็น Admin หรือ กรรมการประเมินทั่วไปที่ไม่ล็อกห้องประจำหรือไม่
+        const isGlobalUser = user && (user.role === 'Admin' || (user.role.includes('Assessor') && !user.assignedArea));
 
         if (isGlobalUser) {
-            catSelect.disabled = false; // 🟢 ปลดล็อกให้เลือก Category ได้
-            if (lockTag) lockTag.style.display = 'none'; // ซ่อนไอคอนล็อก
-            catSelect.value = "สำนักงาน"; // ตั้งค่าเริ่มต้น
+            if (catSelect) catSelect.disabled = false; // ปลดล็อกประเภทพื้นที่ให้เลือกได้อิสระ
+            if (lockTag) lockTag.style.display = 'none'; // ซ่อนข้อความล็อก
         } else {
-            // ถ้าเป็น User ที่โดนล็อกห้องประจำ
-            let userCategory = "สำนักงาน";
-            let userDefaultRoom = "";
-
+            // ถ้าเป็น User/เจ้าของพื้นที่ ที่มีการล็อกห้องประจำ
             if (user && user.assignedArea) {
                 const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
-                const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea);
+                const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea || (user.assignedArea && a.areaName === user.assignedArea.areaName));
 
                 if (assignedAreaObj) {
                     userDefaultRoom = assignedAreaObj.areaName;
                     userCategory = assignedAreaObj.category || getCategoryByRoomName(userDefaultRoom);
+                } else if (typeof user.assignedArea === 'string') {
+                    userDefaultRoom = user.assignedArea;
+                    userCategory = getCategoryByRoomName(userDefaultRoom);
                 }
             }
 
-            catSelect.value = userCategory;
-            catSelect.disabled = true; // ล็อกประเภทพื้นที่เฉพาะ User นี้
+            if (catSelect) catSelect.disabled = true; // ล็อก Dropdown ตามสิทธิ์
             if (lockTag) lockTag.style.display = 'inline-block';
         }
 
+        if (catSelect) catSelect.value = userCategory;
+        
+        // โหลดห้องตาม Category
         onCategoryChanged();
-    
+
+        // ถ้ามีห้องเริ่มต้น ให้เลือกห้องนั้นใน Dropdown อัตโนมัติ
         if (userDefaultRoom) {
             const areaSelect = document.getElementById('areaSelect');
-            for (let i = 0; i < areaSelect.options.length; i++) {
-                if (areaSelect.options[i].text.includes(userDefaultRoom) || userDefaultRoom.includes(areaSelect.options[i].text)) {
-                    areaSelect.selectedIndex = i;
-                    break;
+            if (areaSelect) {
+                for (let i = 0; i < areaSelect.options.length; i++) {
+                    if (areaSelect.options[i].text.includes(userDefaultRoom) || userDefaultRoom.includes(areaSelect.options[i].text)) {
+                        areaSelect.selectedIndex = i;
+                        break;
+                    }
                 }
+                onAreaChanged();
             }
-            onAreaChanged();
         }
     }
 
