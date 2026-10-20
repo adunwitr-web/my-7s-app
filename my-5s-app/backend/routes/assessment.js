@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const mongoose = require('mongoose');
 
 const Assessment = require('../models/Assessment');
 const Area = require('../models/Area');
@@ -24,23 +25,44 @@ const verifyToken = (req, res, next) => {
     });
 };
 
-// 1. ลงนามและบันทึกผลการตรวจประเมิน (จัดส่งอีเมลแจ้งเตือนไปยังผู้รับผิดชอบสถานที่ทันที)
+// 1. ลงนามและบันทึกผลการตรวจประเมิน
 router.post('/', verifyToken, async (req, res) => {
     try {
-        const { area, assessmentRound, scores, items, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
+        let { area, assessmentRound, scores, items, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
         console.log("👉 ข้อมูล items ที่ได้รับจากหน้าเว็บ:", items);
+
         if (!area || !assessmentRound) {
             return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน กรุณาระบุสถานที่และรอบการประเมิน' });
+        }
+
+        // 🟢 แก้ไขบั๊ก Cast Error: ค้นหาหรือแปลงชื่อสถานที่ให้เป็น ObjectId ที่ถูกต้องของ MongoDB
+        if (!mongoose.Types.ObjectId.isValid(area)) {
+            let foundArea = await Area.findOne({ areaName: area });
+
+            if (!foundArea) {
+                // ค้นหาโดยการตัดลำดับข้อด้านหน้าออก เช่น "1. "
+                const cleanName = area.replace(/^\d+\.\s*/, '').trim();
+                foundArea = await Area.findOne({ areaName: new RegExp(cleanName, 'i') });
+            }
+
+            if (foundArea) {
+                area = foundArea._id;
+            } else {
+                // หากไม่มีในฐานข้อมูล ให้สร้าง Record Area ใหม่ให้อัตโนมัติเพื่อใช้ ID
+                const newArea = new Area({ areaName: area, category: 'ทั่วไป' });
+                const savedArea = await newArea.save();
+                area = savedArea._id;
+            }
         }
 
         const evaluationStatus = Number(percentage) < 80 ? 'Needs Improvement' : 'Passed';
 
         const newAssessment = new Assessment({
             area: area,
-            assessor: req.user.userId || req.user.id,
+            assessor: req.user.userId || req.user.id || req.user._id,
             assessmentRound: assessmentRound,
-            scores: scores,
-            items: items,
+            scores: scores || [],
+            items: items || [],
             totalScore: totalScore,
             percentage: percentage,
             status: evaluationStatus,
@@ -52,7 +74,7 @@ router.post('/', verifyToken, async (req, res) => {
 
         // ค้นหาข้อมูลสถานที่และอีเมลของผู้รับผิดชอบสถานที่
         const areaInfo = await Area.findById(area).populate('owner');
-        const assessorUser = await User.findById(req.user.userId || req.user.id);
+        const assessorUser = await User.findById(req.user.userId || req.user.id || req.user._id);
         const systemSetting = await SystemConfig.findOne();
 
         // จัดส่งอีเมลแจ้งผลการตรวจประเมิน
@@ -145,7 +167,7 @@ router.post('/', verifyToken, async (req, res) => {
 
     } catch (error) {
         console.error('❌ Error saving assessment:', error);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
+        res.status(500).json({ message: error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
     }
 });
 
@@ -166,7 +188,7 @@ router.get('/', verifyToken, async (req, res) => {
 // 3. ดึงรายการงานที่ต้องแก้ไข (สำหรับผู้รับผิดชอบสถานที่)
 router.get('/pending', verifyToken, async (req, res) => {
     try {
-        const userId = req.user.userId || req.user.id;
+        const userId = req.user.userId || req.user.id || req.user._id;
         const myAreas = await Area.find({ owner: userId });
         const myAreaIds = myAreas.map(area => area._id);
 
@@ -268,6 +290,7 @@ router.patch('/:id/reject', verifyToken, async (req, res) => {
     }
 });
 
+// 8. แก้ไขคะแนนและข้อมูลประเมินโดย Admin
 router.patch('/:id/edit', verifyToken, async (req, res) => {
     try {
         const { percentage, createdAt, items, totalScore } = req.body;
@@ -278,13 +301,11 @@ router.patch('/:id/edit', verifyToken, async (req, res) => {
             return res.status(404).json({ message: 'ไม่พบบันทึกการประเมินนี้' });
         }
 
-        // อัปเดตข้อมูลใหม่ที่แอดมินแก้ไข
         if (percentage !== undefined) assessment.percentage = percentage;
         if (createdAt !== undefined) assessment.createdAt = createdAt;
-        if (items !== undefined) assessment.items = items; // อัปเดตโครงสร้างรายข้อ (N/A และคะแนน)
+        if (items !== undefined) assessment.items = items;
         if (totalScore !== undefined) assessment.totalScore = totalScore;
 
-        // อัปเดตสถานะให้สอดคล้องกับเปอร์เซ็นต์ใหม่ (ถ้าเปอร์เซ็นต์ถูกแก้จนผ่าน/ไม่ผ่าน)
         if (percentage !== undefined && assessment.status !== 'Approved') {
              assessment.status = Number(percentage) < 80 ? 'Needs Improvement' : 'Passed';
         }
