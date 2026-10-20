@@ -587,7 +587,6 @@
     }
 
     async function loadAreasAndInitUser(user) {
-        // 🟢 ประกาศตัวแปรไว้ด้านบนสุดของฟังก์ชัน ป้องกัน ReferenceError
         let userCategory = "สำนักงาน"; 
         let userDefaultRoom = "";
 
@@ -605,37 +604,41 @@
         const catSelect = document.getElementById('categorySelect');
         const lockTag = document.querySelector('span[style*="🔒"]');
 
-        // เช็กว่าเป็น Admin หรือ กรรมการประเมินทั่วไปที่ไม่ล็อกห้องประจำหรือไม่
         const isGlobalUser = user && (user.role === 'Admin' || (user.role.includes('Assessor') && !user.assignedArea));
 
         if (isGlobalUser) {
-            if (catSelect) catSelect.disabled = false; // ปลดล็อกประเภทพื้นที่ให้เลือกได้อิสระ
-            if (lockTag) lockTag.style.display = 'none'; // ซ่อนข้อความล็อก
+            if (catSelect) catSelect.disabled = false; // Admin/ผู้ประเมินส่วนกลาง เลือกได้อิสระ
+            if (lockTag) lockTag.style.display = 'none';
         } else {
-            // ถ้าเป็น User/เจ้าของพื้นที่ ที่มีการล็อกห้องประจำ
+            // ถ้าเป็น User ทั่วไปที่โดนล็อกหมวดพื้นที่
             if (user && user.assignedArea) {
-                const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
-                const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea || (user.assignedArea && a.areaName === user.assignedArea.areaName));
-
-                if (assignedAreaObj) {
-                    userDefaultRoom = assignedAreaObj.areaName;
-                    userCategory = assignedAreaObj.category || getCategoryByRoomName(userDefaultRoom);
-                } else if (typeof user.assignedArea === 'string') {
-                    userDefaultRoom = user.assignedArea;
-                    userCategory = getCategoryByRoomName(userDefaultRoom);
+                if (typeof user.assignedArea === 'string') {
+                    // เช็กว่าเป็นชื่อหมวดหลักหรือไม่ (เช่น "ห้องเรียน", "ห้องสมุด")
+                    const isCategoryName = Object.keys(rattaData).includes(user.assignedArea) || 
+                                           allAreasData.some(a => a.category === user.assignedArea);
+                    
+                    if (isCategoryName) {
+                        userCategory = user.assignedArea;
+                    } else {
+                        userDefaultRoom = user.assignedArea;
+                        userCategory = getCategoryByRoomName(userDefaultRoom);
+                    }
+                } else if (typeof user.assignedArea === 'object') {
+                    userDefaultRoom = user.assignedArea.areaName || "";
+                    userCategory = user.assignedArea.category || getCategoryByRoomName(userDefaultRoom);
                 }
             }
 
-            if (catSelect) catSelect.disabled = true; // ล็อก Dropdown ตามสิทธิ์
+            if (catSelect) catSelect.disabled = true; // ล็อก Category ตามสิทธิ์
             if (lockTag) lockTag.style.display = 'inline-block';
         }
 
         if (catSelect) catSelect.value = userCategory;
         
-        // โหลดห้องตาม Category
+        // 🟢 ดึงเฉพาะรายการห้องย่อยที่อยู่ใน Category นี้ออกมาให้เลือกใน Dropdown 2
         onCategoryChanged();
 
-        // ถ้ามีห้องเริ่มต้น ให้เลือกห้องนั้นใน Dropdown อัตโนมัติ
+        // ถ้าล็อกห้องไว้เจาะจง ให้เลือกห้องนั้นให้อัตโนมัติ
         if (userDefaultRoom) {
             const areaSelect = document.getElementById('areaSelect');
             if (areaSelect) {

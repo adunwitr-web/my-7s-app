@@ -1064,106 +1064,161 @@
         }
     }
 
-    async function loadAreasForSelect() {
-        try {
-            const token = localStorage.getItem('authToken');
-            let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
-            
-            if (res.ok) {
-                const areas = await res.json();
-                
-                // 🟢 1. จัดกลุ่มพื้นที่ตามหมวดหมู่ (Category)
-                const groupedAreas = {};
-                areas.forEach(a => {
-                    const cat = a.category || 'ทั่วไป';
-                    if (!groupedAreas[cat]) {
-                        groupedAreas[cat] = [];
-                    }
-                    groupedAreas[cat].push(a);
-                });
-
-                let optionsHtml = '<option value="">-- โปรดระบุสถานที่รับผิดชอบ --</option>';
-
-                // 🟢 2. วนลูปสร้าง <optgroup> แยกหมวดหมู่ให้สวยงาม
-                for (const [category, areaList] of Object.entries(groupedAreas)) {
-                    optionsHtml += `<optgroup label="📌 หมวด: ${category}">`;
-                    
-                    const seenNames = new Set();
-                    areaList.forEach(a => {
-                        if (!seenNames.has(a.areaName)) {
-                            seenNames.add(a.areaName);
-                            optionsHtml += `<option value="${a._id}">${a.areaName}</option>`;
-                        }
-                    });
-
-                    optionsHtml += `</optgroup>`;
-                }
-
-                const newSelect = document.getElementById('newAssignedArea');
-                const editSelect = document.getElementById('editAssignedArea');
-                if (newSelect) newSelect.innerHTML = optionsHtml;
-                if (editSelect) editSelect.innerHTML = optionsHtml;
-            }
-        } catch (err) {
-            console.error('Error loading areas for select:', err);
-        }
-    }
-
-    function openEditModal(id) {
-        const user = allUsersData.find(u => u._id === id);
-        if (!user) return;
-        editUserId = id;
-        document.getElementById('editUsername').value = user.username;
-        document.getElementById('editEmail').value = user.email || '';
-        document.getElementById('editFirstName').value = user.firstName || '';
-        document.getElementById('editLastName').value = user.lastName || '';
-        document.getElementById('editRole').value = user.role;
-        document.getElementById('editPassword').value = '';
-        const currentAreaId = user.assignedArea ? (user.assignedArea._id || user.assignedArea) : "";
-        document.getElementById('editAssignedArea').value = currentAreaId;
-        document.getElementById('editUserModal').style.display = 'flex';
-    }
-    function closeEditModal() { document.getElementById('editUserModal').style.display = 'none'; }
-
-    async function submitEditUser() {
-        const username = document.getElementById('editUsername').value.trim();
-        const email = document.getElementById('editEmail').value.trim();
-        const firstName = document.getElementById('editFirstName').value.trim();
-        const lastName = document.getElementById('editLastName').value.trim();
-        const role = document.getElementById('editRole').value;
-        const password = document.getElementById('editPassword').value.trim();
-        const rawArea = document.getElementById('editAssignedArea').value;
-
-        const isMongoId = /^[0-9a-fA-F]{24}$/.test(rawArea);
-        const safeAssignedArea = isMongoId ? rawArea : null;
-
+    // 🟢 1. เปลี่ยนให้ Dropdown แสดงเฉพาะ "ประเภทพื้นที่หลัก" สั้นๆ สะอาดตา
+async function loadAreasForSelect() {
+    try {
         const token = localStorage.getItem('authToken');
-        try {
-            const res = await fetch(`${API_URL}/user/${editUserId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
-                    username, 
-                    email, 
-                    firstName, 
-                    lastName, 
-                    role, 
-                    assignedArea: safeAssignedArea,
-                    ...(password && { password })
-                })
-            });
-            if (res.ok) {
-                alert('ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
-                closeEditModal();
-                loadUsers();
-            } else {
-                alert('ปรับปรุงข้อมูลไม่สำเร็จ');
+        let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
+        
+        // หมวดหลักมาตรฐาน
+        let categories = [
+            "สำนักงาน",
+            "ห้องพักอาจารย์",
+            "ห้องเรียน",
+            "ห้องปฏิบัติการ",
+            "อาคารและโรงฝึกงาน",
+            "ห้องสมุด",
+            "สภาพแวดล้อมภายในอาคาร",
+            "สภาพแวดล้อมภายนอกอาคาร"
+        ];
+
+        if (res.ok) {
+            const areas = await res.json();
+            // ดึง Category เพิ่มเติมจาก DB กรณีมีหมวดใหม่
+            const dbCategories = [...new Set(areas.map(a => a.category).filter(Boolean))];
+            if (dbCategories.length > 0) {
+                categories = [...new Set([...categories, ...dbCategories])];
             }
-        } catch (err) {
-            alert('ระบบขัดข้อง');
+        }
+
+        let optionsHtml = '<option value="">-- โปรดระบุประเภทพื้นที่รับผิดชอบ --</option>';
+        categories.forEach(cat => {
+            optionsHtml += `<option value="${cat}">${cat}</option>`;
+        });
+
+        const newSelect = document.getElementById('newAssignedArea');
+        const editSelect = document.getElementById('editAssignedArea');
+        if (newSelect) newSelect.innerHTML = optionsHtml;
+        if (editSelect) editSelect.innerHTML = optionsHtml;
+    } catch (err) {
+        console.error('Error loading categories for select:', err);
+    }
+}
+
+// 🟢 2. แก้ไข createUser() ให้ส่งชื่อหมวดตรงๆ (ไม่โดนตัดเป็น null)
+async function createUser() {
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value.trim();
+    const email = document.getElementById('newEmail').value.trim();
+    const firstName = document.getElementById('newFirstName').value.trim();
+    const lastName = document.getElementById('newLastName').value.trim();
+    const role = document.getElementById('newRole').value;
+    const assignedArea = document.getElementById('newAssignedArea').value;
+
+    if (!username || !email || !firstName) {
+        alert('โปรดกรอกข้อมูลสำคัญให้ครบถ้วน');
+        return;
+    }
+
+    if (!assignedArea && (role.includes('Owner') || role.includes('Assessor'))) {
+        if (!confirm('⚠️ คุณยังไม่ได้ระบุประเภทพื้นที่รับผิดชอบ User นี้จะไม่ถูกล็อกหมวดประเมิน ยืนยันการบันทึกหรือไม่?')) {
+            return;
         }
     }
+
+    const token = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`${API_URL}/user`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ 
+                username, 
+                password: password || '123456', 
+                email, 
+                firstName, 
+                lastName, 
+                role, 
+                assignedArea: assignedArea || null 
+            })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+            alert('ลงทะเบียนบุคลากรใหม่สำเร็จ');
+            loadUsers();
+        } else {
+            alert('สร้างไม่สำเร็จ: ' + (data.message || 'กรุณาเช็กว่า Username หรือ Email ซ้ำกับที่มีอยู่หรือไม่'));
+        }
+    } catch (err) {
+        alert('ระบบขัดข้อง');
+    }
+}
+
+// 🟢 3. แก้ไข openEditModal() ให้ดึงชื่อหมวดขึ้นมาแสดงตรงกับ Select Box
+function openEditModal(id) {
+    const user = allUsersData.find(u => u._id === id);
+    if (!user) return;
+    editUserId = id;
+    document.getElementById('editUsername').value = user.username;
+    document.getElementById('editEmail').value = user.email || '';
+    document.getElementById('editFirstName').value = user.firstName || '';
+    document.getElementById('editLastName').value = user.lastName || '';
+    document.getElementById('editRole').value = user.role;
+    document.getElementById('editPassword').value = '';
+
+    let currentArea = "";
+    if (user.assignedArea) {
+        if (typeof user.assignedArea === 'object') {
+            currentArea = user.assignedArea.category || user.assignedArea.areaName || user.assignedArea._id;
+        } else {
+            currentArea = user.assignedArea;
+        }
+    }
+    document.getElementById('editAssignedArea').value = currentArea;
+    document.getElementById('editUserModal').style.display = 'flex';
+}
+
+// 🟢 4. แก้ไข submitEditUser() ให้บันทึกการแก้ไขหมวดพื้นที่ลง DB
+async function submitEditUser() {
+    const username = document.getElementById('editUsername').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    const firstName = document.getElementById('editFirstName').value.trim();
+    const lastName = document.getElementById('editLastName').value.trim();
+    const role = document.getElementById('editRole').value;
+    const password = document.getElementById('editPassword').value.trim();
+    const assignedArea = document.getElementById('editAssignedArea').value;
+
+    const token = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`${API_URL}/user/${editUserId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                username, 
+                email, 
+                firstName, 
+                lastName, 
+                role, 
+                assignedArea: assignedArea || null,
+                ...(password && { password })
+            })
+        });
+        if (res.ok) {
+            alert('ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
+            closeEditModal();
+            loadUsers();
+        } else {
+            alert('ปรับปรุงข้อมูลไม่สำเร็จ');
+        }
+    } catch (err) {
+        alert('ระบบขัดข้อง');
+    }
+}
 
     async function createUser() {
         const username = document.getElementById('newUsername').value.trim();
