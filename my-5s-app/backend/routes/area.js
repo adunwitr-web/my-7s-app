@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Area = require('../models/Area');
 const authModule = require('../middleware/auth');
 
@@ -8,6 +9,7 @@ const auth = typeof authModule === 'function'
     ? authModule 
     : (authModule.auth || authModule.protect || authModule.verifyToken || ((req, res, next) => next()));
 
+// ฟังก์ชันช่วย Escape เครื่องหมายพิเศษสำหรับ Regex
 function escapeRegex(text) {
     if (!text || typeof text !== 'string') return '';
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -19,24 +21,24 @@ router.get('/', auth, async (req, res) => {
         const { category } = req.query;
         let query = {};
 
-        // 1. กรองตาม Category (ถ้าส่งมาจาก Frontend)
+        // 1. กรองตาม Category (ถ้ามีการส่งมาจาก Frontend)
         if (category && typeof category === 'string' && category.trim()) {
             query.category = { $regex: new RegExp(escapeRegex(category.trim()), 'i') };
         }
 
-        // 2. ตรวจสอบสิทธิ์ User
+        // 2. ตรวจสอบสิทธิ์ User แบบปลอดภัย (กัน undefined)
         const userRole = (req.user && req.user.role) ? String(req.user.role) : '';
         const isAdminOrAssessor = userRole === 'Admin' || userRole.includes('Assessor');
 
         if (req.user && !isAdminOrAssessor) {
-            // รองรับโครงสร้าง User ID ทุกแบบ (_id, id, userId)
             const userId = req.user._id || req.user.id || req.user.userId;
             const userName = req.user.firstName || req.user.fullName || req.user.username || '';
             const firstName = String(userName).split(' ')[0].replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
 
             const orConditions = [];
 
-            if (userId) {
+            // 🟢 เช็กว่าเป็น Valid Mongo ObjectId ก่อนใส่ใน Query (กัน CastError 500)
+            if (userId && mongoose.Types.ObjectId.isValid(userId)) {
                 orConditions.push({ assignedUsers: userId });
                 orConditions.push({ owner: userId });
             }
@@ -50,19 +52,18 @@ router.get('/', auth, async (req, res) => {
             }
         }
 
-        // ค้นหาข้อมูลแบบปลอดภัย เช็ก Schema ก่อนสั่ง populate
-        let areasQuery = Area.find(query);
-
-        if (Area.schema && Area.schema.paths) {
-            if (Area.schema.paths.owner) {
-                areasQuery = areasQuery.populate('owner', 'username firstName lastName email');
-            }
-            if (Area.schema.paths.assignedUsers) {
-                areasQuery = areasQuery.populate('assignedUsers', 'username firstName lastName email');
-            }
+        // 3. ดึงข้อมูลแบบปลอดภัย (ถ้า populate พัง ให้ดึงเฉพาะข้อมูลหลักแทน เซิร์ฟเวอร์จะไม่ล่ม)
+        let areas = [];
+        try {
+            areas = await Area.find(query)
+                .populate('owner', 'username firstName lastName email')
+                .populate('assignedUsers', 'username firstName lastName email')
+                .exec();
+        } catch (populateErr) {
+            console.warn('⚠️ Populate failed, fetching raw areas:', populateErr.message);
+            areas = await Area.find(query).exec();
         }
 
-        const areas = await areasQuery.exec();
         return res.json(areas);
 
     } catch (err) {
@@ -85,7 +86,7 @@ router.post('/', auth, async (req, res) => {
             category, 
             building: building || '',
             responsiblePersons: responsiblePersons || [],
-            owner 
+            owner: (owner && mongoose.Types.ObjectId.isValid(owner)) ? owner : null
         });
 
         await newArea.save();
