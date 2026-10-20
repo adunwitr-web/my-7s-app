@@ -1130,6 +1130,25 @@
         localStorage.clear();
         window.location.href = 'index.html';
     }
+    async function loadRooms(selectedCategory) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`/api/areas?category=${encodeURIComponent(selectedCategory)}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    const rooms = await response.json();
+
+    const roomSelect = document.getElementById('roomSelect'); // ID ตัวเลือกห้องของมึง
+    roomSelect.innerHTML = '<option value="">-- โปรดระบุห้องรับผิดชอบ --</option>';
+
+    rooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room._id;
+        option.textContent = `${room.areaName} (${room.building || 'ไม่ระบุอาคาร'})`;
+        roomSelect.appendChild(option);
+    });
+}
 </script>
 </body>
 </html>
