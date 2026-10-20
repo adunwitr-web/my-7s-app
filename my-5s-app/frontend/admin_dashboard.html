@@ -440,7 +440,7 @@
                     <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบสถานที่</option>
                 </select>
                 <select id="newAssignedArea" class="form-control">
-                    <option value="">-- โปรดระบุห้อง/สถานที่รับผิดชอบ --</option>
+                    <option value="">-- โปรดระบุประเภทพื้นที่/สถานที่รับผิดชอบ --</option>
                 </select>
             </div>
             <button onclick="createUser()" class="btn-table" style="background: var(--gov-primary); color:white; margin-top:12px; padding:8px 20px;">
@@ -496,7 +496,7 @@
         <div style="margin-bottom:15px;">
             <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">สถานที่รับผิดชอบ:</label>
             <select id="editAssignedArea" class="form-control">
-                <option value="">-- โปรดระบุห้อง/สถานที่รับผิดชอบ --</option>
+                <option value="">-- โปรดระบุประเภทพื้นที่/สถานที่รับผิดชอบ --</option>
             </select>
         </div>
         <div style="background:#fff1f2; padding:12px; border-radius:4px; border-left:4px solid #b91c1c; margin-bottom:15px;">
@@ -574,14 +574,17 @@
         <div>
             <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ประเภทพื้นที่ที่ใช้ฟอร์มนี้:</label>
             <select id="previewTargetAreas" class="form-control">
-                <option value="สำนักงาน">สำนักงาน</option>
-                <option value="ห้องพักอาจารย์">ห้องพักอาจารย์</option>
+                <option value="สำนักงานฯ - ห้องพักอาจารย์">สำนักงานฯ - ห้องพักอาจารย์</option>
                 <option value="ห้องเรียน">ห้องเรียน</option>
-                <option value="ห้องปฏิบัติการ">ห้องปฏิบัติการ</option>
-                <option value="อาคารและโรงฝึกงาน">อาคารและโรงฝึกงาน</option>
+                <option value="ห้องปฏิบัติการทดลอง">ห้องปฏิบัติการทดลอง</option>
                 <option value="ห้องสมุด">ห้องสมุด</option>
-                <option value="สภาพแวดล้อมภายในอาคาร">สภาพแวดล้อมภายในอาคาร</option>
-                <option value="สภาพแวดล้อมภายนอกอาคาร">สภาพแวดล้อมภายนอกอาคาร</option>
+                <option value="โรงฝึกงาน">โรงฝึกงาน</option>
+                <option value="ห้องปฏิบัติการวิชาชีพ">ห้องปฏิบัติการวิชาชีพ</option>
+                <option value="ห้องปฏิบัติคอมพิวเตอร์">ห้องปฏิบัติคอมพิวเตอร์</option>
+                <option value="โรงอาหาร - ซุ้มอาหาร">โรงอาหาร - ซุ้มอาหาร</option>
+                <option value="ภูมิทัศน์และพื้นที่ส่วนกลาง">ภูมิทัศน์และพื้นที่ส่วนกลาง</option>
+                <option value="ห้องประชุมและหอประชุม">ห้องประชุมและหอประชุม</option>
+                <option value="อาคารสถานที่ และความปลอดภัยอาคาร">อาคารสถานที่ และความปลอดภัยอาคาร</option>
             </select>
         </div>
     </div>
@@ -642,6 +645,20 @@
     let editUserId = '';
     let adminLineChartInstance = null;
     let adminBarChartInstance = null;
+
+    const categoriesList = [
+        "สำนักงานฯ - ห้องพักอาจารย์",
+        "ห้องเรียน",
+        "ห้องปฏิบัติการทดลอง",
+        "ห้องสมุด",
+        "โรงฝึกงาน",
+        "ห้องปฏิบัติการวิชาชีพ",
+        "ห้องปฏิบัติคอมพิวเตอร์",
+        "โรงอาหาร - ซุ้มอาหาร",
+        "ภูมิทัศน์และพื้นที่ส่วนกลาง",
+        "ห้องประชุมและหอประชุม",
+        "อาคารสถานที่ และความปลอดภัยอาคาร"
+    ];
 
     window.onload = function() {
         const token = localStorage.getItem('authToken');
@@ -1048,25 +1065,19 @@
 
         let optionsHtml = '<option value="">-- ไม่ระบุ / พื้นที่ส่วนกลาง --</option>';
         
+        optionsHtml += '<optgroup label="📂 เลือกตามหมวดหมู่หลัก (11 หมวดมาตรฐาน)">';
+        categoriesList.forEach(cat => {
+            optionsHtml += `<option value="${cat}">${cat}</option>`;
+        });
+        optionsHtml += '</optgroup>';
+
         if (allAreasList && allAreasList.length > 0) {
+            optionsHtml += '<optgroup label="🏢 เลือกตามห้อง/สถานที่เจาะจง">';
             allAreasList.forEach(area => {
                 const catStr = area.category ? ` [${area.category}]` : '';
                 optionsHtml += `<option value="${area._id}">${area.areaName}${catStr}</option>`;
             });
-        } else {
-            const categories = [
-                "สำนักงาน",
-                "ห้องพักอาจารย์",
-                "ห้องเรียน",
-                "ห้องปฏิบัติการ",
-                "อาคารและโรงฝึกงาน",
-                "ห้องสมุด",
-                "สภาพแวดล้อมภายในอาคาร",
-                "สภาพแวดล้อมภายนอกอาคาร"
-            ];
-            categories.forEach(cat => {
-                optionsHtml += `<option value="${cat}">${cat}</option>`;
-            });
+            optionsHtml += '</optgroup>';
         }
 
         const newSelect = document.getElementById('newAssignedArea');
@@ -1925,7 +1936,7 @@
         
         currentEditFormId = id;
         document.getElementById('previewFormName').value = form.formName;
-        document.getElementById('previewTargetAreas').value = form.targetAreas[0] || 'สำนักงาน';
+        document.getElementById('previewTargetAreas').value = form.targetAreas[0] || 'สำนักงานฯ - ห้องพักอาจารย์';
         
         document.querySelector(`input[name="publishMode"][value="${form.publishMode}"]`).checked = true;
         if (form.publishMode === 'scheduled' && form.publishDate) {
