@@ -6,10 +6,11 @@ const authModule = require('../middleware/auth');
 // ดึง middleware function ยืดหยุ่นรองรับทุกรูปแบบ export
 const auth = typeof authModule === 'function' 
     ? authModule 
-    : (authModule.auth || authModule.protect || authModule.verifyToken);
+    : (authModule.auth || authModule.protect || authModule.verifyToken || ((req, res, next) => next()));
 
 // ฟังก์ชันช่วย Escape เครื่องหมายพิเศษสำหรับ Regex
 function escapeRegex(text) {
+    if (!text || typeof text !== 'string') return '';
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
 
@@ -19,27 +20,34 @@ router.get('/', auth, async (req, res) => {
         const { category } = req.query;
         let query = {};
 
-        // 1. กรองตาม Category (ถ้ามีการส่งมา)
-        if (category && category.trim()) {
+        // 1. กรองตาม Category (ถ้ามีการส่งมาจาก Frontend)
+        if (category && typeof category === 'string' && category.trim()) {
             query.category = { $regex: new RegExp(escapeRegex(category.trim()), 'i') };
         }
 
-        // 2. ถ้าไม่ใช่ Admin/Assessor ให้แสดงเฉพาะห้องที่รับผิดชอบ
-        if (req.user && req.user.role !== 'Admin' && !req.user.role.includes('Assessor')) {
+        // 2. ป้องกัน req.user.role เป็น undefined / null
+        const userRole = (req.user && req.user.role) ? String(req.user.role) : '';
+        const isAdminOrAssessor = userRole === 'Admin' || userRole.includes('Assessor');
+
+        // ถ้าไม่ใช่ Admin หรือ Assessor ให้แสดงเฉพาะห้องที่ตนเองรับผิดชอบ
+        if (req.user && !isAdminOrAssessor) {
             const userName = req.user.firstName || req.user.fullName || req.user.username || '';
-            const firstName = userName.split(' ')[0].replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
+            const firstName = String(userName).split(' ')[0].replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
 
-            const orConditions = [
-                { assignedUsers: req.user._id },
-                { owner: req.user._id }
-            ];
+            const orConditions = [];
 
-            // ดักจับ: เพิ่มเงื่อนไขค้นหาตามชื่อ เฉพาะเมื่อ firstName ไม่ใช่ค่าว่างเท่านั้น
+            if (req.user._id) {
+                orConditions.push({ assignedUsers: req.user._id });
+                orConditions.push({ owner: req.user._id });
+            }
+
             if (firstName.length > 0) {
                 orConditions.push({ responsiblePersons: { $regex: escapeRegex(firstName), $options: 'i' } });
             }
 
-            query.$or = orConditions;
+            if (orConditions.length > 0) {
+                query.$or = orConditions;
+            }
         }
 
         const areas = await Area.find(query)
