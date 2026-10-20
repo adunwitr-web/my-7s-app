@@ -596,28 +596,38 @@
             }
         } catch (err) {}
 
-        let userCategory = "สำนักงาน"; 
-        let userDefaultRoom = "";
+        const catSelect = document.getElementById('categorySelect');
+        const lockTag = document.querySelector('span[style*="🔒"]');
 
-        if (user && user.assignedArea) {
-            const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
-            const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea || a.areaName === user.assignedArea.areaName);
+        // ถ้าผู้ใช้เป็น Admin หรือ กรรมการประเมินที่ไม่มีการล็อกห้องเฉพาะ ให้ปลดล็อก Category ให้เลือกได้อิสระ
+        const isGlobalUser = user.role === 'Admin' || (user.role.includes('Assessor') && !user.assignedArea);
 
-            if (assignedAreaObj) {
-                userDefaultRoom = assignedAreaObj.areaName;
-                userCategory = assignedAreaObj.category || getCategoryByRoomName(userDefaultRoom);
-            } else if (typeof user.assignedArea === 'string') {
-                userDefaultRoom = user.assignedArea;
-                userCategory = getCategoryByRoomName(userDefaultRoom);
+        if (isGlobalUser) {
+            catSelect.disabled = false; // 🟢 ปลดล็อกให้เลือก Category ได้
+            if (lockTag) lockTag.style.display = 'none'; // ซ่อนไอคอนล็อก
+            catSelect.value = "สำนักงาน"; // ตั้งค่าเริ่มต้น
+        } else {
+            // ถ้าเป็น User ที่โดนล็อกห้องประจำ
+            let userCategory = "สำนักงาน";
+            let userDefaultRoom = "";
+
+            if (user && user.assignedArea) {
+                const assignedId = typeof user.assignedArea === 'object' ? user.assignedArea._id : user.assignedArea;
+                const assignedAreaObj = allAreasData.find(a => a._id === assignedId || a.areaName === user.assignedArea);
+
+                if (assignedAreaObj) {
+                    userDefaultRoom = assignedAreaObj.areaName;
+                    userCategory = assignedAreaObj.category || getCategoryByRoomName(userDefaultRoom);
+                }
             }
+
+            catSelect.value = userCategory;
+            catSelect.disabled = true; // ล็อกประเภทพื้นที่เฉพาะ User นี้
+            if (lockTag) lockTag.style.display = 'inline-block';
         }
 
-        const catSelect = document.getElementById('categorySelect');
-        catSelect.value = userCategory;
-        catSelect.disabled = true; 
-        
         onCategoryChanged();
-
+    
         if (userDefaultRoom) {
             const areaSelect = document.getElementById('areaSelect');
             for (let i = 0; i < areaSelect.options.length; i++) {
@@ -1130,25 +1140,6 @@
         localStorage.clear();
         window.location.href = 'index.html';
     }
-    async function loadRooms(selectedCategory) {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`/api/areas?category=${encodeURIComponent(selectedCategory)}`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
-    const rooms = await response.json();
-
-    const roomSelect = document.getElementById('roomSelect'); // ID ตัวเลือกห้องของมึง
-    roomSelect.innerHTML = '<option value="">-- โปรดระบุห้องรับผิดชอบ --</option>';
-
-    rooms.forEach(room => {
-        const option = document.createElement('option');
-        option.value = room._id;
-        option.textContent = `${room.areaName} (${room.building || 'ไม่ระบุอาคาร'})`;
-        roomSelect.appendChild(option);
-    });
-}
 </script>
 </body>
 </html>
