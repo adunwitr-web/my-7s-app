@@ -308,7 +308,17 @@
             <h2>⏳ วาระงานที่รอดำเนินการพิจารณา (Action Required)</h2>
         </div>
 
-        <h4 style="color: #0369a1; margin: 15px 0 6px 0;">1. รายการผ่านเกณฑ์มาตรฐาน (รอการรับรองผลอย่างเป็นทางการ)</h4>
+        <h4 style="color: #b91c1c; margin: 15px 0 6px 0;">1. รายการไม่ผ่านเกณฑ์มาตรฐาน (ต้องปรับปรุงแก้ไข)</h4>
+        <div class="table-responsive">
+            <table class="gov-table">
+                <thead>
+                    <tr><th>วันที่มีการตรวจ</th><th>สถานที่รับการประเมิน</th><th>คณะกรรมการผู้ตรวจ</th><th>ร้อยละ</th><th>การปฏิบัติการ</th></tr>
+                </thead>
+                <tbody id="tableNeedsImprovement"><tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการต้องปรับปรุง</td></tr></tbody>
+            </table>
+        </div>
+
+        <h4 style="color: #0369a1; margin: 25px 0 6px 0;">2. รายการผ่านเกณฑ์มาตรฐาน (รอการรับรองผลอย่างเป็นทางการ)</h4>
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
@@ -318,7 +328,7 @@
             </table>
         </div>
 
-        <h4 style="color: #ea580c; margin: 25px 0 6px 0;">2. รายการส่งมอบรายงานปรับปรุงสถานที่ (รอการตรวจสอบ)</h4>
+        <h4 style="color: #ea580c; margin: 25px 0 6px 0;">3. รายการส่งมอบรายงานปรับปรุงสถานที่ (รอการตรวจสอบ)</h4>
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
@@ -567,17 +577,15 @@
         <div>
             <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ประเภทพื้นที่ที่ใช้ฟอร์มนี้:</label>
             <select id="previewTargetAreas" class="form-control">
-                <option value="สำนักงาน และห้องพักอาจารย์">สำนักงาน และห้องพักอาจารย์</option>
-                <option value="ห้องสมุด">ห้องสมุด</option>
-                <option value="ห้องเรียน">ห้องเรียน</option>
-                <option value="ห้องปฏิบัติการทดลอง">ห้องปฏิบัติการทดลอง</option>
-                <option value="โรงฝึกงาน">โรงฝึกงาน</option>
-                <option value="ภูมิทัศน์และพื้นที่ส่วนกลาง">ภูมิทัศน์และพื้นที่ส่วนกลาง</option>
-                <option value="ห้องปฏิบัติการคอมพิวเตอร์">ห้องปฏิบัติการคอมพิวเตอร์</option>
-                <option value="อาคารสถานที่และความปลอดภัยอาคาร">อาคารสถานที่และความปลอดภัยอาคาร</option>
-                <option value="โรงอาหารและซุ้มอาหาร">โรงอาหารและซุ้มอาหาร</option>
-                <option value="ห้องประชุมและหอประชุม">ห้องประชุมและหอประชุม</option>
-            </select>
+                    <option value="สำนักงาน">สำนักงาน</option>
+                    <option value="ห้องพักอาจารย์">ห้องพักอาจารย์</option>
+                    <option value="ห้องเรียน">ห้องเรียน</option>
+                    <option value="ห้องปฏิบัติการ">ห้องปฏิบัติการ</option>
+                    <option value="อาคารและโรงฝึกงาน">อาคารและโรงฝึกงาน</option>
+                    <option value="ห้องสมุด">ห้องสมุด</option>
+                    <option value="สภาพแวดล้อมภายในอาคาร">สภาพแวดล้อมภายในอาคาร</option>
+                    <option value="สภาพแวดล้อมภายนอกอาคาร">สภาพแวดล้อมภายนอกอาคาร</option>
+</select>
         </div>
     </div>
 
@@ -680,11 +688,13 @@
 
             initAdminDashboard(data);
 
+            const tbNeedsFix = document.getElementById('tableNeedsImprovement');
             const tbPendingPass = document.getElementById('tablePendingPass');
             const tbPendingReview = document.getElementById('tablePendingReview');
             const tbHistoryDirect = document.getElementById('tableHistoryDirectPass');
             const tbHistoryCorrected = document.getElementById('tableHistoryCorrectedPass');
 
+            if (tbNeedsFix) tbNeedsFix.innerHTML = '';
             tbPendingPass.innerHTML = '';
             tbPendingReview.innerHTML = '';
             tbHistoryDirect.innerHTML = '';
@@ -692,7 +702,7 @@
 
             data.forEach(item => {
                 const date = new Date(item.createdAt).toLocaleDateString('th-TH');
-                const location = item.area ? item.area.areaName : 'ไม่ระบุ';
+                const location = item.area ? (item.area.areaName || item.area) : 'ไม่ระบุ';
                 const assessor = item.assessor ? `${item.assessor.firstName || ''} ${item.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
 
                 const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">ดูบันทึกตรวจ</button>`;
@@ -701,7 +711,9 @@
                 const btnEdit = `<button onclick="editAssessment('${item._id}')" class="btn-table" style="background:#f59e0b; color:white;">แก้ไข</button>`;
                 const btnPDF = `<button onclick="downloadPDF('${item._id}')" class="btn-table" style="background:#0ea5e9; color:white;">โหลด PDF</button>`;
 
-                if (item.status === 'Passed') {
+                if (item.status === 'Needs Improvement') {
+                    if (tbNeedsFix) tbNeedsFix.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b style="color:#b91c1c;">${item.percentage}%</b></td><td>${btnView} ${btnEdit} ${btnPDF}</td></tr>`;
+                } else if (item.status === 'Passed') {
                     tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnEdit} ${btnPDF}</td></tr>`;
                 } else if (item.status === 'Corrected') {
                     const submitDate = item.correctionData?.submittedAt ? new Date(item.correctionData.submittedAt).toLocaleDateString('th-TH') : date;
@@ -716,6 +728,7 @@
                 }
             });
 
+            if (tbNeedsFix && !tbNeedsFix.innerHTML) tbNeedsFix.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการที่ต้องปรับปรุง</td></tr>';
             if (!tbPendingPass.innerHTML) tbPendingPass.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr>';
             if (!tbPendingReview.innerHTML) tbPendingReview.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr>';
             if (!tbHistoryDirect.innerHTML) tbHistoryDirect.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr>';

@@ -649,10 +649,20 @@
             return;
         }
 
-        const rooms = rattaData[cat] || [];
-        rooms.forEach((r, idx) => {
-            areaSelect.innerHTML += `<option value="${cat}_${idx}">${r}</option>`;
-        });
+        // 🟢 ดึงห้องจากฐานข้อมูล DB จริงตามหมวดหมู่
+        const dbMatchingRooms = allAreasData.filter(a => (a.category || '').includes(cat) || cat.includes(a.category || ''));
+
+        if (dbMatchingRooms.length > 0) {
+            dbMatchingRooms.forEach(room => {
+                areaSelect.innerHTML += `<option value="${room._id}">${room.areaName}</option>`;
+            });
+        } else {
+            // สำรองกรณี DB ยังไม่มีข้อมูล
+            const fallbackRooms = rattaData[cat] || [];
+            fallbackRooms.forEach((r, idx) => {
+                areaSelect.innerHTML += `<option value="${cat}_${idx}">${r}</option>`;
+            });
+        }
 
         document.getElementById('areaCategoryDisplay').innerText = cat;
         loadFormByAreaType(cat);
