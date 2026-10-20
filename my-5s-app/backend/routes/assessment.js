@@ -9,12 +9,10 @@ const Area = require('../models/Area');
 const User = require('../models/user');
 const SystemConfig = require('../models/SystemConfig');
 
-// ฟังก์ชัน Escape ตัวอักษรพิเศษใน Regex (แก้ปัญหาเครื่องหมายวงเล็บในชื่อห้อง)
 function escapeRegex(text) {
     return text ? text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
 }
 
-// ตรวจสอบกุญแจยืนยันตัวตน (Token)
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
@@ -30,80 +28,54 @@ const verifyToken = (req, res, next) => {
     });
 };
 
-// 1. ลงนามและบันทึกผลการตรวจประเมิน
+// 1. บันทึกผลการตรวจประเมิน (พร้อมป้องกันการส่งซ้ำในรอบเดียวกัน)
 router.post('/', verifyToken, async (req, res) => {
     try {
         let { area, category, assessmentRound, scores, items, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
-        console.log("👉 ข้อมูล items ที่ได้รับจากหน้าเว็บ:", items);
 
         if (!area || !assessmentRound) {
             return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน กรุณาระบุสถานที่และรอบการประเมิน' });
         }
 
-        // 🟢 1. ค้นหาและจับคู่ Area ObjectId ให้ถูกต้องแม้ชื่อห้องมีวงเล็บ
+        // 🟢 1. ค้นหา Area ใน DB ให้ถูกต้อง
         let foundArea = null;
         if (mongoose.Types.ObjectId.isValid(area)) {
             foundArea = await Area.findById(area);
         }
 
         if (!foundArea) {
-            const cleanName = String(area).replace(/^\d+\.\s*/, '').trim(); // ตัด "1. " ออก
-            const codeMatch = String(area).match(/\((.*?)\)/); // ดึงรหัสในวงเล็บ เช่น MS 9302
-            const roomCode = codeMatch ? codeMatch[1].trim() : '';
-
+            const cleanName = String(area).replace(/^\d+\.\s*/, '').trim();
             foundArea = await Area.findOne({
                 $or: [
                     { areaName: area },
                     { areaName: cleanName },
-                    { areaName: new RegExp(escapeRegex(cleanName), 'i') },
-                    ...(roomCode ? [{ areaName: new RegExp(escapeRegex(roomCode), 'i') }] : [])
+                    { areaName: new RegExp(escapeRegex(cleanName), 'i') }
                 ]
             });
         }
 
-        // 🟢 2. หากพบ Area ให้เช็กและผูก Owner กับ User อัตโนมัติ (ซ่อมแซมการเชื่อมโยง)
         if (foundArea) {
             area = foundArea._id;
-            
-            if (!foundArea.owner) {
-                const matchedUser = await User.findOne({
-                    $or: [
-                        { assignedArea: foundArea._id },
-                        { assignedArea: foundArea.areaName },
-                        { assignedArea: new RegExp(escapeRegex(foundArea.areaName), 'i') }
-                    ]
-                });
-                if (matchedUser) {
-                    foundArea.owner = matchedUser._id;
-                    await foundArea.save();
-                }
-            }
         } else {
-            // หากไม่มีใน DB จริงๆ ให้สร้าง Area ใหม่และค้นหา User มาผูก Owner ทันที
-            const validCategories = ['สำนักงาน', 'ห้องพักอาจารย์', 'ห้องเรียน', 'ห้องปฏิบัติการ', 'อาคารและโรงฝึกงาน', 'ห้องสมุด', 'สภาพแวดล้อมภายในอาคาร', 'สภาพแวดล้อมภายนอกอาคาร'];
-            const selectedCategory = validCategories.includes(category) ? category : 'ห้องเรียน';
-            const cleanName = String(area).replace(/^\d+\.\s*/, '').trim();
-
-            const matchedUser = await User.findOne({
-                $or: [
-                    { assignedArea: area },
-                    { assignedArea: cleanName },
-                    { assignedArea: new RegExp(escapeRegex(cleanName), 'i') }
-                ]
-            });
-
+            // สร้าง Area ใหม่ถ้ายังไม่มีในระบบ
             const newArea = new Area({ 
-                areaName: cleanName || area, 
-                category: selectedCategory,
-                owner: matchedUser ? matchedUser._id : null
+                areaName: String(area).replace(/^\d+\.\s*/, '').trim(), 
+                category: category || 'สำนักงาน'
             });
             const savedArea = await newArea.save();
             area = savedArea._id;
+        }
 
-            if (matchedUser && !matchedUser.assignedArea) {
-                matchedUser.assignedArea = savedArea._id;
-                await matchedUser.save();
-            }
+        // 🟢 2. ป้องกันการส่งแบบประเมินซ้ำในสถานที่เดียวกัน และรอบประเมินเดียวกัน
+        const existingCheck = await Assessment.findOne({
+            area: area,
+            assessmentRound: assessmentRound
+        });
+
+        if (existingCheck) {
+            return res.status(400).json({ 
+                message: `สถานที่นี้ได้รับการตรวจประเมินในรอบ "${assessmentRound}" เรียบร้อยแล้ว ไม่สามารถส่งแบบประเมินซ้ำได้` 
+            });
         }
 
         const evaluationStatus = Number(percentage) < 80 ? 'Needs Improvement' : 'Passed';
@@ -123,87 +95,9 @@ router.post('/', verifyToken, async (req, res) => {
 
         await newAssessment.save();
 
-        // 🟢 3. ค้นหาข้อมูลผู้รับผิดชอบเพื่อส่งอีเมลแจ้งเตือน
-        const areaInfo = await Area.findById(area).populate('owner');
-        const assessorUser = await User.findById(req.user.userId || req.user.id || req.user._id);
-        const systemSetting = await SystemConfig.findOne();
-
-        let targetEmail = areaInfo && areaInfo.owner ? areaInfo.owner.email : null;
-        if (!targetEmail) {
-            const fallbackUser = await User.findOne({ assignedArea: area });
-            if (fallbackUser && fallbackUser.email) targetEmail = fallbackUser.email;
-        }
-
-        if (targetEmail) {
-            try {
-                const senderEmail = (systemSetting && systemSetting.adminEmail) ? systemSetting.adminEmail : 'rutsv.7s.official@gmail.com';
-                const senderPass = (systemSetting && systemSetting.appPassword) ? systemSetting.appPassword : '';
-
-                if (senderEmail && senderPass) {
-                    const transporter = nodemailer.createTransport({
-                        service: 'gmail',
-                        auth: { user: senderEmail, pass: senderPass }
-                    });
-
-                    const assessorFullName = assessorUser ? (assessorUser.fullName || `${assessorUser.firstName || ''} ${assessorUser.lastName || ''}`.trim()) : 'คณะกรรมการตรวจประเมินฯ';
-                    const targetOwnerName = (areaInfo && areaInfo.owner) ? (areaInfo.owner.fullName || `${areaInfo.owner.firstName || ''} ${areaInfo.owner.lastName || ''}`.trim()) : 'หัวหน้างาน/ผู้รับผิดชอบสถานที่';
-                    const statusTextThai = Number(percentage) >= 80 ? 'ผ่านเกณฑ์มาตรฐานการตรวจประเมิน' : 'ไม่ผ่านเกณฑ์มาตรฐาน (ต้องดำเนินการปรับปรุงแก้ไข)';
-                    const statusColor = Number(percentage) >= 80 ? '#15803d' : '#b91c1c';
-
-                    const mailOptions = {
-                        from: `"ระบบประเมิน 7ส. วิทยาลัยรัตภูมิ" <${senderEmail}>`,
-                        to: targetEmail,
-                        subject: `แจ้งผลการตรวจประเมินมาตรฐาน 7ส. และสิ่งแวดล้อม - ${areaInfo ? areaInfo.areaName : 'สถานที่ปฏิบัติงาน'}`,
-                        html: `
-                            <div style="font-family: 'Sarabun', Tahoma, sans-serif; max-width: 650px; margin: auto; padding: 25px; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #ffffff; color: #0f172a;">
-                                <div style="text-align: center; border-bottom: 2px solid #1b5e20; padding-bottom: 12px; margin-bottom: 20px;">
-                                    <h2 style="margin: 0; color: #1b5e20; font-size: 1.3em;">แจ้งผลการตรวจประเมินมาตรฐาน 7ส.</h2>
-                                    <p style="margin: 4px 0 0 0; font-size: 0.9em; color: #475569;">มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทยาลัยรัตภูมิ</p>
-                                </div>
-                                <table style="width: 100%; font-size: 0.95em; line-height: 1.8; margin-bottom: 15px;">
-                                    <tr><td><b>วันที่ตรวจประเมิน:</b> ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
-                                    <tr><td><b>เรียน:</b> ${targetOwnerName} (ผู้รับผิดชอบสถานที่)</td></tr>
-                                    <tr><td><b>สถานที่ตรวจประเมิน:</b> ${areaInfo ? areaInfo.areaName : 'สถานที่รับการตรวจ'} (${areaInfo ? (areaInfo.category || 'ทั่วไป') : 'ทั่วไป'})</td></tr>
-                                    <tr><td><b>รอบการประเมิน:</b> ${assessmentRound}</td></tr>
-                                </table>
-                                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid ${statusColor}; padding: 15px; border-radius: 4px; margin-bottom: 18px;">
-                                    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 1.05em; color: ${statusColor};">ผลการตรวจ: ${statusTextThai}</p>
-                                    <p style="margin: 0; font-size: 0.95em;">
-                                        คะแนนรวมที่ได้: <b>${totalScore} คะแนน</b> (คิดเป็นร้อยละ <b>${percentage}%</b>)
-                                    </p>
-                                    ${assessorComment ? `<p style="margin: 10px 0 0 0; font-size: 0.9em; color: #7c2d12; background: #fff7ed; padding: 8px 12px; border-radius: 4px;"><b>ข้อเสนอแนะจากคณะกรรมการ:</b> "${assessorComment}"</p>` : ''}
-                                </div>
-                                ${Number(percentage) < 80 ? `
-                                <p style="font-size: 0.95em; line-height: 1.7; color: #475569;">
-                                    จึงเรียนมาเพื่อโปรดดำเนินการปรับปรุงแก้ไข และจัดส่งรายงานผลการแก้ไขพร้อมภาพถ่ายเข้าสู่ระบบสารสนเทศ Green 7S Plus เพื่อให้คณะกรรมการตรวจรับรองต่อไป
-                                </p>
-                                ` : `
-                                <p style="font-size: 0.95em; line-height: 1.7; color: #15803d;">
-                                    สถานที่ของท่านผ่านเกณฑ์มาตรฐานการตรวจประเมินเรียบร้อยแล้ว ขอขอบคุณที่ให้ความร่วมมือในการรักษามาตรฐานสถานที่ปฏิบัติงาน
-                                </p>
-                                `}
-                                <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
-                                    <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 0.95em;">( ${assessorFullName} )</p>
-                                    <p style="margin: 2px 0 0 0; font-size: 0.85em; color: #64748b;">คณะกรรมการตรวจประเมินมาตรฐาน 7ส. และสิ่งแวดล้อม</p>
-                                    <p style="margin: 2px 0 0 0; font-size: 0.8em; color: #64748b;">วิทยาลัยรัตภูมิ มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย</p>
-                                </div>
-                            </div>
-                        `
-                    };
-
-                    transporter.sendMail(mailOptions, (error, info) => {
-                        if (error) console.error('❌ ไม่สามารถส่งอีเมลแจ้งเตือนได้:', error);
-                        else console.log('✅ จัดส่งอีเมลแจ้งเตือนสำเร็จไปยัง:', targetEmail);
-                    });
-                }
-            } catch (mailErr) {
-                console.error('⚠️ เกิดข้อผิดพลาดในระบบส่งอีเมล:', mailErr);
-            }
-        }
-
         res.status(201).json({ 
             success: true, 
-            message: 'บันทึกผลการตรวจประเมินและจัดส่งอีเมลแจ้งเตือนเรียบร้อยแล้ว'
+            message: 'บันทึกผลการตรวจประเมินเรียบร้อยแล้ว'
         });
 
     } catch (error) {
@@ -212,11 +106,11 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// 2. ดึงข้อมูลการประเมินทั้งหมด (สำหรับผู้ดูแลระบบ)
+// 2. ดึงข้อมูลการประเมินทั้งหมดสำหรับ Admin
 router.get('/', verifyToken, async (req, res) => {
     try {
         const assessments = await Assessment.find()
-            .populate('area', 'areaName category')
+            .populate('area', 'areaName category owner')
             .populate('assessor', 'firstName lastName username fullName')
             .sort({ createdAt: -1 });
 
@@ -226,18 +120,16 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// 🟢 3. ดึงรายการประเมินทั้งหมดของผู้รับผิดชอบสถานที่ (สำหรับ Owner Dashboard)
+// 3. ดึงรายการประเมินสำหรับ Owner Dashboard
 router.get('/pending', verifyToken, async (req, res) => {
     try {
         const userId = req.user.userId || req.user.id || req.user._id;
         const currentUser = await User.findById(userId);
         let myAreaIds = [];
 
-        // ก. ดึง Area ที่มี owner = userId
         const ownedAreas = await Area.find({ owner: userId });
         ownedAreas.forEach(a => myAreaIds.push(a._id));
 
-        // ข. ดึง Area จาก assignedArea ของ User
         if (currentUser && currentUser.assignedArea) {
             const assigned = currentUser.assignedArea;
             if (mongoose.Types.ObjectId.isValid(assigned)) {
@@ -261,32 +153,25 @@ router.get('/pending', verifyToken, async (req, res) => {
             }
         }
 
-        let query = {};
-        if (myAreaIds.length > 0) {
-            query = { area: { $in: myAreaIds } };
-        } else {
-            return res.json([]);
-        }
+        if (myAreaIds.length === 0) return res.json([]);
 
-        // ดึง Assessment ทุกสถานะ (Passed, Needs Improvement, Corrected, Approved)
-        const tasks = await Assessment.find(query)
+        const tasks = await Assessment.find({ area: { $in: myAreaIds } })
             .populate('area', 'areaName category owner')
             .populate('assessor', 'firstName lastName fullName username')
             .sort({ createdAt: -1 });
 
         res.json(tasks);
     } catch (error) {
-        console.error('❌ Error fetching owner assessments:', error);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลงาน' });
     }
 });
 
-// 4. ดึงข้อมูลประเมินแบบระบุใบตรวจ
+// 4. ดึงข้อมูลแบบระบุ ID
 router.get('/:id', verifyToken, async (req, res) => {
     try {
         const assessment = await Assessment.findById(req.params.id)
             .populate('area', 'areaName category owner')
-            .populate('assessor', 'firstName lastName fullName');
+            .populate('assessor', 'firstName lastName fullName username');
 
         if (!assessment) {
             return res.status(404).json({ message: 'ไม่พบบันทึกการประเมินนี้ในระบบ' });
@@ -297,15 +182,13 @@ router.get('/:id', verifyToken, async (req, res) => {
     }
 });
 
-// 5. ผู้รับผิดชอบสถานที่ส่งรายงานการปรับปรุงแก้ไข
+// 5. เจ้าของสถานที่ส่งรายงานการแก้ไข
 router.patch('/:id/resolve', verifyToken, async (req, res) => {
     try {
         const { detail, photoUrl } = req.body;
         const assessment = await Assessment.findById(req.params.id);
 
-        if (!assessment) {
-            return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
-        }
+        if (!assessment) return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
 
         assessment.status = 'Corrected';
         assessment.correctionData = {
@@ -315,13 +198,13 @@ router.patch('/:id/resolve', verifyToken, async (req, res) => {
         };
 
         await assessment.save();
-        res.json({ success: true, message: 'ส่งรายงานผลการปรับปรุงสถานที่เข้าสู่ระบบสารสนเทศเรียบร้อยแล้ว' });
+        res.json({ success: true, message: 'ส่งรายงานผลการปรับปรุงสถานที่เรียบร้อยแล้ว' });
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
     }
 });
 
-// 6. รับรองผลการประเมินมาตรฐาน (Approve)
+// 6. Admin รับรองผลการประเมิน
 router.patch('/:id/approve', verifyToken, async (req, res) => {
     try {
         const assessment = await Assessment.findByIdAndUpdate(
@@ -329,10 +212,7 @@ router.patch('/:id/approve', verifyToken, async (req, res) => {
             { status: 'Approved' },
             { new: true }
         );
-
-        if (!assessment) {
-            return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
-        }
+        if (!assessment) return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
 
         res.json({ success: true, message: 'รับรองผลการประเมินมาตรฐานเรียบร้อยแล้ว' });
     } catch (error) {
@@ -340,15 +220,13 @@ router.patch('/:id/approve', verifyToken, async (req, res) => {
     }
 });
 
-// 7. ส่งกลับเพื่อปรับปรุงแก้ไขเพิ่มเติม (Reject)
+// 7. Admin ส่งกลับไปแก้ไข
 router.patch('/:id/reject', verifyToken, async (req, res) => {
     try {
         const { reason } = req.body;
         const assessment = await Assessment.findById(req.params.id);
 
-        if (!assessment) {
-            return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
-        }
+        if (!assessment) return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
 
         assessment.status = 'Needs Improvement';
         const previousDetail = assessment.correctionData ? (assessment.correctionData.detail || '') : '';
@@ -365,32 +243,30 @@ router.patch('/:id/reject', verifyToken, async (req, res) => {
     }
 });
 
-// 8. แก้ไขคะแนนและข้อมูลประเมินโดย Admin
+// 8. Admin แก้ไขคะแนนและข้อมูลประเมิน
 router.patch('/:id/edit', verifyToken, async (req, res) => {
     try {
-        const { percentage, createdAt, items, totalScore } = req.body;
-        
+        const { percentage, createdAt, items, totalScore, scores } = req.body;
         const assessment = await Assessment.findById(req.params.id);
 
-        if (!assessment) {
-            return res.status(404).json({ message: 'ไม่พบบันทึกการประเมินนี้' });
-        }
+        if (!assessment) return res.status(404).json({ message: 'ไม่พบบันทึกการประเมินนี้' });
 
         if (percentage !== undefined) assessment.percentage = percentage;
         if (createdAt !== undefined) assessment.createdAt = createdAt;
         if (items !== undefined) assessment.items = items;
+        if (scores !== undefined) assessment.scores = scores;
         if (totalScore !== undefined) assessment.totalScore = totalScore;
 
         if (percentage !== undefined && assessment.status !== 'Approved') {
-             assessment.status = Number(percentage) < 80 ? 'Needs Improvement' : 'Passed';
+            assessment.status = Number(percentage) < 80 ? 'Needs Improvement' : 'Passed';
         }
 
         await assessment.save();
-        res.json({ success: true, message: 'บันทึกการแก้ไขคะแนนและวันที่สำเร็จ' });
+        res.json({ success: true, message: 'บันทึกการแก้ไขเรียบร้อยแล้ว' });
 
     } catch (error) {
         console.error('Error editing assessment:', error);
-        res.status(500).json({ message: 'เซิร์ฟเวอร์เกิดข้อผิดพลาดในการแก้ไขข้อมูล' });
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล' });
     }
 });
 
