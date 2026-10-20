@@ -9,7 +9,7 @@ const Area = require('../models/Area');
 const User = require('../models/user');
 const SystemConfig = require('../models/SystemConfig');
 
-// ฟังก์ชัน Escape ตัวอักษรพิเศษใน Regex (แก้ปัญหาติดวงเล็บในชื่อห้อง)
+// ฟังก์ชัน Escape ตัวอักษรพิเศษใน Regex (แก้ปัญหาเครื่องหมายวงเล็บในชื่อห้อง)
 function escapeRegex(text) {
     return text ? text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
 }
@@ -40,14 +40,18 @@ router.post('/', verifyToken, async (req, res) => {
             return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน กรุณาระบุสถานที่และรอบการประเมิน' });
         }
 
-        // 🟢 แก้ไขการจับคู่ ObjectId ของ Area ให้แม่นยำแม้ชื่อห้องมีวงเล็บ
-        if (!mongoose.Types.ObjectId.isValid(area)) {
-            const cleanName = area.replace(/^\d+\.\s*/, '').trim(); // ตัด "1. " ออก
-            const codeMatch = area.match(/\((.*?)\)/); // ดึงรหัสในวงเล็บ เช่น MS 9302
+        // 🟢 1. ค้นหาและจับคู่ Area ObjectId ให้ถูกต้องแม้ชื่อห้องมีวงเล็บ
+        let foundArea = null;
+        if (mongoose.Types.ObjectId.isValid(area)) {
+            foundArea = await Area.findById(area);
+        }
+
+        if (!foundArea) {
+            const cleanName = String(area).replace(/^\d+\.\s*/, '').trim(); // ตัด "1. " ออก
+            const codeMatch = String(area).match(/\((.*?)\)/); // ดึงรหัสในวงเล็บ เช่น MS 9302
             const roomCode = codeMatch ? codeMatch[1].trim() : '';
 
-            // ค้นหาใน DB ด้วยหลายเงื่อนไขแบบ Safe Regex
-            let foundArea = await Area.findOne({
+            foundArea = await Area.findOne({
                 $or: [
                     { areaName: area },
                     { areaName: cleanName },
@@ -55,20 +59,50 @@ router.post('/', verifyToken, async (req, res) => {
                     ...(roomCode ? [{ areaName: new RegExp(escapeRegex(roomCode), 'i') }] : [])
                 ]
             });
+        }
 
-            if (foundArea) {
-                area = foundArea._id;
-            } else {
-                // หากหาไม่เจอจริงและต้องสร้างห้องใหม่ ให้ใช้หมวดหมู่ที่ตรงตาม Enum ใน Schema
-                const validCategories = ['สำนักงาน', 'ห้องพักอาจารย์', 'ห้องเรียน', 'ห้องปฏิบัติการ', 'อาคารและโรงฝึกงาน', 'ห้องสมุด', 'สภาพแวดล้อมภายในอาคาร', 'สภาพแวดล้อมภายนอกอาคาร'];
-                const selectedCategory = validCategories.includes(category) ? category : 'ห้องเรียน';
-
-                const newArea = new Area({ 
-                    areaName: cleanName || area, 
-                    category: selectedCategory 
+        // 🟢 2. หากพบ Area ให้เช็กและผูก Owner กับ User อัตโนมัติ (ซ่อมแซมการเชื่อมโยง)
+        if (foundArea) {
+            area = foundArea._id;
+            
+            if (!foundArea.owner) {
+                const matchedUser = await User.findOne({
+                    $or: [
+                        { assignedArea: foundArea._id },
+                        { assignedArea: foundArea.areaName },
+                        { assignedArea: new RegExp(escapeRegex(foundArea.areaName), 'i') }
+                    ]
                 });
-                const savedArea = await newArea.save();
-                area = savedArea._id;
+                if (matchedUser) {
+                    foundArea.owner = matchedUser._id;
+                    await foundArea.save();
+                }
+            }
+        } else {
+            // หากไม่มีใน DB จริงๆ ให้สร้าง Area ใหม่และค้นหา User มาผูก Owner ทันที
+            const validCategories = ['สำนักงาน', 'ห้องพักอาจารย์', 'ห้องเรียน', 'ห้องปฏิบัติการ', 'อาคารและโรงฝึกงาน', 'ห้องสมุด', 'สภาพแวดล้อมภายในอาคาร', 'สภาพแวดล้อมภายนอกอาคาร'];
+            const selectedCategory = validCategories.includes(category) ? category : 'ห้องเรียน';
+            const cleanName = String(area).replace(/^\d+\.\s*/, '').trim();
+
+            const matchedUser = await User.findOne({
+                $or: [
+                    { assignedArea: area },
+                    { assignedArea: cleanName },
+                    { assignedArea: new RegExp(escapeRegex(cleanName), 'i') }
+                ]
+            });
+
+            const newArea = new Area({ 
+                areaName: cleanName || area, 
+                category: selectedCategory,
+                owner: matchedUser ? matchedUser._id : null
+            });
+            const savedArea = await newArea.save();
+            area = savedArea._id;
+
+            if (matchedUser && !matchedUser.assignedArea) {
+                matchedUser.assignedArea = savedArea._id;
+                await matchedUser.save();
             }
         }
 
@@ -89,13 +123,18 @@ router.post('/', verifyToken, async (req, res) => {
 
         await newAssessment.save();
 
-        // ค้นหาข้อมูลสถานที่และอีเมลของผู้รับผิดชอบสถานที่
+        // 🟢 3. ค้นหาข้อมูลผู้รับผิดชอบเพื่อส่งอีเมลแจ้งเตือน
         const areaInfo = await Area.findById(area).populate('owner');
         const assessorUser = await User.findById(req.user.userId || req.user.id || req.user._id);
         const systemSetting = await SystemConfig.findOne();
 
-        // จัดส่งอีเมลแจ้งผลการตรวจประเมิน
-        if (areaInfo && areaInfo.owner && areaInfo.owner.email) {
+        let targetEmail = areaInfo && areaInfo.owner ? areaInfo.owner.email : null;
+        if (!targetEmail) {
+            const fallbackUser = await User.findOne({ assignedArea: area });
+            if (fallbackUser && fallbackUser.email) targetEmail = fallbackUser.email;
+        }
+
+        if (targetEmail) {
             try {
                 const senderEmail = (systemSetting && systemSetting.adminEmail) ? systemSetting.adminEmail : 'rutsv.7s.official@gmail.com';
                 const senderPass = (systemSetting && systemSetting.appPassword) ? systemSetting.appPassword : '';
@@ -103,43 +142,30 @@ router.post('/', verifyToken, async (req, res) => {
                 if (senderEmail && senderPass) {
                     const transporter = nodemailer.createTransport({
                         service: 'gmail',
-                        auth: {
-                            user: senderEmail,
-                            pass: senderPass
-                        }
+                        auth: { user: senderEmail, pass: senderPass }
                     });
 
                     const assessorFullName = assessorUser ? (assessorUser.fullName || `${assessorUser.firstName || ''} ${assessorUser.lastName || ''}`.trim()) : 'คณะกรรมการตรวจประเมินฯ';
-                    const targetOwnerName = areaInfo.owner.fullName || `${areaInfo.owner.firstName || ''} ${areaInfo.owner.lastName || ''}`.trim() || 'หัวหน้างาน/ผู้รับผิดชอบสถานที่';
+                    const targetOwnerName = (areaInfo && areaInfo.owner) ? (areaInfo.owner.fullName || `${areaInfo.owner.firstName || ''} ${areaInfo.owner.lastName || ''}`.trim()) : 'หัวหน้างาน/ผู้รับผิดชอบสถานที่';
                     const statusTextThai = Number(percentage) >= 80 ? 'ผ่านเกณฑ์มาตรฐานการตรวจประเมิน' : 'ไม่ผ่านเกณฑ์มาตรฐาน (ต้องดำเนินการปรับปรุงแก้ไข)';
                     const statusColor = Number(percentage) >= 80 ? '#15803d' : '#b91c1c';
 
                     const mailOptions = {
                         from: `"ระบบประเมิน 7ส. วิทยาลัยรัตภูมิ" <${senderEmail}>`,
-                        to: areaInfo.owner.email,
-                        subject: `แจ้งผลการตรวจประเมินมาตรฐาน 7ส. และสิ่งแวดล้อม - ${areaInfo.areaName}`,
+                        to: targetEmail,
+                        subject: `แจ้งผลการตรวจประเมินมาตรฐาน 7ส. และสิ่งแวดล้อม - ${areaInfo ? areaInfo.areaName : 'สถานที่ปฏิบัติงาน'}`,
                         html: `
                             <div style="font-family: 'Sarabun', Tahoma, sans-serif; max-width: 650px; margin: auto; padding: 25px; border: 1px solid #cbd5e1; border-radius: 6px; background-color: #ffffff; color: #0f172a;">
                                 <div style="text-align: center; border-bottom: 2px solid #1b5e20; padding-bottom: 12px; margin-bottom: 20px;">
                                     <h2 style="margin: 0; color: #1b5e20; font-size: 1.3em;">แจ้งผลการตรวจประเมินมาตรฐาน 7ส.</h2>
                                     <p style="margin: 4px 0 0 0; font-size: 0.9em; color: #475569;">มหาวิทยาลัยเทคโนโลยีราชมงคลศรีวิชัย วิทยาลัยรัตภูมิ</p>
                                 </div>
-
                                 <table style="width: 100%; font-size: 0.95em; line-height: 1.8; margin-bottom: 15px;">
-                                    <tr>
-                                        <td><b>วันที่ตรวจประเมิน:</b> ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><b>เรียน:</b> ${targetOwnerName} (ผู้รับผิดชอบสถานที่)</td>
-                                    </tr>
-                                    <tr>
-                                        <td><b>สถานที่ตรวจประเมิน:</b> ${areaInfo.areaName} (${areaInfo.category || 'ทั่วไป'})</td>
-                                    </tr>
-                                    <tr>
-                                        <td><b>รอบการประเมิน:</b> ${assessmentRound}</td>
-                                    </tr>
+                                    <tr><td><b>วันที่ตรวจประเมิน:</b> ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
+                                    <tr><td><b>เรียน:</b> ${targetOwnerName} (ผู้รับผิดชอบสถานที่)</td></tr>
+                                    <tr><td><b>สถานที่ตรวจประเมิน:</b> ${areaInfo ? areaInfo.areaName : 'สถานที่รับการตรวจ'} (${areaInfo ? (areaInfo.category || 'ทั่วไป') : 'ทั่วไป'})</td></tr>
+                                    <tr><td><b>รอบการประเมิน:</b> ${assessmentRound}</td></tr>
                                 </table>
-
                                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid ${statusColor}; padding: 15px; border-radius: 4px; margin-bottom: 18px;">
                                     <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 1.05em; color: ${statusColor};">ผลการตรวจ: ${statusTextThai}</p>
                                     <p style="margin: 0; font-size: 0.95em;">
@@ -147,7 +173,6 @@ router.post('/', verifyToken, async (req, res) => {
                                     </p>
                                     ${assessorComment ? `<p style="margin: 10px 0 0 0; font-size: 0.9em; color: #7c2d12; background: #fff7ed; padding: 8px 12px; border-radius: 4px;"><b>ข้อเสนอแนะจากคณะกรรมการ:</b> "${assessorComment}"</p>` : ''}
                                 </div>
-
                                 ${Number(percentage) < 80 ? `
                                 <p style="font-size: 0.95em; line-height: 1.7; color: #475569;">
                                     จึงเรียนมาเพื่อโปรดดำเนินการปรับปรุงแก้ไข และจัดส่งรายงานผลการแก้ไขพร้อมภาพถ่ายเข้าสู่ระบบสารสนเทศ Green 7S Plus เพื่อให้คณะกรรมการตรวจรับรองต่อไป
@@ -157,7 +182,6 @@ router.post('/', verifyToken, async (req, res) => {
                                     สถานที่ของท่านผ่านเกณฑ์มาตรฐานการตรวจประเมินเรียบร้อยแล้ว ขอขอบคุณที่ให้ความร่วมมือในการรักษามาตรฐานสถานที่ปฏิบัติงาน
                                 </p>
                                 `}
-
                                 <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px dashed #cbd5e1;">
                                     <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 0.95em;">( ${assessorFullName} )</p>
                                     <p style="margin: 2px 0 0 0; font-size: 0.85em; color: #64748b;">คณะกรรมการตรวจประเมินมาตรฐาน 7ส. และสิ่งแวดล้อม</p>
@@ -169,7 +193,7 @@ router.post('/', verifyToken, async (req, res) => {
 
                     transporter.sendMail(mailOptions, (error, info) => {
                         if (error) console.error('❌ ไม่สามารถส่งอีเมลแจ้งเตือนได้:', error);
-                        else console.log('✅ จัดส่งอีเมลแจ้งเตือนสำเร็จไปยัง:', areaInfo.owner.email);
+                        else console.log('✅ จัดส่งอีเมลแจ้งเตือนสำเร็จไปยัง:', targetEmail);
                     });
                 }
             } catch (mailErr) {
@@ -188,7 +212,7 @@ router.post('/', verifyToken, async (req, res) => {
     }
 });
 
-// 2. ดึงข้อมูลการประเมินทั้งหมด
+// 2. ดึงข้อมูลการประเมินทั้งหมด (สำหรับผู้ดูแลระบบ)
 router.get('/', verifyToken, async (req, res) => {
     try {
         const assessments = await Assessment.find()
@@ -202,23 +226,57 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// 3. ดึงรายการงานที่ต้องแก้ไข (สำหรับผู้รับผิดชอบสถานที่)
+// 🟢 3. ดึงรายการประเมินทั้งหมดของผู้รับผิดชอบสถานที่ (สำหรับ Owner Dashboard)
 router.get('/pending', verifyToken, async (req, res) => {
     try {
         const userId = req.user.userId || req.user.id || req.user._id;
-        const myAreas = await Area.find({ owner: userId });
-        const myAreaIds = myAreas.map(area => area._id);
+        const currentUser = await User.findById(userId);
+        let myAreaIds = [];
 
-        const tasks = await Assessment.find({ 
-            status: { $in: ['Needs Improvement', 'Corrected'] },
-            area: { $in: myAreaIds } 
-        })
-        .populate('area', 'areaName category')
-        .populate('assessor', 'firstName lastName fullName')
-        .sort({ createdAt: -1 });
+        // ก. ดึง Area ที่มี owner = userId
+        const ownedAreas = await Area.find({ owner: userId });
+        ownedAreas.forEach(a => myAreaIds.push(a._id));
+
+        // ข. ดึง Area จาก assignedArea ของ User
+        if (currentUser && currentUser.assignedArea) {
+            const assigned = currentUser.assignedArea;
+            if (mongoose.Types.ObjectId.isValid(assigned)) {
+                if (!myAreaIds.some(id => id.toString() === assigned.toString())) {
+                    myAreaIds.push(assigned);
+                }
+            } else {
+                const cleanName = String(assigned).replace(/^\d+\.\s*/, '').trim();
+                const matchedAreas = await Area.find({
+                    $or: [
+                        { areaName: assigned },
+                        { areaName: cleanName },
+                        { areaName: new RegExp(escapeRegex(cleanName), 'i') }
+                    ]
+                });
+                matchedAreas.forEach(a => {
+                    if (!myAreaIds.some(id => id.toString() === a._id.toString())) {
+                        myAreaIds.push(a._id);
+                    }
+                });
+            }
+        }
+
+        let query = {};
+        if (myAreaIds.length > 0) {
+            query = { area: { $in: myAreaIds } };
+        } else {
+            return res.json([]);
+        }
+
+        // ดึง Assessment ทุกสถานะ (Passed, Needs Improvement, Corrected, Approved)
+        const tasks = await Assessment.find(query)
+            .populate('area', 'areaName category owner')
+            .populate('assessor', 'firstName lastName fullName username')
+            .sort({ createdAt: -1 });
 
         res.json(tasks);
     } catch (error) {
+        console.error('❌ Error fetching owner assessments:', error);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลงาน' });
     }
 });
