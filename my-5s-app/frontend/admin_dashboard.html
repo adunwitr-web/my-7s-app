@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -192,7 +191,6 @@
             font-size: 0.95em;
         }
 
-        /* 📱 Responsive Mobile & iPad */
         @media (max-width: 768px) {
             .gov-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
             .gov-user-panel { width: 100%; justify-content: space-between; }
@@ -249,7 +247,6 @@
         </div>
     </section>
 
-    <!-- 📊 แดชบอร์ดวิเคราะห์และสถิติภาพรวมสำหรับ Admin -->
     <section class="doc-panel" style="border-top: 4px solid #1b5e20;">
         <div class="doc-panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <h2 style="color: var(--gov-primary-dark); margin: 0;">📊 แดชบอร์ดสรุปเปอร์เซ็นต์คะแนนประเมินภาพรวมและรายห้อง</h2>
@@ -577,17 +574,14 @@
         <div>
             <label style="font-weight: 600; font-size: 0.95em; color: #333; margin-bottom: 8px; display: block;">ประเภทพื้นที่ที่ใช้ฟอร์มนี้:</label>
             <select id="previewTargetAreas" class="form-control">
-                <option value="สำนักงานฯ - ห้องพักอาจารย์">สำนักงานฯ - ห้องพักอาจารย์</option>
+                <option value="สำนักงาน">สำนักงาน</option>
+                <option value="ห้องพักอาจารย์">ห้องพักอาจารย์</option>
                 <option value="ห้องเรียน">ห้องเรียน</option>
-                <option value="ห้องปฏิบัติการทดลอง">ห้องปฏิบัติการทดลอง</option>
+                <option value="ห้องปฏิบัติการ">ห้องปฏิบัติการ</option>
+                <option value="อาคารและโรงฝึกงาน">อาคารและโรงฝึกงาน</option>
                 <option value="ห้องสมุด">ห้องสมุด</option>
-                <option value="โรงฝึกงาน">โรงฝึกงาน</option>
-                <option value="ห้องปฏิบัติการวิชาชีพ">ห้องปฏิบัติการวิชาชีพ</option>
-                <option value="ห้องปฏิบัติคอมพิวเตอร์">ห้องปฏิบัติคอมพิวเตอร์</option>
-                <option value="โรงอาหาร - ซุ้มอาหาร">โรงอาหาร - ซุ้มอาหาร</option>
-                <option value="ภูมิทัศน์และพื้นที่ส่วนกลาง">ภูมิทัศน์และพื้นที่ส่วนกลาง</option>
-                <option value="ห้องประชุมและหอประชุม">ห้องประชุมและหอประชุม</option>
-                <option value="อาคารสถานที่ และความปลอดภัยอาคาร">อาคารสถานที่ และความปลอดภัยอาคาร</option>
+                <option value="สภาพแวดล้อมภายในอาคาร">สภาพแวดล้อมภายในอาคาร</option>
+                <option value="สภาพแวดล้อมภายนอกอาคาร">สภาพแวดล้อมภายนอกอาคาร</option>
             </select>
         </div>
     </div>
@@ -1048,7 +1042,14 @@
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = '';
             users.forEach(u => {
-                const areaDisplay = u.assignedArea ? (typeof u.assignedArea === 'object' ? (u.assignedArea.category || u.assignedArea.areaName || u.assignedArea) : u.assignedArea) : '-';
+                let areaDisplay = '-';
+                if (u.assignedArea) {
+                    if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
+                        areaDisplay = u.assignedArea.category || u.assignedArea.areaName || u.assignedArea._id || '-';
+                    } else if (typeof u.assignedArea === 'string') {
+                        areaDisplay = u.assignedArea;
+                    }
+                }
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${u.username}</b></td>
@@ -1067,20 +1068,16 @@
         }
     }
 
-    // 🟢 โหลด 11 หมวดหลักขึ้น Dropdown ใน Admin
     async function loadAreasForSelect() {
         const categories = [
-            "สำนักงานฯ - ห้องพักอาจารย์",
+            "สำนักงาน",
+            "ห้องพักอาจารย์",
             "ห้องเรียน",
-            "ห้องปฏิบัติการทดลอง",
+            "ห้องปฏิบัติการ",
+            "อาคารและโรงฝึกงาน",
             "ห้องสมุด",
-            "โรงฝึกงาน",
-            "ห้องปฏิบัติการวิชาชีพ",
-            "ห้องปฏิบัติคอมพิวเตอร์",
-            "โรงอาหาร - ซุ้มอาหาร",
-            "ภูมิทัศน์และพื้นที่ส่วนกลาง",
-            "ห้องประชุมและหอประชุม",
-            "อาคารสถานที่ และความปลอดภัยอาคาร"
+            "สภาพแวดล้อมภายในอาคาร",
+            "สภาพแวดล้อมภายนอกอาคาร"
         ];
 
         let optionsHtml = '<option value="">-- โปรดระบุประเภทพื้นที่รับผิดชอบ --</option>';
@@ -1094,7 +1091,6 @@
         if (editSelect) editSelect.innerHTML = optionsHtml;
     }
 
-    // 🟢 สร้าง User และบันทึกหมวดที่เลือกลง DB ตรงๆ
     async function createUser() {
         const username = document.getElementById('newUsername').value.trim();
         const password = document.getElementById('newPassword').value.trim();
@@ -1107,12 +1103,6 @@
         if (!username || !email || !firstName) {
             alert('โปรดกรอกข้อมูลสำคัญให้ครบถ้วน');
             return;
-        }
-
-        if (!assignedArea && (role.includes('Owner') || role.includes('Assessor'))) {
-            if (!confirm('⚠️ คุณยังไม่ได้ระบุประเภทพื้นที่รับผิดชอบ User นี้จะไม่ถูกล็อกหมวดประเมิน ยืนยันการบันทึกหรือไม่?')) {
-                return;
-            }
         }
 
         const token = localStorage.getItem('authToken');
@@ -1138,6 +1128,12 @@
 
             if (res.ok) {
                 alert('ลงทะเบียนบุคลากรใหม่สำเร็จ');
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('newEmail').value = '';
+                document.getElementById('newFirstName').value = '';
+                document.getElementById('newLastName').value = '';
+                document.getElementById('newAssignedArea').value = '';
                 loadUsers();
             } else {
                 alert('สร้างไม่สำเร็จ: ' + (data.message || 'กรุณาเช็กว่า Username หรือ Email ซ้ำกับที่มีอยู่หรือไม่'));
@@ -1151,18 +1147,18 @@
         const user = allUsersData.find(u => u._id === id);
         if (!user) return;
         editUserId = id;
-        document.getElementById('editUsername').value = user.username;
+        document.getElementById('editUsername').value = user.username || '';
         document.getElementById('editEmail').value = user.email || '';
         document.getElementById('editFirstName').value = user.firstName || '';
         document.getElementById('editLastName').value = user.lastName || '';
-        document.getElementById('editRole').value = user.role;
+        document.getElementById('editRole').value = user.role || 'Internal Assessor';
         document.getElementById('editPassword').value = '';
 
         let currentArea = "";
         if (user.assignedArea) {
-            if (typeof user.assignedArea === 'object') {
-                currentArea = user.assignedArea.category || user.assignedArea.areaName || user.assignedArea._id;
-            } else {
+            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
+                currentArea = user.assignedArea.category || user.assignedArea.areaName || user.assignedArea._id || "";
+            } else if (typeof user.assignedArea === 'string') {
                 currentArea = user.assignedArea;
             }
         }
@@ -1203,7 +1199,8 @@
                 closeEditModal();
                 loadUsers();
             } else {
-                alert('ปรับปรุงข้อมูลไม่สำเร็จ');
+                const data = await res.json().catch(() => ({}));
+                alert('ปรับปรุงข้อมูลไม่สำเร็จ: ' + (data.message || ''));
             }
         } catch (err) {
             alert('ระบบขัดข้อง');
@@ -1906,7 +1903,7 @@
         
         currentEditFormId = id;
         document.getElementById('previewFormName').value = form.formName;
-        document.getElementById('previewTargetAreas').value = form.targetAreas[0] || 'สำนักงานฯ - ห้องพักอาจารย์';
+        document.getElementById('previewTargetAreas').value = form.targetAreas[0] || 'สำนักงาน';
         
         document.querySelector(`input[name="publishMode"][value="${form.publishMode}"]`).checked = true;
         if (form.publishMode === 'scheduled' && form.publishDate) {
