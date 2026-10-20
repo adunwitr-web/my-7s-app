@@ -1086,14 +1086,16 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    area: areaTarget,
-                    assessmentRound: currentActiveRoundText || 'ประเมินรอบปกติ',
-                    items: items,
-                    totalScore: totalScore,
-                    percentage: percentage,
-                    status: percentage < 80 ? 'Needs Improvement' : 'Passed',
-                    assessorComment: assessorComment
+            // ในฟังก์ชัน submitAssessment() ตรงส่วน body ของ fetch ให้เพิ่มหมวดหมู่แนบไปด้วย
+         body: JSON.stringify({
+            area: areaTarget,
+            category: document.getElementById('categorySelect').value, // 🟢 แนบหมวดหมู่ส่งไปด้วย
+            assessmentRound: currentActiveRoundText || 'ประเมินรอบปกติ',
+            items: items,
+            totalScore: totalScore,
+            percentage: percentage,
+            status: percentage < 80 ? 'Needs Improvement' : 'Passed',
+            assessorComment: assessorComment
                 })
             });
 
