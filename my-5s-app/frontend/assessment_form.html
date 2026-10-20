@@ -323,7 +323,6 @@
         .btn-submit-doc:hover { background: var(--gov-primary-dark); }
         .btn-submit-doc:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-        /* 📱 Responsive Mobile & iPad */
         @media (max-width: 768px) {
             .gov-header {
                 padding: 12px 16px;
@@ -1036,7 +1035,12 @@
         const percentage = parseFloat(document.getElementById('percentage').innerText) || 0;
         const assessorComment = document.getElementById('assessorComment').value.trim();
 
-        const dbArea = allAreasData.find(a => a.areaName === areaNameText);
+        // 🟢 จับคู่ ObjectId ของ Area ทั้งแบบค้นหาชื่อตรง และแบบตัดเลขข้อด้านหน้าออก
+        let dbArea = allAreasData.find(a => a.areaName === areaNameText);
+        if (!dbArea) {
+            const cleanName = areaNameText.replace(/^\d+\.\s*/, '').trim();
+            dbArea = allAreasData.find(a => a.areaName === cleanName || a.areaName.includes(cleanName) || cleanName.includes(a.areaName));
+        }
         const areaTarget = dbArea ? dbArea._id : areaNameText;
 
         if (!confirm(`ยืนยันการบันทึกผลการตรวจประเมินสำหรับ "${areaNameText}"?\nคะแนนรวม: ${totalScore} / ${maxScore} (${percentage.toFixed(2)}%)`)) return;
