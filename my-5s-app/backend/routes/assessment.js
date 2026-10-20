@@ -9,6 +9,11 @@ const Area = require('../models/Area');
 const User = require('../models/user');
 const SystemConfig = require('../models/SystemConfig');
 
+// ฟังก์ชัน Escape ตัวอักษรพิเศษใน Regex (แก้ปัญหาติดวงเล็บในชื่อห้อง)
+function escapeRegex(text) {
+    return text ? text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+}
+
 // ตรวจสอบกุญแจยืนยันตัวตน (Token)
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -28,28 +33,40 @@ const verifyToken = (req, res, next) => {
 // 1. ลงนามและบันทึกผลการตรวจประเมิน
 router.post('/', verifyToken, async (req, res) => {
     try {
-        let { area, assessmentRound, scores, items, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
+        let { area, category, assessmentRound, scores, items, totalScore, percentage, evidencePhoto, assessorComment } = req.body;
         console.log("👉 ข้อมูล items ที่ได้รับจากหน้าเว็บ:", items);
 
         if (!area || !assessmentRound) {
             return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน กรุณาระบุสถานที่และรอบการประเมิน' });
         }
 
-        // 🟢 แก้ไขบั๊ก Cast Error: ค้นหาหรือแปลงชื่อสถานที่ให้เป็น ObjectId ที่ถูกต้องของ MongoDB
+        // 🟢 แก้ไขการจับคู่ ObjectId ของ Area ให้แม่นยำแม้ชื่อห้องมีวงเล็บ
         if (!mongoose.Types.ObjectId.isValid(area)) {
-            let foundArea = await Area.findOne({ areaName: area });
+            const cleanName = area.replace(/^\d+\.\s*/, '').trim(); // ตัด "1. " ออก
+            const codeMatch = area.match(/\((.*?)\)/); // ดึงรหัสในวงเล็บ เช่น MS 9302
+            const roomCode = codeMatch ? codeMatch[1].trim() : '';
 
-            if (!foundArea) {
-                // ค้นหาโดยการตัดลำดับข้อด้านหน้าออก เช่น "1. "
-                const cleanName = area.replace(/^\d+\.\s*/, '').trim();
-                foundArea = await Area.findOne({ areaName: new RegExp(cleanName, 'i') });
-            }
+            // ค้นหาใน DB ด้วยหลายเงื่อนไขแบบ Safe Regex
+            let foundArea = await Area.findOne({
+                $or: [
+                    { areaName: area },
+                    { areaName: cleanName },
+                    { areaName: new RegExp(escapeRegex(cleanName), 'i') },
+                    ...(roomCode ? [{ areaName: new RegExp(escapeRegex(roomCode), 'i') }] : [])
+                ]
+            });
 
             if (foundArea) {
                 area = foundArea._id;
             } else {
-                // หากไม่มีในฐานข้อมูล ให้สร้าง Record Area ใหม่ให้อัตโนมัติเพื่อใช้ ID
-                const newArea = new Area({ areaName: area, category: 'ทั่วไป' });
+                // หากหาไม่เจอจริงและต้องสร้างห้องใหม่ ให้ใช้หมวดหมู่ที่ตรงตาม Enum ใน Schema
+                const validCategories = ['สำนักงาน', 'ห้องพักอาจารย์', 'ห้องเรียน', 'ห้องปฏิบัติการ', 'อาคารและโรงฝึกงาน', 'ห้องสมุด', 'สภาพแวดล้อมภายในอาคาร', 'สภาพแวดล้อมภายนอกอาคาร'];
+                const selectedCategory = validCategories.includes(category) ? category : 'ห้องเรียน';
+
+                const newArea = new Area({ 
+                    areaName: cleanName || area, 
+                    category: selectedCategory 
+                });
                 const savedArea = await newArea.save();
                 area = savedArea._id;
             }
