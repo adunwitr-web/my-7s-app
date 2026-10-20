@@ -2,157 +2,166 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-const User = require('./models/User');
+// นำเข้า Models (ใช้ชื่อตัวเล็กให้ตรงกับไฟล์จริงในโครงการ)
+const User = require('./models/user');
 const Area = require('./models/Area');
 
 const seedData = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/my-5s-db');
+        // ดึงค่าการเชื่อมต่อจาก .env (รองรับทั้ง MONGO_URI และ MONGODB_URI)
+        const dbUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/my-5s-db';
+        
+        console.log('⏳ กำลังเชื่อมต่อไปยัง MongoDB...');
+        await mongoose.connect(dbUri);
         console.log('✅ Connected to MongoDB for seeding Green 7S Plus...');
 
-        // ล้างข้อมูลเก่า
+        // 1. ล้างข้อมูลเก่าป้องกันข้อมูลซ้ำซ้อน
         await User.deleteMany({});
         await Area.deleteMany({});
 
-        // 1. สร้างรหัสผ่านเข้ารหัส (123456 ให้ทุกคน)
+        // 2. สร้างรหัสผ่านเข้ารหัส (123456 ให้ทุกคน)
         const hashedPassword = await bcrypt.hash('123456', 10);
 
-        // 2. สร้าง Area Owner ตัวอย่างก่อน เพื่อเอา _id ไปผูกกับห้อง
-        const owner1 = await User.create({
-            username: 'owner_office',
+        // 3. สร้าง Admin ประจำระบบ
+        const adminUser = await User.create({
+            username: 'sangthian.j',
             password: hashedPassword,
-            firstName: 'นภา',
-            lastName: 'รักสะอาด',
-            email: 'napha@5s.com',
-            fullName: 'นางสาวนภา รักสะอาด',
-            role: 'Area Owner',
-            position: 'เจ้าหน้าที่บริหารงานทั่วไป'
+            firstName: 'แสงเทียน',
+            lastName: 'จันทร์แสงทอง',
+            email: 'sangthian.j@rmutsv.ac.th',
+            fullName: 'นางสาวแสงเทียน จันทร์แสงทอง',
+            role: 'Admin',
+            position: 'เจ้าหน้าที่'
         });
 
-        const owner2 = await User.create({
-            username: 'owner_lab',
-            password: hashedPassword,
-            firstName: 'กิตติศักดิ์',
-            lastName: 'คุมแล็บ',
-            email: 'kittisak@5s.com',
-            fullName: 'นายกิตติศักดิ์ คุมแล็บ',
-            role: 'Area Owner',
-            position: 'นักวิทยาศาสตร์'
-        });
-
-        // 3. สร้างพื้นที่ตัวอย่างครบทุกหมวดหมู่ของ Green 7S Plus
-        const areaList = [
-            { areaName: 'ห้องสำนักงาน ผู้อำนวยการ', category: 'สำนักงาน และห้องพักอาจารย์', owner: owner1._id }, // [0] ผศ.น้ำเพ็ญ
-            { areaName: 'ห้องพักอาจารย์และห้องสมุด', category: 'ห้องสมุด', owner: owner1._id },                 // [1] ผศ.ศิวดล
-            { areaName: 'ห้องเรียนรวม 101 อาคารบรรยาย', category: 'ห้องเรียน', owner: owner1._id },             // [2] ผศ.ดร.ภาวนา
-            { areaName: 'ห้องปฏิบัติการและวิจัย', category: 'ห้องปฏิบัติการทดลอง', owner: owner2._id },           // [3] ผศ.วันดี
-            { areaName: 'โรงฝึกงานเครื่องมือกลและงานเชื่อม', category: 'โรงฝึกงาน', owner: owner2._id },       // [4] ผศ.วันประชา
-            { areaName: 'สภาพแวดล้อมและภูมิทัศน์ส่วนกลาง', category: 'ภูมิทัศน์และพื้นที่ส่วนกลาง', owner: owner1._id }, // [5] ผศ.พิเชฐ
-            { areaName: 'ห้องปฏิบัติการคอมพิวเตอร์ 1', category: 'ห้องปฏิบัติการคอมพิวเตอร์', owner: owner2._id },
-            { areaName: 'ระบบไฟฟ้าและโครงสร้าง อาคาร 1', category: 'อาคารสถานที่และความปลอดภัยอาคาร', owner: owner2._id },
-            { areaName: 'โรงอาหารกลางและซุ้มจำหน่ายเครื่องดื่ม', category: 'โรงอาหารและซุ้มอาหาร', owner: owner1._id },
-            { areaName: 'หอประชุมใหญ่ประจำวิทยาเขต', category: 'ห้องประชุมและหอประชุม', owner: owner1._id }
-        ];
-
-        const createdAreas = await Area.insertMany(areaList);
-        console.log(`🏢 Created ${createdAreas.length} Areas Successfully (Green 7S Plus)`);
-
-        // 4. บัญชีผู้ใช้จริงตามที่อาจารย์สั่ง (Password: 123456 ทุกคน)
-        const realUsers = [
-            // เจ้าหน้าที่ (Admin)
-            {
-                username: 'sangthian.j',
-                password: hashedPassword,
-                firstName: 'แสงเทียน',
-                lastName: 'จันทร์แสงทอง',
-                email: 'sangthian.j@rmutsv.ac.th',
-                fullName: 'นางสาวแสงเทียน จันทร์แสงทอง',
-                role: 'Admin',
-                position: 'เจ้าหน้าที่'
-            },
-            // ผู้ตรวจ 1: ผศ.น้ำเพ็ญ -> ห้องสำนักงาน ผู้อำนวยการ
+        // 4. บัญชีผู้ใช้จริงตามอาจารย์สั่ง (เข้าตรวจได้ และเป็นเจ้าของพื้นที่ด้วย)
+        const usersToCreate = [
             {
                 username: 'nampen.p',
-                password: hashedPassword,
                 firstName: 'น้ำเพ็ญ',
                 lastName: 'พรหมประสิทธิ์',
-                email: 'nampen.p@rmusv.ac.th',
+                email: 'nampen.p@rmutsv.ac.th',
                 fullName: 'ผู้ช่วยศาสตราจารย์น้ำเพ็ญ พรหมประสิทธิ์',
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
-                assignedArea: createdAreas[0]._id
+                areaInfo: {
+                    areaName: 'ห้องสำนักงาน ผู้อำนวยการ',
+                    category: 'สำนักงาน และห้องพักอาจารย์'
+                }
             },
-            // ผู้ตรวจ 2: ผศ.ศิวดล -> ห้องพักอาจารย์และห้องสมุด
             {
                 username: 'sivadol.n',
-                password: hashedPassword,
                 firstName: 'ศิวดล',
                 lastName: 'นวลนภดล',
                 email: 'sivadol.n@rmutsv.ac.th',
                 fullName: 'ผู้ช่วยศาสตราจารย์ศิวดล นวลนภดล',
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
-                assignedArea: createdAreas[1]._id
+                areaInfo: {
+                    areaName: 'ห้องพักอาจารย์และห้องสมุด',
+                    category: 'ห้องสมุด'
+                }
             },
-            // ผู้ตรวจ 3: ผศ.ดร.ภาวนา -> ห้องเรียน
             {
                 username: 'pawana.p',
-                password: hashedPassword,
                 firstName: 'ภาวนา',
                 lastName: 'พุ่มไสว',
-                email: 'pawana.p@rmusv.ac.th',
+                email: 'pawana.p@rmutsv.ac.th',
                 fullName: 'ผู้ช่วยศาสตราจารย์.ดร.ภาวนา พุ่มไสว',
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
-                assignedArea: createdAreas[2]._id
+                areaInfo: {
+                    areaName: 'ห้องเรียนรวม 101 อาคารบรรยาย',
+                    category: 'ห้องเรียน'
+                }
             },
-            // ผู้ตรวจ 4: ผศ.วันดี -> ห้องปฏิบัติการ
             {
                 username: 'wandee.nu',
-                password: hashedPassword,
                 firstName: 'วันดี',
                 lastName: 'นวนสร้อย',
-                email: 'wandee.nu@rmusv.ac.th',
+                email: 'wandee.nu@rmutsv.ac.th',
                 fullName: 'ผู้ช่วยศาสตราจารย์วันดี นวนสร้อย',
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
-                assignedArea: createdAreas[3]._id
+                areaInfo: {
+                    areaName: 'ห้องปฏิบัติการและวิจัย',
+                    category: 'ห้องปฏิบัติการทดลอง'
+                }
             },
-            // ผู้ตรวจ 5: ผศ.วันประชา -> โรงฝึกงาน
             {
                 username: 'wanpracha.n',
-                password: hashedPassword,
                 firstName: 'วันประชา',
                 lastName: 'นวนสร้อย',
-                email: 'wanpracha.n@rmusv.ac.th',
+                email: 'wanpracha.n@rmutsv.ac.th',
                 fullName: 'ผู้ช่วยศาสตราจารย์วันประชา นวนสร้อย',
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
-                assignedArea: createdAreas[4]._id
+                areaInfo: {
+                    areaName: 'โรงฝึกงานเครื่องมือกลและงานเชื่อม',
+                    category: 'โรงฝึกงาน'
+                }
             },
-            // ผู้ตรวจ 6: ผศ.พิเชฐ -> สภาพแวดล้อม
             {
                 username: 'pichet.s',
-                password: hashedPassword,
                 firstName: 'พิเชฐ',
                 lastName: 'สุวรรณโณ',
                 email: 'pichet.s@rmutsv.ac.th',
                 fullName: 'ผู้ช่วยศาสตราจารย์พิเชฐ สุวรรณโณ',
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
-                assignedArea: createdAreas[5]._id
+                areaInfo: {
+                    areaName: 'สภาพแวดล้อมและภูมิทัศน์ส่วนกลาง',
+                    category: 'ภูมิทัศน์และพื้นที่ส่วนกลาง'
+                }
             }
         ];
 
-        await User.insertMany(realUsers);
+        // 5. วนลูปสร้าง User และ Area โดยเชื่อม ID ของทั้งสองฝั่งเข้าด้วยกัน
+        for (const u of usersToCreate) {
+            // สร้าง User
+            const createdUser = await User.create({
+                username: u.username,
+                password: hashedPassword,
+                firstName: u.firstName,
+                lastName: u.lastName,
+                email: u.email,
+                fullName: u.fullName,
+                role: u.role,
+                position: u.position
+            });
+
+            // สร้าง Area และผูก owner ด้วย ID ของ User ที่เพิ่งสร้าง
+            const createdArea = await Area.create({
+                areaName: u.areaInfo.areaName,
+                category: u.areaInfo.category,
+                owner: createdUser._id
+            });
+
+            // อัปเดต assignedArea ของ User กลับไปด้วย Area ID
+            createdUser.assignedArea = createdArea._id;
+            await createdUser.save();
+        }
+
+        // 6. สร้างพื้นที่ส่วนกลางเพิ่มเติมอื่นๆ
+        const adminOwnerId = adminUser._id;
+        const extraAreas = [
+            { areaName: 'ห้องปฏิบัติการคอมพิวเตอร์ 1', category: 'ห้องปฏิบัติการคอมพิวเตอร์', owner: adminOwnerId },
+            { areaName: 'ระบบไฟฟ้าและโครงสร้าง อาคาร 1', category: 'อาคารสถานที่และความปลอดภัยอาคาร', owner: adminOwnerId },
+            { areaName: 'โรงอาหารกลางและซุ้มจำหน่ายเครื่องดื่ม', category: 'โรงอาหารและซุ้มอาหาร', owner: adminOwnerId },
+            { areaName: 'หอประชุมใหญ่ประจำวิทยาเขต', category: 'ห้องประชุมและหอประชุม', owner: adminOwnerId }
+        ];
+
+        await Area.insertMany(extraAreas);
 
         console.log('👤 All Users Seeded Successfully');
+        console.log('🏢 All Areas Seeded Successfully (Green 7S Plus)');
         console.log('\n🎉 --- GREEN 7S PLUS SEEDING COMPLETED --- 🎉');
         console.log('📌 รหัสผ่านของทุกคนคือ: 123456');
         console.log(' - Admin: sangthian.j@rmutsv.ac.th');
-        console.log(' - ผู้ตรวจประเมิน 6 ท่าน (เข้าตรวจห้องที่ได้รับมอบหมายได้ทันที)\n');
+        console.log(' - ผู้ตรวจประเมิน 6 ท่าน (ผูกห้องและเข้าใช้งานได้ทั้งสองโหมดทันที)\n');
 
         process.exit(0);
+
     } catch (err) {
         console.error('❌ Seeding Error:', err);
         process.exit(1);

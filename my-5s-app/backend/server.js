@@ -9,7 +9,7 @@ const app = express();
 // อนุญาตให้ Frontend เรียกใช้ API ได้โดยไม่ติด CORS
 app.use(cors({
     origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // <-- เติม 'PATCH' ตรงนี้
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -25,9 +25,11 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/my-5s-db')
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/assessment', require('./routes/assessment'));
 app.use('/api/areas', require('./routes/area'));
+app.use('/api/area', require('./routes/area')); // 🟢 สำรองเส้นนี้ไว้ป้องกัน 404
 app.use('/api/user', require('./routes/user'));
 app.use('/api/forms', require('./routes/forms'));
 app.use('/api/system-config', require('./routes/systemConfig'));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
