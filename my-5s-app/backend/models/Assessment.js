@@ -14,10 +14,10 @@ const assessmentSchema = new mongoose.Schema({
         maxScore: Number,
         score: Number,
         isNA: { type: Boolean, default: false },
-        // 🟢 เพิ่ม subItems เพื่อเก็บข้อความและรอยติ๊กแต่ละข้อ (1.1, 1.2, ...)
         subItems: [{
             text: String,
-            checked: Boolean
+            checked: Boolean,
+            isNA: { type: Boolean, default: false }
         }],
 
         topicPhoto: { type: String, default: '' }
