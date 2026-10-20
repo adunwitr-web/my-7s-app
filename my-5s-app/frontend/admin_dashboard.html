@@ -1069,15 +1069,44 @@
             const token = localStorage.getItem('authToken');
             let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
+            
             if (res.ok) {
                 const areas = await res.json();
+                
+                // 🟢 1. จัดกลุ่มพื้นที่ตามหมวดหมู่ (Category)
+                const groupedAreas = {};
+                areas.forEach(a => {
+                    const cat = a.category || 'ทั่วไป';
+                    if (!groupedAreas[cat]) {
+                        groupedAreas[cat] = [];
+                    }
+                    groupedAreas[cat].push(a);
+                });
+
                 let optionsHtml = '<option value="">-- โปรดระบุสถานที่รับผิดชอบ --</option>';
-                areas.forEach(a => { optionsHtml += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`; });
-                document.getElementById('newAssignedArea').innerHTML = optionsHtml;
-                document.getElementById('editAssignedArea').innerHTML = optionsHtml;
+
+                // 🟢 2. วนลูปสร้าง <optgroup> แยกหมวดหมู่ให้สวยงาม
+                for (const [category, areaList] of Object.entries(groupedAreas)) {
+                    optionsHtml += `<optgroup label="📌 หมวด: ${category}">`;
+                    
+                    const seenNames = new Set();
+                    areaList.forEach(a => {
+                        if (!seenNames.has(a.areaName)) {
+                            seenNames.add(a.areaName);
+                            optionsHtml += `<option value="${a._id}">${a.areaName}</option>`;
+                        }
+                    });
+
+                    optionsHtml += `</optgroup>`;
+                }
+
+                const newSelect = document.getElementById('newAssignedArea');
+                const editSelect = document.getElementById('editAssignedArea');
+                if (newSelect) newSelect.innerHTML = optionsHtml;
+                if (editSelect) editSelect.innerHTML = optionsHtml;
             }
         } catch (err) {
-            console.error(err);
+            console.error('Error loading areas for select:', err);
         }
     }
 
