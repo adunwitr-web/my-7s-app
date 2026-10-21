@@ -1187,12 +1187,28 @@
         const editSelect = document.getElementById('editAssignedArea');
         if (editSelect) {
             editSelect.value = ""; // รีเซ็ตก่อน
+            let currentArea = "";
+            
+            // แปลงค่าที่มาจาก DB ให้เป็น String พื้นที่หลักชัดเจน
             if (user.assignedArea) {
                 if (typeof user.assignedArea === 'object' && user.assignedArea.category) {
-                    editSelect.value = user.assignedArea.category;
+                    currentArea = user.assignedArea.category.trim();
                 } else if (typeof user.assignedArea === 'string') {
-                    editSelect.value = user.assignedArea;
+                    currentArea = user.assignedArea.trim();
                 }
+            }
+            
+            // วนลูปจับคู่เพื่อ Select Dropdown ให้อัตโนมัติ 100%
+            let matched = false;
+            for(let i = 0; i < editSelect.options.length; i++) {
+                if(editSelect.options[i].value === currentArea || currentArea.includes(editSelect.options[i].value)) {
+                    editSelect.value = editSelect.options[i].value;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched && currentArea) {
+                editSelect.value = ""; // ถ้าหาไม่เจอจริงๆ ให้กลับไปค่าตั้งต้น
             }
         }
         document.getElementById('editUserModal').style.display = 'flex';

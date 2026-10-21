@@ -565,50 +565,61 @@
         const lockNoticeTag = document.getElementById('lockNoticeTag');
 
         const isAdmin = user && user.role === 'Admin';
-        const assignedVal = user ? user.assignedArea : null;
+        let assignedVal = user ? user.assignedArea : null;
 
-        if (isAdmin || !assignedVal) {
-            if (catSelect) catSelect.disabled = false;
+        // 1. คลีนค่าที่ได้จาก User ให้อ่านง่าย
+        if (assignedVal && typeof assignedVal === 'object') {
+            assignedVal = assignedVal.category || assignedVal.areaName || assignedVal.name || "";
+        }
+        if (typeof assignedVal === 'string') {
+            assignedVal = assignedVal.trim();
+        }
+
+        // 2. ถ้าเป็น Admin หรือ "ผู้ประเมินที่ไม่ล็อคพื้นที่" ให้เลือกได้อิสระ
+        if (isAdmin || !assignedVal || assignedVal === "" || assignedVal.includes("ไม่ล็อค")) {
+            if (catSelect) {
+                catSelect.disabled = false;
+                catSelect.style.backgroundColor = "#ffffff";
+            }
             if (areaSelect) areaSelect.disabled = false;
             if (lockNoticeTag) lockNoticeTag.style.display = 'none';
 
             if (catSelect && !catSelect.value) catSelect.value = "สำนักงานฯ - ห้องพักอาจารย์";
             onCategoryChanged();
         } else {
-            let lockedCategory = null;
+            // 3. กรณี User ถูกล็อคพื้นที่ (เป็น Owner หรือ Assessor ที่รับผิดชอบหมวดนั้น)
+            let lockedCategory = assignedVal;
 
-            if (typeof assignedVal === 'object' && assignedVal !== null) {
-                lockedCategory = assignedVal.category || assignedVal.areaName;
-            } else if (typeof assignedVal === 'string') {
-                if (rattaData[assignedVal]) {
-                    lockedCategory = assignedVal;
-                } else {
-                    for (const [cat, rooms] of Object.entries(rattaData)) {
-                        if (rooms.some(r => r.includes(assignedVal) || assignedVal.includes(r))) {
-                            lockedCategory = cat;
-                            break;
-                        }
+            // ป้องกันกรณีแอดมินเผลอพิมพ์ผิด ให้ค้นหาให้ตรงกับ rattaData
+            if (!rattaData[lockedCategory]) {
+                for (const [cat, rooms] of Object.entries(rattaData)) {
+                    if (rooms.some(r => r.includes(lockedCategory) || lockedCategory.includes(r))) {
+                        lockedCategory = cat;
+                        break;
                     }
-                    if (!lockedCategory) lockedCategory = assignedVal;
                 }
             }
 
-            if (lockedCategory) {
+            if (lockedCategory && rattaData[lockedCategory]) {
                 if (catSelect) {
                     catSelect.value = lockedCategory;
-                    catSelect.disabled = true;
+                    catSelect.disabled = true; // 🔒 ล็อคพื้นที่หลัก
+                    catSelect.style.backgroundColor = "#e2e8f0"; // เปลี่ยนสีให้รู้ว่าถูกล็อค
                 }
                 
+                // 🔄 ดึง "ห้องย่อย" มาใส่ Dropdown ทันที!
                 onCategoryChanged();
 
                 if (areaSelect) {
-                    areaSelect.disabled = false;
+                    areaSelect.disabled = false; // เปิดให้เลือกห้องย่อย
                 }
 
                 if (lockNoticeTag) {
                     lockNoticeTag.style.display = 'inline-block';
-                    lockNoticeTag.innerText = `🔒 (ล็อคสิทธิ์ประเมิน: ${lockedCategory})`;
+                    lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่หลัก: ${lockedCategory})`;
                 }
+            } else {
+                onCategoryChanged();
             }
         }
     }
@@ -616,7 +627,8 @@
     function onCategoryChanged() {
         const cat = document.getElementById('categorySelect').value;
         const areaSelect = document.getElementById('areaSelect');
-        areaSelect.innerHTML = '<option value="">-- โปรดระบุห้องรับผิดชอบ --</option>';
+        // อัปเดตคำใบ้ให้ชัดเจนว่าให้เลือกห้องย่อย
+        areaSelect.innerHTML = '<option value="">-- โปรดระบุห้องย่อย / สถานที่รับการตรวจ --</option>';
 
         if (!cat) {
             onAreaChanged();
