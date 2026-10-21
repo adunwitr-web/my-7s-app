@@ -1,27 +1,39 @@
 const jwt = require('jsonwebtoken');
 
-// Middleware 1: ตรวจสอบว่าได้ Login และมี Token หรือไม่
+// Middleware 1: ตรวจสอบ Token (รองรับทั้ง "Bearer <token>" และ token ตรงๆ)
 const verifyToken = (req, res, next) => {
-    // ปกติ Token จะส่งมาใน Header ในรูปแบบ "Bearer <token>"
-    const token = req.header('Authorization');
-    if (!token) return res.status(401).json({ error: 'ปฏิเสธการเข้าถึง: กรุณาเข้าสู่ระบบ' });
+    const header = req.header('Authorization') || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7).trim() : header.trim();
+
+    if (!token) {
+        return res.status(401).json({
+            message: 'ปฏิเสธการเข้าถึง: กรุณาเข้าสู่ระบบ',
+            error: 'ปฏิเสธการเข้าถึง: กรุณาเข้าสู่ระบบ'
+        });
+    }
 
     try {
-        // ถอดรหัส Token ด้วย Secret Key ของเรา
-        const verified = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
-        req.user = verified; // เก็บข้อมูล user (id, role) ที่ถอดได้ไว้ใน request
-        next(); // ให้ทำงานขั้นต่อไปได้
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const uid = decoded.userId || decoded.id || decoded._id;
+        // ทำให้ทุกไฟล์ใช้ req.user.userId / id / _id ได้เหมือนกันหมด
+        req.user = { ...decoded, userId: uid, id: uid, _id: uid };
+        next();
     } catch (err) {
-        res.status(400).json({ error: 'Token ไม่ถูกต้อง หรือหมดอายุแล้ว' });
+        return res.status(401).json({
+            message: 'Token ไม่ถูกต้อง หรือหมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่',
+            error: 'Token ไม่ถูกต้อง หรือหมดอายุแล้ว'
+        });
     }
 };
 
 // Middleware 2: ตรวจสอบ Role (เช่น ให้ผ่านเฉพาะ Admin)
 const checkRole = (roles) => {
     return (req, res, next) => {
-        // เช็คว่า Role ของคนที่ล็อกอินตรงกับที่ API อนุญาตหรือไม่
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ error: 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้' });
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({
+                message: 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้',
+                error: 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลส่วนนี้'
+            });
         }
         next();
     };
