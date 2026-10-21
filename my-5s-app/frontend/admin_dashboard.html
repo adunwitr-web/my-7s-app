@@ -1068,15 +1068,18 @@
 
     async function loadUsers() {
         const token = localStorage.getItem('authToken');
+        // 🚀 เพิ่ม Timestamp หลอกเบราว์เซอร์ว่านี่คือ URL ใหม่เสมอ จะได้ไปดึงข้อมูลใหม่จาก Database 100%
+        const timestamp = new Date().getTime();
+        
         try {
-            let res = await fetch(`${API_URL}/user`, {
+            let res = await fetch(`${API_URL}/user?_t=${timestamp}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             let users = [];
             if (res.ok) {
                 users = await res.json();
             } else {
-                let res2 = await fetch(`${API_URL}/users`, {
+                let res2 = await fetch(`${API_URL}/users?_t=${timestamp}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res2.ok) users = await res2.json();
@@ -1094,7 +1097,9 @@
 
             users.forEach(u => {
                 let areaDisplay = '<span style="color:#64748b;">ทุกพื้นที่ (ไม่ล็อค)</span>';
-                if (u.assignedArea) {
+                
+                // ดักจับให้ชัวร์ว่ามีค่า และไม่เป็นค่าว่าง
+                if (u.assignedArea && u.assignedArea !== "" && u.assignedArea !== "null") {
                     let aVal = '';
                     if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
                         aVal = u.assignedArea.category || u.assignedArea.areaName || '-';
@@ -1103,6 +1108,7 @@
                     }
                     areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${aVal}</b>`;
                 }
+                
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${u.username || '-'}</b></td>
@@ -1236,7 +1242,8 @@
             firstName, 
             lastName, 
             role, 
-            assignedArea: assignedArea ? assignedArea : "" 
+            // 🚀 เปลี่ยนกลับมาส่งค่า null ถ้าไม่ได้เลือกพื้นที่ (Database มักจะจัดการ null ได้ดีกว่า)
+            assignedArea: assignedArea ? assignedArea : null 
         };
         
         if (password) {
@@ -1260,8 +1267,13 @@
 
             if (res.ok) {
                 alert('✅ ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
-                closeEditModal(); // พอมันเจอคำสั่งนี้ มันจะปิดหน้าต่างได้ปกติแล้ว
-                loadUsers(); 
+                closeEditModal();
+                
+                // ⏳ หน่วงเวลา 400ms ให้ Database ด้านหลังบันทึกข้อมูลเสร็จชัวร์ๆ ค่อยสั่งโหลดตารางใหม่
+                setTimeout(() => {
+                    loadUsers();
+                }, 400);
+
             } else {
                 const data = await res.json().catch(() => ({}));
                 alert('❌ ปรับปรุงข้อมูลไม่สำเร็จ: ' + (data.message || 'ข้อมูลอาจซ้ำซ้อน'));
