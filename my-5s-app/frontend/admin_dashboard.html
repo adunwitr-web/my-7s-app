@@ -1044,22 +1044,41 @@
 
     function closeModal() { document.getElementById('detailsModal').style.display = 'none'; }
 
-    function openUserModal() {
+    async function openUserModal() {
         document.getElementById('userModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
-        loadAreasForSelect();
-        loadUsers();
+        await loadAreasForSelect();
+        await loadUsers();
     }
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    function loadAreasForSelect() {
+    async function loadAreasForSelect() {
         let optionsHtml = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
         optionsHtml += '<optgroup label="📌 ล็อคระดับหมวดหมู่หลัก">';
         categoriesList.forEach(cat => {
             optionsHtml += `<option value="${cat}">${cat}</option>`;
         });
         optionsHtml += '</optgroup>';
+
+        try {
+            const token = localStorage.getItem('authToken');
+            let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
+            
+            if (res.ok) {
+                const areas = await res.json();
+                if (Array.isArray(areas) && areas.length > 0) {
+                    optionsHtml += '<optgroup label="🏢 ล็อครายห้อง/รายสถานที่ (Database Areas)">';
+                    areas.forEach(a => {
+                        optionsHtml += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`;
+                    });
+                    optionsHtml += '</optgroup>';
+                }
+            }
+        } catch (e) {
+            console.error("Error loading DB areas for select:", e);
+        }
 
         const newSelect = document.getElementById('newAssignedArea');
         const editSelect = document.getElementById('editAssignedArea');
@@ -1070,24 +1089,45 @@
     async function loadUsers() {
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`${API_URL}/user`, {
+            let res = await fetch(`${API_URL}/user`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const users = await res.json();
+            let users = [];
+            if (res.ok) {
+                users = await res.json();
+            } else {
+                let res2 = await fetch(`${API_URL}/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res2.ok) users = await res2.json();
+            }
+
             allUsersData = users;
             const tbody = document.getElementById('userTableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
+
+            if (!Array.isArray(users) || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่พบข้อมูลผู้ใช้งานในระบบ</td></tr>';
+                return;
+            }
+
             users.forEach(u => {
                 let areaDisplay = '<span style="color:#64748b;">ทุกพื้นที่ (ไม่ล็อค)</span>';
                 if (u.assignedArea) {
-                    const aVal = typeof u.assignedArea === 'object' ? (u.assignedArea.category || u.assignedArea.areaName || '-') : u.assignedArea;
+                    let aVal = '';
+                    if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
+                        aVal = u.assignedArea.category || u.assignedArea.areaName || u.assignedArea.name || '-';
+                    } else {
+                        aVal = u.assignedArea;
+                    }
                     areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${aVal}</b>`;
                 }
                 tbody.innerHTML += `
                     <tr>
-                        <td><b>${u.username}</b></td>
+                        <td><b>${u.username || '-'}</b></td>
                         <td>${u.firstName || ''} ${u.lastName || ''}</td>
-                        <td>${u.role}</td>
+                        <td>${u.role || '-'}</td>
                         <td>${areaDisplay}</td>
                         <td>
                             <button onclick="openEditModal('${u._id}')" class="btn-table" style="background:#fed7aa; color:#9a3412;">ปรับปรุง/รหัส</button>
@@ -1130,7 +1170,7 @@
                     firstName, 
                     lastName, 
                     role, 
-                    assignedArea: assignedArea || null 
+                    assignedArea: assignedArea ? assignedArea : null 
                 })
             });
 
@@ -1164,21 +1204,21 @@
         document.getElementById('editRole').value = user.role || 'Internal Assessor';
         document.getElementById('editPassword').value = '';
 
-        let currentArea = "";
-        if (user.assignedArea) {
-            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                currentArea = user.assignedArea._id || user.assignedArea.category || user.assignedArea.areaName || '';
-            } else {
-                currentArea = user.assignedArea;
-            }
-        }
-        
         const editSelect = document.getElementById('editAssignedArea');
         if (editSelect) {
-            editSelect.value = currentArea;
-            if (editSelect.selectedIndex === -1 && typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                const fallback = user.assignedArea.category || user.assignedArea.areaName;
-                if (fallback) editSelect.value = fallback;
+            editSelect.value = "";
+            if (user.assignedArea) {
+                if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
+                    if (user.assignedArea._id) editSelect.value = user.assignedArea._id;
+                    if (editSelect.selectedIndex === -1 && user.assignedArea.category) {
+                        editSelect.value = user.assignedArea.category;
+                    }
+                    if (editSelect.selectedIndex === -1 && user.assignedArea.areaName) {
+                        editSelect.value = user.assignedArea.areaName;
+                    }
+                } else if (typeof user.assignedArea === 'string') {
+                    editSelect.value = user.assignedArea;
+                }
             }
         }
         document.getElementById('editUserModal').style.display = 'flex';
@@ -1198,20 +1238,34 @@
         const assignedArea = document.getElementById('editAssignedArea').value;
 
         const token = localStorage.getItem('authToken');
+        
+        const bodyData = {
+            username, 
+            email, 
+            firstName, 
+            lastName, 
+            role, 
+            assignedArea: assignedArea ? assignedArea : null
+        };
+        if (password) {
+            bodyData.password = password;
+        }
+
         try {
-            const res = await fetch(`${API_URL}/user/${editUserId}`, {
+            let res = await fetch(`${API_URL}/user/${editUserId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
-                    username, 
-                    email, 
-                    firstName, 
-                    lastName, 
-                    role, 
-                    assignedArea: assignedArea || null,
-                    ...(password && { password })
-                })
+                body: JSON.stringify(bodyData)
             });
+
+            if (!res.ok && res.status === 404) {
+                res = await fetch(`${API_URL}/users/${editUserId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(bodyData)
+                });
+            }
+
             if (res.ok) {
                 alert('ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
                 closeEditModal();
@@ -1229,10 +1283,16 @@
         if (!confirm(`ยืนยันการลบบัญชีผู้ใช้: ${username} ออกจากทะเบียนถาวร?`)) return;
         const token = localStorage.getItem('authToken');
         try {
-            const res = await fetch(`${API_URL}/user/${id}`, {
+            let res = await fetch(`${API_URL}/user/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (!res.ok && res.status === 404) {
+                res = await fetch(`${API_URL}/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            }
             if (res.ok) loadUsers();
         } catch (err) {
             alert('ระบบขัดข้อง');
