@@ -34,7 +34,7 @@ const seedData = async () => {
             position: 'เจ้าหน้าที่'
         });
 
-        // 4. บัญชีผู้ใช้จริงตามอาจารย์สั่ง (เข้าตรวจได้ และเป็นเจ้าของพื้นที่ด้วย)
+        // 4. บัญชีผู้ใช้จริง (เข้าตรวจได้ และเป็นเจ้าของพื้นที่ด้วย)
         const usersToCreate = [
             {
                 username: 'nampen.p',
@@ -45,8 +45,9 @@ const seedData = async () => {
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
                 areaInfo: {
-                    areaName: 'ห้องสำนักงาน ผู้อำนวยการ',
-                    category: 'สำนักงาน และห้องพักอาจารย์'
+                    areaName: 'ห้องสำนักงาน ผู้อำนวยการ (MS 9205)',
+                    category: 'สำนักงานฯ - ห้องพักอาจารย์',
+                    department: 'สำนักงานผู้อำนวยการ'
                 }
             },
             {
@@ -58,8 +59,9 @@ const seedData = async () => {
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
                 areaInfo: {
-                    areaName: 'ห้องพักอาจารย์และห้องสมุด',
-                    category: 'ห้องสมุด'
+                    areaName: 'ห้องสมุด (MS 9401)',
+                    category: 'ห้องสมุด',
+                    department: 'งานวิทยบริการและเทคโนโลยีสารสนเทศ'
                 }
             },
             {
@@ -71,8 +73,9 @@ const seedData = async () => {
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
                 areaInfo: {
-                    areaName: 'ห้องเรียนรวม 101 อาคารบรรยาย',
-                    category: 'ห้องเรียน'
+                    areaName: 'ห้องเรียนรวม (MS 9405)',
+                    category: 'ห้องเรียน',
+                    department: 'สาขาศึกษาทั่วไป'
                 }
             },
             {
@@ -84,8 +87,9 @@ const seedData = async () => {
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
                 areaInfo: {
-                    areaName: 'ห้องปฏิบัติการและวิจัย',
-                    category: 'ห้องปฏิบัติการทดลอง'
+                    areaName: 'ห้องปฏิบัติการฟิสิกส์ (MS 9103)',
+                    category: 'ห้องปฏิบัติการทดลอง',
+                    department: 'สาขาศึกษาทั่วไป'
                 }
             },
             {
@@ -97,8 +101,9 @@ const seedData = async () => {
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
                 areaInfo: {
-                    areaName: 'โรงฝึกงานเครื่องมือกลและงานเชื่อม',
-                    category: 'โรงฝึกงาน'
+                    areaName: 'โรงฝึกงานพื้นฐาน',
+                    category: 'โรงฝึกงาน',
+                    department: 'สาขาวิชาวิศวกรรมเครื่องจักรกลเกษตร'
                 }
             },
             {
@@ -110,8 +115,9 @@ const seedData = async () => {
                 role: 'Internal Assessor',
                 position: 'ผู้ตรวจประเมิน',
                 areaInfo: {
-                    areaName: 'สภาพแวดล้อมและภูมิทัศน์ส่วนกลาง',
-                    category: 'ภูมิทัศน์และพื้นที่ส่วนกลาง'
+                    areaName: 'ภูมิทัศน์และพื้นที่ส่วนกลาง',
+                    category: 'ภูมิทัศน์และพื้นที่ส่วนกลาง',
+                    department: 'งานอาคารสถานที่'
                 }
             }
         ];
@@ -130,10 +136,11 @@ const seedData = async () => {
                 position: u.position
             });
 
-            // สร้าง Area และผูก owner ด้วย ID ของ User ที่เพิ่งสร้าง
+            // สร้าง Area พร้อมใส่ department
             const createdArea = await Area.create({
                 areaName: u.areaInfo.areaName,
                 category: u.areaInfo.category,
+                department: u.areaInfo.department || 'วิทยาลัยรัตภูมิ',
                 owner: createdUser._id
             });
 
@@ -142,13 +149,39 @@ const seedData = async () => {
             await createdUser.save();
         }
 
-        // 6. สร้างพื้นที่ส่วนกลางเพิ่มเติมอื่นๆ
+        // 6. สร้างพื้นที่ส่วนกลางเพิ่มเติมอื่นๆ พร้อมระบุ department ให้ครบ
         const adminOwnerId = adminUser._id;
         const extraAreas = [
-            { areaName: 'ห้องปฏิบัติการคอมพิวเตอร์ 1', category: 'ห้องปฏิบัติการคอมพิวเตอร์', owner: adminOwnerId },
-            { areaName: 'ระบบไฟฟ้าและโครงสร้าง อาคาร 1', category: 'อาคารสถานที่และความปลอดภัยอาคาร', owner: adminOwnerId },
-            { areaName: 'โรงอาหารกลางและซุ้มจำหน่ายเครื่องดื่ม', category: 'โรงอาหารและซุ้มอาหาร', owner: adminOwnerId },
-            { areaName: 'หอประชุมใหญ่ประจำวิทยาเขต', category: 'ห้องประชุมและหอประชุม', owner: adminOwnerId }
+            { 
+                areaName: 'ห้องปฏิบัติการคอมพิวเตอร์ (MS 9303)', 
+                category: 'ห้องปฏิบัติคอมพิวเตอร์', 
+                department: 'สาขาวิชาคอมพิวเตอร์ธุรกิจ', 
+                owner: adminOwnerId 
+            },
+            { 
+                areaName: 'อาคารสถานที่ และความปลอดภัยอาคาร', 
+                category: 'อาคารสถานที่ และความปลอดภัยอาคาร', 
+                department: 'งานอาคารสถานที่', 
+                owner: adminOwnerId 
+            },
+            { 
+                areaName: 'โรงอาหารกลาง และซุ้มอาหาร', 
+                category: 'โรงอาหาร - ซุ้มอาหาร', 
+                department: 'งานสวัสดิการ', 
+                owner: adminOwnerId 
+            },
+            { 
+                areaName: 'ห้องประชุมโกสน (MS 9207)', 
+                category: 'ห้องประชุมและหอประชุม', 
+                department: 'สำนักงานผู้อำนวยการ', 
+                owner: adminOwnerId 
+            },
+            { 
+                areaName: 'ห้องสื่อโฆษณากราฟฟิก (MS 9106)', 
+                category: 'ห้องปฏิบัติการวิชาชีพ', 
+                department: 'สาขาบริหารธุรกิจ', 
+                owner: adminOwnerId 
+            }
         ];
 
         await Area.insertMany(extraAreas);
