@@ -1279,26 +1279,6 @@
         }
     }
 
-    async function deleteUser(id, username) {
-        if (!confirm(`ยืนยันการลบบัญชีผู้ใช้: ${username} ออกจากทะเบียนถาวร?`)) return;
-        const token = localStorage.getItem('authToken');
-        try {
-            let res = await fetch(`${API_URL}/user/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok && res.status === 404) {
-                res = await fetch(`${API_URL}/users/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-            }
-            if (res.ok) loadUsers();
-        } catch (err) {
-            alert('ระบบขัดข้อง');
-        }
-    }
-
     function openSettingsModal() {
         document.getElementById('settingsModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
