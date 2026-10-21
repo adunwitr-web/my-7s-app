@@ -304,7 +304,7 @@
             <span>คณะกรรมการตรวจประเมิน: </span>
             <strong id="assessorName">กำลังโหลด...</strong>
         </div>
-        <button id="btnSwitchToOwner" style="display: none; background: #00bcd4; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="window.location.href='owner_dashboard.html'">
+        <button id="btnSwitchToOwner" style="display: none; background: #00bcd4; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="navigatePage('owner')">
             🔄 โหมดเจ้าของพื้นที่
         </button>
         <button class="btn-gov-logout" onclick="logout()">ออกจากระบบ</button>
@@ -403,6 +403,7 @@
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
 
+    // 📌 ข้อมูลห้องและสถานที่ทั้งหมดจากไฟล์ Excel (วิทยาลัยรัตภูมิ) แยกตาม 11 หมวดหมู่หลัก
     const rattaData = {
         "สำนักงานฯ - ห้องพักอาจารย์": [
             "1. งานทะเบียนและวัดผล (MS 9105)",
@@ -496,11 +497,19 @@
     let isSubmittingAssessment = false;
     let currentActiveRoundText = '';
 
+    function navigatePage(key) {
+        const isNumbered = window.location.pathname.includes('_');
+        if (key === 'index') window.location.href = isNumbered ? 'index_5.html' : 'index.html';
+        else if (key === 'owner') window.location.href = isNumbered ? 'owner_dashboard_5.html' : 'owner_dashboard.html';
+        else if (key === 'assessor') window.location.href = isNumbered ? 'assessment_form_8.html' : 'assessment_form.html';
+        else if (key === 'admin') window.location.href = isNumbered ? 'admin_dashboard_10.html' : 'admin_dashboard.html';
+    }
+
     window.onload = function() {
         const token = localStorage.getItem('authToken');
         const userStr = localStorage.getItem('userData');
         if (!token || !userStr) {
-            window.location.href = 'index.html';
+            navigatePage('index');
             return;
         }
         const user = JSON.parse(userStr);
@@ -557,85 +566,72 @@
         const areaSelect = document.getElementById('areaSelect');
         const lockNoticeTag = document.getElementById('lockNoticeTag');
 
-        let assignedAreaObj = null;
-        let assignedCategoryStr = null;
-
-        if (user && user.assignedArea) {
-            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                assignedAreaObj = user.assignedArea;
-            } else if (typeof user.assignedArea === 'string') {
-                assignedAreaObj = allAreasData.find(a => a._id === user.assignedArea || a.areaName === user.assignedArea);
-                if (!assignedAreaObj) {
-                    assignedCategoryStr = user.assignedArea;
-                }
-            }
-        }
-
         const isAdmin = user && user.role === 'Admin';
-        const isAssessorOnly = user && user.role && user.role.includes('Assessor') && !user.role.includes('Area Owner');
+        const assignedVal = user ? user.assignedArea : null;
 
-        if (isAdmin || (isAssessorOnly && !assignedAreaObj && !assignedCategoryStr)) {
+        // 🔒 ตรวจสอบระบบล็อคพื้นที่ผู้ประเมินตามสิทธิ์ User
+        if (isAdmin || !assignedVal) {
+            // ไม่ล็อค สามารถประเมินได้ทุกพื้นที่
             if (catSelect) catSelect.disabled = false;
             if (areaSelect) areaSelect.disabled = false;
             if (lockNoticeTag) lockNoticeTag.style.display = 'none';
 
             if (catSelect && !catSelect.value) catSelect.value = "สำนักงานฯ - ห้องพักอาจารย์";
             onCategoryChanged();
-        } else if (assignedAreaObj) {
-            const targetCategory = assignedAreaObj.category || getCategoryByRoomName(assignedAreaObj.areaName);
-
-            if (catSelect) {
-                catSelect.value = targetCategory;
-                catSelect.disabled = true; 
-            }
-
-            onCategoryChanged();
-
-            if (areaSelect) {
-                let foundIndex = -1;
-                for (let i = 0; i < areaSelect.options.length; i++) {
-                    const opt = areaSelect.options[i];
-                    if (opt.value === assignedAreaObj._id || opt.text === assignedAreaObj.areaName || opt.text.includes(assignedAreaObj.areaName)) {
-                        foundIndex = i;
-                        break;
-                    }
-                }
-
-                if (foundIndex !== -1) {
-                    areaSelect.selectedIndex = foundIndex;
-                }
-
-                areaSelect.disabled = true; 
-                onAreaChanged();
-            }
-
-            if (lockNoticeTag) {
-                lockNoticeTag.style.display = 'inline-block';
-                lockNoticeTag.innerText = `🔒 (ล็อคพื้นที่รับผิดชอบ: ${assignedAreaObj.areaName || targetCategory})`;
-            }
-        } else if (assignedCategoryStr) {
-            if (catSelect) {
-                catSelect.value = assignedCategoryStr;
-                catSelect.disabled = true;
-            }
-
-            onCategoryChanged();
-
-            if (areaSelect) {
-                areaSelect.disabled = false;
-            }
-
-            if (lockNoticeTag) {
-                lockNoticeTag.style.display = 'inline-block';
-                lockNoticeTag.innerText = `🔒 (ล็อคหมวดพื้นที่: ${assignedCategoryStr})`;
-            }
         } else {
-            if (catSelect) catSelect.disabled = false;
-            if (areaSelect) areaSelect.disabled = false;
-            if (lockNoticeTag) lockNoticeTag.style.display = 'none';
+            // ล็อคพื้นที่สำหรับ User ที่มีการกำหนดพื้นที่รับผิดชอบไว้
+            let lockedCategory = null;
+            let lockedRoom = null;
 
-            if (catSelect && !catSelect.value) catSelect.value = "สำนักงานฯ - ห้องพักอาจารย์";
-            onCategoryChanged();
+            if (typeof assignedVal === 'object' && assignedVal !== null) {
+                lockedCategory = assignedVal.category;
+                lockedRoom = assignedVal.areaName;
+            } else if (typeof assignedVal === 'string') {
+                if (rattaData[assignedVal]) {
+                    lockedCategory = assignedVal;
+                } else {
+                    for (const [cat, rooms] of Object.entries(rattaData)) {
+                        if (rooms.some(r => r.includes(assignedVal) || assignedVal.includes(r))) {
+                            lockedCategory = cat;
+                            lockedRoom = assignedVal;
+                            break;
+                        }
+                    }
+                    if (!lockedCategory) lockedCategory = assignedVal;
+                }
+            }
+
+            if (lockedCategory) {
+                if (catSelect) {
+                    catSelect.value = lockedCategory;
+                    catSelect.disabled = true;
+                }
+                onCategoryChanged();
+
+                if (lockedRoom && areaSelect) {
+                    let foundIdx = -1;
+                    for (let i = 0; i < areaSelect.options.length; i++) {
+                        const opt = areaSelect.options[i];
+                        if (opt.text.includes(lockedRoom) || lockedRoom.includes(opt.text)) {
+                            foundIdx = i;
+                            break;
+                        }
+                    }
+                    if (foundIdx !== -1) {
+                        areaSelect.selectedIndex = foundIdx;
+                        areaSelect.disabled = true;
+                    } else {
+                        areaSelect.disabled = false;
+                    }
+                } else if (areaSelect) {
+                    areaSelect.disabled = false;
+                }
+
+                if (lockNoticeTag) {
+                    lockNoticeTag.style.display = 'inline-block';
+                    lockNoticeTag.innerText = `🔒 (ล็อคสิทธิ์ประเมิน: ${lockedRoom || lockedCategory})`;
+                }
+            }
         }
     }
 
@@ -649,6 +645,7 @@
         return "สำนักงานฯ - ห้องพักอาจารย์";
     }
 
+    // 📌 ดึงรายการห้องจาก Excel (rattaData) แสดงผลใน Dropdown ให้ครบ 100%
     function onCategoryChanged() {
         const cat = document.getElementById('categorySelect').value;
         const areaSelect = document.getElementById('areaSelect');
@@ -659,18 +656,38 @@
             return;
         }
 
-        const dbMatchingRooms = allAreasData.filter(a => (a.category || '').includes(cat) || cat.includes(a.category || ''));
+        const excelRooms = rattaData[cat] || [];
+        const dbMatchingRooms = allAreasData.filter(a => 
+            (a.category || '').trim() === cat.trim() || 
+            (a.category || '').includes(cat) || 
+            cat.includes(a.category || '')
+        );
 
-        if (dbMatchingRooms.length > 0) {
-            dbMatchingRooms.forEach(room => {
-                areaSelect.innerHTML += `<option value="${room._id}">${room.areaName}</option>`;
-            });
-        } else {
-            const fallbackRooms = rattaData[cat] || [];
-            fallbackRooms.forEach((r, idx) => {
-                areaSelect.innerHTML += `<option value="${cat}_${idx}">${r}</option>`;
-            });
-        }
+        const addedNames = new Set();
+
+        // 1. เพิ่มห้องทั้งหมดจากไฟล์ Excel
+        excelRooms.forEach(roomText => {
+            const dbMatch = dbMatchingRooms.find(db => 
+                db.areaName === roomText || 
+                roomText.includes(db.areaName) || 
+                db.areaName.includes(roomText)
+            );
+
+            if (dbMatch) {
+                areaSelect.innerHTML += `<option value="${dbMatch._id}">${dbMatch.areaName}</option>`;
+                addedNames.add(dbMatch.areaName);
+            } else {
+                areaSelect.innerHTML += `<option value="${roomText}">${roomText}</option>`;
+                addedNames.add(roomText);
+            }
+        });
+
+        // 2. เพิ่มห้องที่อาจจะมาจาก DB เพิ่มเติม
+        dbMatchingRooms.forEach(db => {
+            if (!addedNames.has(db.areaName)) {
+                areaSelect.innerHTML += `<option value="${db._id}">${db.areaName}</option>`;
+            }
+        });
 
         document.getElementById('areaCategoryDisplay').innerText = cat;
         loadFormByAreaType(cat);
@@ -1130,7 +1147,7 @@
 
     function logout() {
         localStorage.clear();
-        window.location.href = 'index.html';
+        navigatePage('index');
     }
 </script>
 </body>
