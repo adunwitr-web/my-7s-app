@@ -1156,14 +1156,15 @@
                     firstName, 
                     lastName, 
                     role, 
-                    assignedArea: assignedArea ? assignedArea : null 
+                    // 🚀 บังคับส่งค่า "" ไปตรงๆ ถ้าไม่ล็อคพื้นที่
+                    assignedArea: assignedArea === "" ? "" : assignedArea 
                 })
             });
 
             const data = await res.json().catch(() => ({}));
 
             if (res.ok) {
-                alert('ลงทะเบียนบุคลากรใหม่สำเร็จ');
+                alert('✅ ลงทะเบียนบุคลากรใหม่สำเร็จ');
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('newEmail').value = '';
@@ -1172,10 +1173,10 @@
                 document.getElementById('newAssignedArea').value = '';
                 loadUsers();
             } else {
-                alert('สร้างไม่สำเร็จ: ' + (data.message || 'กรุณาเช็กว่า Username หรือ Email ซ้ำกับที่มีอยู่หรือไม่'));
+                alert('❌ สร้างไม่สำเร็จ: ' + (data.message || 'ข้อมูลอาจซ้ำ'));
             }
         } catch (err) {
-            alert('ระบบขัดข้อง');
+            alert('❌ ระบบขัดข้อง');
         }
     }
 
@@ -1242,8 +1243,8 @@
             firstName, 
             lastName, 
             role, 
-            // 🚀 เปลี่ยนกลับมาส่งค่า null ถ้าไม่ได้เลือกพื้นที่ (Database มักจะจัดการ null ได้ดีกว่า)
-            assignedArea: assignedArea ? assignedArea : null 
+            // 🚀 บังคับส่งค่า "" ไปตรงๆ ถ้าต้องการล้างการล็อคพื้นที่
+            assignedArea: assignedArea === "" ? "" : assignedArea 
         };
         
         if (password) {
@@ -1268,12 +1269,7 @@
             if (res.ok) {
                 alert('✅ ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
                 closeEditModal();
-                
-                // ⏳ หน่วงเวลา 400ms ให้ Database ด้านหลังบันทึกข้อมูลเสร็จชัวร์ๆ ค่อยสั่งโหลดตารางใหม่
-                setTimeout(() => {
-                    loadUsers();
-                }, 400);
-
+                setTimeout(() => { loadUsers(); }, 400);
             } else {
                 const data = await res.json().catch(() => ({}));
                 alert('❌ ปรับปรุงข้อมูลไม่สำเร็จ: ' + (data.message || 'ข้อมูลอาจซ้ำซ้อน'));

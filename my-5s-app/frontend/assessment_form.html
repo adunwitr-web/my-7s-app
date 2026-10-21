@@ -567,7 +567,6 @@
         const isAdmin = user && user.role === 'Admin';
         let assignedVal = user ? user.assignedArea : null;
 
-        // 1. คลีนค่าที่ได้จาก User ให้อ่านง่าย
         if (assignedVal && typeof assignedVal === 'object') {
             assignedVal = assignedVal.category || assignedVal.areaName || assignedVal.name || "";
         }
@@ -575,11 +574,27 @@
             assignedVal = assignedVal.trim();
         }
 
-        // 2. ถ้าเป็น Admin หรือ "ผู้ประเมินที่ไม่ล็อคพื้นที่" ให้เลือกได้อิสระ
+        // กรณี Admin หรือ พวกที่ไม่ล็อคพื้นที่ (ประเมินได้หมด)
         if (isAdmin || !assignedVal || assignedVal === "" || assignedVal.includes("ไม่ล็อค")) {
             if (catSelect) {
                 catSelect.disabled = false;
                 catSelect.style.backgroundColor = "#ffffff";
+                
+                // ดึงหมวดหมู่กลับมาให้ครบเผื่อโดนลบทิ้งไปตอนแรก
+                catSelect.innerHTML = `
+                    <option value="">-- โปรดเลือกประเภทพื้นที่ --</option>
+                    <option value="สำนักงานฯ - ห้องพักอาจารย์">สำนักงานฯ - ห้องพักอาจารย์</option>
+                    <option value="ห้องเรียน">ห้องเรียน</option>
+                    <option value="ห้องปฏิบัติการทดลอง">ห้องปฏิบัติการทดลอง</option>
+                    <option value="ห้องสมุด">ห้องสมุด</option>
+                    <option value="โรงฝึกงาน">โรงฝึกงาน</option>
+                    <option value="ห้องปฏิบัติการวิชาชีพ">ห้องปฏิบัติการวิชาชีพ</option>
+                    <option value="ห้องปฏิบัติคอมพิวเตอร์">ห้องปฏิบัติคอมพิวเตอร์</option>
+                    <option value="โรงอาหาร - ซุ้มอาหาร">โรงอาหาร - ซุ้มอาหาร</option>
+                    <option value="ภูมิทัศน์และพื้นที่ส่วนกลาง">ภูมิทัศน์และพื้นที่ส่วนกลาง</option>
+                    <option value="ห้องประชุมและหอประชุม">ห้องประชุมและหอประชุม</option>
+                    <option value="อาคารสถานที่ และความปลอดภัยอาคาร">อาคารสถานที่ และความปลอดภัยอาคาร</option>
+                `;
             }
             if (areaSelect) areaSelect.disabled = false;
             if (lockNoticeTag) lockNoticeTag.style.display = 'none';
@@ -587,10 +602,9 @@
             if (catSelect && !catSelect.value) catSelect.value = "สำนักงานฯ - ห้องพักอาจารย์";
             onCategoryChanged();
         } else {
-            // 3. กรณี User ถูกล็อคพื้นที่ (เป็น Owner หรือ Assessor ที่รับผิดชอบหมวดนั้น)
+            // 🚨 กรณี User ถูกล็อคพื้นที่!
             let lockedCategory = assignedVal;
 
-            // ป้องกันกรณีแอดมินเผลอพิมพ์ผิด ให้ค้นหาให้ตรงกับ rattaData
             if (!rattaData[lockedCategory]) {
                 for (const [cat, rooms] of Object.entries(rattaData)) {
                     if (rooms.some(r => r.includes(lockedCategory) || lockedCategory.includes(r))) {
@@ -602,21 +616,21 @@
 
             if (lockedCategory && rattaData[lockedCategory]) {
                 if (catSelect) {
-                    catSelect.value = lockedCategory;
-                    catSelect.disabled = true; // 🔒 ล็อคพื้นที่หลัก
-                    catSelect.style.backgroundColor = "#e2e8f0"; // เปลี่ยนสีให้รู้ว่าถูกล็อค
+                    // 🚀 ไม้ตาย: ลบ Option อื่นทิ้งให้หมด บังคับให้มีแค่ตัวเดียวที่โดนล็อค!
+                    catSelect.innerHTML = `<option value="${lockedCategory}" selected>${lockedCategory}</option>`;
+                    catSelect.disabled = true; // ปิดไม่ให้กด
+                    catSelect.style.backgroundColor = "#e2e8f0"; 
                 }
                 
-                // 🔄 ดึง "ห้องย่อย" มาใส่ Dropdown ทันที!
                 onCategoryChanged();
 
                 if (areaSelect) {
-                    areaSelect.disabled = false; // เปิดให้เลือกห้องย่อย
+                    areaSelect.disabled = false; 
                 }
 
                 if (lockNoticeTag) {
                     lockNoticeTag.style.display = 'inline-block';
-                    lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่หลัก: ${lockedCategory})`;
+                    lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategory})`;
                 }
             } else {
                 onCategoryChanged();
