@@ -451,7 +451,7 @@
         <div class="table-responsive">
             <table class="gov-table">
                 <thead>
-                    <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>หมวดหมู่หลักรับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
+                    <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>พื้นที่รับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
                 </thead>
                 <tbody id="userTableBody"></tbody>
             </table>
@@ -494,7 +494,7 @@
             </select>
         </div>
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">หมวดหมู่หลักรับผิดชอบ:</label>
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">พื้นที่รับผิดชอบ:</label>
             <select id="editAssignedArea" class="form-control">
                 <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
             </select>
@@ -1047,18 +1047,42 @@
     async function openUserModal() {
         document.getElementById('userModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
-        loadAreasForSelect(); // เรียกแค่ระบบดึง String ล้วนๆ ไม่ต้อง Fetch API แล้ว
+        await loadAreasForSelect(); // ต้องดึง API พื้นที่ให้เสร็จก่อน
         await loadUsers();
     }
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    // แก้ไขใหม่ ไม่ต้อง Fetch API เอาแค่ Categories ล้วนๆ
-    function loadAreasForSelect() {
+    // กลับมา Fetch API เพื่อเอา _id ไปส่งให้ Backend บันทึก (สำคัญมาก ไม่งั้น Backend เตะทิ้ง)
+    async function loadAreasForSelect() {
+        const token = localStorage.getItem('authToken');
         let optionsHtml = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
-        categoriesList.forEach(cat => {
-            optionsHtml += `<option value="${cat}">${cat}</option>`;
-        });
+
+        try {
+            let res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
+            let areas = [];
+            if (res.ok) {
+                areas = await res.json();
+            } else {
+                let res2 = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res2.ok) areas = await res2.json();
+            }
+
+            if (areas && areas.length > 0) {
+                areas.forEach(a => {
+                    // จัดรูปแบบให้สวยงาม เช่น "ห้องเรียน (อาคาร A)" เป็นต้น ซ่อน _id ไว้ใน value
+                    const displayName = a.areaName ? `${a.category} - ${a.areaName}` : a.category;
+                    optionsHtml += `<option value="${a._id}">${displayName}</option>`;
+                });
+            } else {
+                // Fallback กรณี DB ไม่มีข้อมูล
+                categoriesList.forEach(cat => {
+                    optionsHtml += `<option value="${cat}">${cat}</option>`;
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching areas:', err);
+        }
 
         const newSelect = document.getElementById('newAssignedArea');
         const editSelect = document.getElementById('editAssignedArea');
@@ -1097,9 +1121,12 @@
                 if (u.assignedArea) {
                     let aVal = '';
                     if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
-                        aVal = u.assignedArea.category || u.assignedArea.areaName || u.assignedArea.name || '-';
+                        // ปรับให้โชว์ข้อมูลครบถ้วนขึ้น
+                        aVal = u.assignedArea.areaName ? `${u.assignedArea.category} - ${u.assignedArea.areaName}` : (u.assignedArea.category || '-');
                     } else {
-                        aVal = u.assignedArea;
+                        // ถ้า Backend คืนมาเป็น ID เพียวๆ ให้พยายามหาชื่อจาก dropdown
+                        const opt = document.querySelector(`#newAssignedArea option[value="${u.assignedArea}"]`);
+                        aVal = opt ? opt.innerText : 'มีพื้นที่รับผิดชอบ (ID)';
                     }
                     areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${aVal}</b>`;
                 }
@@ -1188,16 +1215,11 @@
         if (editSelect) {
             editSelect.value = ""; // รีเซ็ตก่อน
             if (user.assignedArea) {
-                // เช็คให้ตรงกับหมวดหมู่หลักใน Dropdown อย่างแม่นยำ
-                if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                    let catMatch = user.assignedArea.category || user.assignedArea.areaName || "";
-                    if (categoriesList.includes(catMatch)) {
-                        editSelect.value = catMatch;
-                    }
+                // จับคู่กับ _id ของ Area ที่ดึงมาจาก Backend
+                if (typeof user.assignedArea === 'object' && user.assignedArea._id) {
+                    editSelect.value = user.assignedArea._id;
                 } else if (typeof user.assignedArea === 'string') {
-                    if (categoriesList.includes(user.assignedArea)) {
-                        editSelect.value = user.assignedArea;
-                    }
+                    editSelect.value = user.assignedArea;
                 }
             }
         }
@@ -1219,7 +1241,6 @@
 
         const token = localStorage.getItem('authToken');
         
-        // ตอนนี้ assignedArea จะส่งไปเป็น String หมวดหมู่หลักตรงๆ ซึ่ง Backend จะไม่ตีกับ Object ID แล้ว
         const bodyData = {
             username, 
             email, 
