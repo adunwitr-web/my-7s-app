@@ -1047,38 +1047,18 @@
     async function openUserModal() {
         document.getElementById('userModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
-        await loadAreasForSelect();
+        loadAreasForSelect(); // เรียกแค่ระบบดึง String ล้วนๆ ไม่ต้อง Fetch API แล้ว
         await loadUsers();
     }
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    async function loadAreasForSelect() {
+    // แก้ไขใหม่ ไม่ต้อง Fetch API เอาแค่ Categories ล้วนๆ
+    function loadAreasForSelect() {
         let optionsHtml = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
-        optionsHtml += '<optgroup label="📌 ล็อคระดับหมวดหมู่หลัก">';
         categoriesList.forEach(cat => {
             optionsHtml += `<option value="${cat}">${cat}</option>`;
         });
-        optionsHtml += '</optgroup>';
-
-        try {
-            const token = localStorage.getItem('authToken');
-            let res = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
-            
-            if (res.ok) {
-                const areas = await res.json();
-                if (Array.isArray(areas) && areas.length > 0) {
-                    optionsHtml += '<optgroup label="🏢 ล็อครายห้อง/รายสถานที่ (Database Areas)">';
-                    areas.forEach(a => {
-                        optionsHtml += `<option value="${a._id}">${a.areaName} (${a.category || 'ทั่วไป'})</option>`;
-                    });
-                    optionsHtml += '</optgroup>';
-                }
-            }
-        } catch (e) {
-            console.error("Error loading DB areas for select:", e);
-        }
 
         const newSelect = document.getElementById('newAssignedArea');
         const editSelect = document.getElementById('editAssignedArea');
@@ -1206,18 +1186,18 @@
 
         const editSelect = document.getElementById('editAssignedArea');
         if (editSelect) {
-            editSelect.value = "";
+            editSelect.value = ""; // รีเซ็ตก่อน
             if (user.assignedArea) {
+                // เช็คให้ตรงกับหมวดหมู่หลักใน Dropdown อย่างแม่นยำ
                 if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                    if (user.assignedArea._id) editSelect.value = user.assignedArea._id;
-                    if (editSelect.selectedIndex === -1 && user.assignedArea.category) {
-                        editSelect.value = user.assignedArea.category;
-                    }
-                    if (editSelect.selectedIndex === -1 && user.assignedArea.areaName) {
-                        editSelect.value = user.assignedArea.areaName;
+                    let catMatch = user.assignedArea.category || user.assignedArea.areaName || "";
+                    if (categoriesList.includes(catMatch)) {
+                        editSelect.value = catMatch;
                     }
                 } else if (typeof user.assignedArea === 'string') {
-                    editSelect.value = user.assignedArea;
+                    if (categoriesList.includes(user.assignedArea)) {
+                        editSelect.value = user.assignedArea;
+                    }
                 }
             }
         }
@@ -1239,6 +1219,7 @@
 
         const token = localStorage.getItem('authToken');
         
+        // ตอนนี้ assignedArea จะส่งไปเป็น String หมวดหมู่หลักตรงๆ ซึ่ง Backend จะไม่ตีกับ Object ID แล้ว
         const bodyData = {
             username, 
             email, 
@@ -1247,6 +1228,7 @@
             role, 
             assignedArea: assignedArea ? assignedArea : null
         };
+        
         if (password) {
             bodyData.password = password;
         }
