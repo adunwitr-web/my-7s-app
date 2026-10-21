@@ -1189,7 +1189,7 @@
             editSelect.value = ""; // รีเซ็ตก่อน
             let currentArea = "";
             
-            // แปลงค่าที่มาจาก DB ให้เป็น String พื้นที่หลักชัดเจน
+            // แปลงค่าที่มาจาก DB ให้เป็น String 
             if (user.assignedArea) {
                 if (typeof user.assignedArea === 'object' && user.assignedArea.category) {
                     currentArea = user.assignedArea.category.trim();
@@ -1198,24 +1198,21 @@
                 }
             }
             
-            // วนลูปจับคู่เพื่อ Select Dropdown ให้อัตโนมัติ 100%
             let matched = false;
             for(let i = 0; i < editSelect.options.length; i++) {
-                if(editSelect.options[i].value === currentArea || currentArea.includes(editSelect.options[i].value)) {
-                    editSelect.value = editSelect.options[i].value;
+                const optVal = editSelect.options[i].value;
+                // แก้บั๊กตรงนี้: ห้ามให้ optVal เป็นค่าว่างไปเข้าเงื่อนไข .includes() เด็ดขาด
+                if(optVal !== "" && (optVal === currentArea || currentArea.includes(optVal))) {
+                    editSelect.value = optVal;
                     matched = true;
                     break;
                 }
             }
-            if (!matched && currentArea) {
-                editSelect.value = ""; // ถ้าหาไม่เจอจริงๆ ให้กลับไปค่าตั้งต้น
+            if (!matched) {
+                editSelect.value = ""; 
             }
         }
         document.getElementById('editUserModal').style.display = 'flex';
-    }
-
-    function closeEditModal() {
-        document.getElementById('editUserModal').style.display = 'none';
     }
 
     async function submitEditUser() {
@@ -1235,7 +1232,7 @@
             firstName, 
             lastName, 
             role, 
-            assignedArea: assignedArea ? assignedArea : null
+            assignedArea: assignedArea ? assignedArea : "" // ส่งค่าว่างไปแทน null เพื่อให้ Database อัปเดตเคลียร์ค่าได้ชัวร์กว่า
         };
         
         if (password) {
@@ -1258,15 +1255,15 @@
             }
 
             if (res.ok) {
-                alert('ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
+                alert('✅ ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
                 closeEditModal();
-                loadUsers();
+                loadUsers(); // โหลดตารางใหม่ทันที
             } else {
                 const data = await res.json().catch(() => ({}));
-                alert('ปรับปรุงข้อมูลไม่สำเร็จ: ' + (data.message || ''));
+                alert('❌ ปรับปรุงข้อมูลไม่สำเร็จ: ' + (data.message || 'ข้อมูลอาจซ้ำซ้อน'));
             }
         } catch (err) {
-            alert('ระบบขัดข้อง');
+            alert('❌ ระบบขัดข้อง ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้');
         }
     }
 
