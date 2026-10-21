@@ -576,11 +576,9 @@
             onCategoryChanged();
         } else {
             let lockedCategory = null;
-            let lockedRoom = null;
 
             if (typeof assignedVal === 'object' && assignedVal !== null) {
-                lockedCategory = assignedVal.category;
-                lockedRoom = assignedVal.areaName;
+                lockedCategory = assignedVal.category || assignedVal.areaName;
             } else if (typeof assignedVal === 'string') {
                 if (rattaData[assignedVal]) {
                     lockedCategory = assignedVal;
@@ -588,7 +586,6 @@
                     for (const [cat, rooms] of Object.entries(rattaData)) {
                         if (rooms.some(r => r.includes(assignedVal) || assignedVal.includes(r))) {
                             lockedCategory = cat;
-                            lockedRoom = assignedVal;
                             break;
                         }
                     }
@@ -601,30 +598,16 @@
                     catSelect.value = lockedCategory;
                     catSelect.disabled = true;
                 }
+                
                 onCategoryChanged();
 
-                if (lockedRoom && areaSelect) {
-                    let foundIdx = -1;
-                    for (let i = 0; i < areaSelect.options.length; i++) {
-                        const opt = areaSelect.options[i];
-                        if (opt.text.includes(lockedRoom) || lockedRoom.includes(opt.text)) {
-                            foundIdx = i;
-                            break;
-                        }
-                    }
-                    if (foundIdx !== -1) {
-                        areaSelect.selectedIndex = foundIdx;
-                        areaSelect.disabled = true;
-                    } else {
-                        areaSelect.disabled = false;
-                    }
-                } else if (areaSelect) {
+                if (areaSelect) {
                     areaSelect.disabled = false;
                 }
 
                 if (lockNoticeTag) {
                     lockNoticeTag.style.display = 'inline-block';
-                    lockNoticeTag.innerText = `🔒 (ล็อคสิทธิ์ประเมิน: ${lockedRoom || lockedCategory})`;
+                    lockNoticeTag.innerText = `🔒 (ล็อคสิทธิ์ประเมิน: ${lockedCategory})`;
                 }
             }
         }

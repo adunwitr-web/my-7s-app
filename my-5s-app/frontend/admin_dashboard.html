@@ -1047,42 +1047,18 @@
     async function openUserModal() {
         document.getElementById('userModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
-        await loadAreasForSelect(); // ต้องดึง API พื้นที่ให้เสร็จก่อน
+        await loadAreasForSelect(); 
         await loadUsers();
     }
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    // กลับมา Fetch API เพื่อเอา _id ไปส่งให้ Backend บันทึก (สำคัญมาก ไม่งั้น Backend เตะทิ้ง)
     async function loadAreasForSelect() {
-        const token = localStorage.getItem('authToken');
         let optionsHtml = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
 
-        try {
-            let res = await fetch(`${API_URL}/area`, { headers: { 'Authorization': `Bearer ${token}` } });
-            let areas = [];
-            if (res.ok) {
-                areas = await res.json();
-            } else {
-                let res2 = await fetch(`${API_URL}/areas`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res2.ok) areas = await res2.json();
-            }
-
-            if (areas && areas.length > 0) {
-                areas.forEach(a => {
-                    // จัดรูปแบบให้สวยงาม เช่น "ห้องเรียน (อาคาร A)" เป็นต้น ซ่อน _id ไว้ใน value
-                    const displayName = a.areaName ? `${a.category} - ${a.areaName}` : a.category;
-                    optionsHtml += `<option value="${a._id}">${displayName}</option>`;
-                });
-            } else {
-                // Fallback กรณี DB ไม่มีข้อมูล
-                categoriesList.forEach(cat => {
-                    optionsHtml += `<option value="${cat}">${cat}</option>`;
-                });
-            }
-        } catch (err) {
-            console.error('Error fetching areas:', err);
-        }
+        categoriesList.forEach(cat => {
+            optionsHtml += `<option value="${cat}">${cat}</option>`;
+        });
 
         const newSelect = document.getElementById('newAssignedArea');
         const editSelect = document.getElementById('editAssignedArea');
@@ -1121,12 +1097,9 @@
                 if (u.assignedArea) {
                     let aVal = '';
                     if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
-                        // ปรับให้โชว์ข้อมูลครบถ้วนขึ้น
-                        aVal = u.assignedArea.areaName ? `${u.assignedArea.category} - ${u.assignedArea.areaName}` : (u.assignedArea.category || '-');
+                        aVal = u.assignedArea.category || u.assignedArea.areaName || '-';
                     } else {
-                        // ถ้า Backend คืนมาเป็น ID เพียวๆ ให้พยายามหาชื่อจาก dropdown
-                        const opt = document.querySelector(`#newAssignedArea option[value="${u.assignedArea}"]`);
-                        aVal = opt ? opt.innerText : 'มีพื้นที่รับผิดชอบ (ID)';
+                        aVal = u.assignedArea;
                     }
                     areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${aVal}</b>`;
                 }
@@ -1215,9 +1188,8 @@
         if (editSelect) {
             editSelect.value = ""; // รีเซ็ตก่อน
             if (user.assignedArea) {
-                // จับคู่กับ _id ของ Area ที่ดึงมาจาก Backend
-                if (typeof user.assignedArea === 'object' && user.assignedArea._id) {
-                    editSelect.value = user.assignedArea._id;
+                if (typeof user.assignedArea === 'object' && user.assignedArea.category) {
+                    editSelect.value = user.assignedArea.category;
                 } else if (typeof user.assignedArea === 'string') {
                     editSelect.value = user.assignedArea;
                 }
