@@ -373,7 +373,6 @@
             <button onclick="closeCorrectionModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
         </div>
 
-        <!-- 📌 แสดงรายการข้อบกพร่องที่ไม่ผ่านเกณฑ์ -->
         <div style="background: #fff7ed; border-left: 4px solid #ea580c; padding: 14px; border-radius: 4px; margin-bottom: 16px;">
             <p style="margin: 0 0 6px 0; font-weight: 700; color: #9a3412; font-size: 0.95em;">📌 รายการจุดบกพร่องที่ไม่ผ่านเกณฑ์การประเมิน:</p>
             <div id="failedItemsListContainer" style="margin-top: 6px; font-size: 0.9em; color: #7c2d12;"></div>
@@ -412,11 +411,10 @@
     let ownerChartInstance = null;
 
     function navigatePage(key) {
-        const isNumbered = window.location.pathname.includes('_');
-        if (key === 'index') window.location.href = isNumbered ? 'index_5.html' : 'index.html';
-        else if (key === 'owner') window.location.href = isNumbered ? 'owner_dashboard_5.html' : 'owner_dashboard.html';
-        else if (key === 'assessor') window.location.href = isNumbered ? 'assessment_form_8.html' : 'assessment_form.html';
-        else if (key === 'admin') window.location.href = isNumbered ? 'admin_dashboard_10.html' : 'admin_dashboard.html';
+        if (key === 'index') window.location.href = 'index.html';
+        else if (key === 'owner') window.location.href = 'owner_dashboard.html';
+        else if (key === 'assessor') window.location.href = 'assessment_form.html';
+        else if (key === 'admin') window.location.href = 'admin_dashboard.html';
     }
 
     window.onload = function() {
@@ -682,7 +680,6 @@
         document.getElementById('ownerFixPreviewContainer').style.display = 'none';
         ownerFixPhotoBase64 = '';
 
-        // 📌 แสดงรายการจุดที่ไม่ผ่านเกณฑ์
         const failedItemsContainer = document.getElementById('failedItemsListContainer');
         failedItemsContainer.innerHTML = '';
 

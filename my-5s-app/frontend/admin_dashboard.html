@@ -660,11 +660,10 @@
     ];
 
     function navigatePage(key) {
-        const isNumbered = window.location.pathname.includes('_');
-        if (key === 'index') window.location.href = isNumbered ? 'index_5.html' : 'index.html';
-        else if (key === 'owner') window.location.href = isNumbered ? 'owner_dashboard_5.html' : 'owner_dashboard.html';
-        else if (key === 'assessor') window.location.href = isNumbered ? 'assessment_form_8.html' : 'assessment_form.html';
-        else if (key === 'admin') window.location.href = isNumbered ? 'admin_dashboard_11.html' : 'admin_dashboard.html';
+        if (key === 'index') window.location.href = 'index.html';
+        else if (key === 'owner') window.location.href = 'owner_dashboard.html';
+        else if (key === 'assessor') window.location.href = 'assessment_form.html';
+        else if (key === 'admin') window.location.href = 'admin_dashboard.html';
     }
 
     window.onload = function() {
@@ -736,9 +735,9 @@
                 const btnPDF = `<button onclick="downloadPDF('${item._id}')" class="btn-table" style="background:#0ea5e9; color:white;">โหลด PDF</button>`;
 
                 if (item.status === 'Needs Improvement') {
-                    if (tbNeedsFix) tbNeedsFix.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b style="color:#b91c1c;">${item.percentage}%</b></td><td>${btnView} ${btnEdit} ${btnPDF}</td></tr>`;
+                    if (tbNeedsFix) tbNeedsFix.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b style="color:#b91c1c;">${item.percentage}%</b></td><td>${btnView} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
                 } else if (item.status === 'Passed') {
-                    tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnEdit} ${btnPDF}</td></tr>`;
+                    tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
                 } else if (item.status === 'Corrected') {
                     const submitDate = item.correctionData?.submittedAt ? new Date(item.correctionData.submittedAt).toLocaleDateString('th-TH') : date;
                     tbPendingReview.innerHTML += `<tr><td>${submitDate}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
@@ -1081,7 +1080,7 @@
             users.forEach(u => {
                 let areaDisplay = '<span style="color:#64748b;">ทุกพื้นที่ (ไม่ล็อค)</span>';
                 if (u.assignedArea) {
-                    const aVal = typeof u.assignedArea === 'object' ? (u.assignedArea.areaName || u.assignedArea.category || '-') : u.assignedArea;
+                    const aVal = typeof u.assignedArea === 'object' ? (u.assignedArea.category || u.assignedArea.areaName || '-') : u.assignedArea;
                     areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${aVal}</b>`;
                 }
                 tbody.innerHTML += `
@@ -1167,9 +1166,21 @@
 
         let currentArea = "";
         if (user.assignedArea) {
-            currentArea = typeof user.assignedArea === 'object' ? (user.assignedArea.category || user.assignedArea.areaName || '') : user.assignedArea;
+            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
+                currentArea = user.assignedArea._id || user.assignedArea.category || user.assignedArea.areaName || '';
+            } else {
+                currentArea = user.assignedArea;
+            }
         }
-        document.getElementById('editAssignedArea').value = currentArea;
+        
+        const editSelect = document.getElementById('editAssignedArea');
+        if (editSelect) {
+            editSelect.value = currentArea;
+            if (editSelect.selectedIndex === -1 && typeof user.assignedArea === 'object' && user.assignedArea !== null) {
+                const fallback = user.assignedArea.category || user.assignedArea.areaName;
+                if (fallback) editSelect.value = fallback;
+            }
+        }
         document.getElementById('editUserModal').style.display = 'flex';
     }
 

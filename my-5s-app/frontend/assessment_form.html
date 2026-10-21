@@ -403,7 +403,6 @@
 <script>
     const API_URL = 'https://my-7s-app.onrender.com/api';
 
-    // 📌 ข้อมูลห้องและสถานที่ทั้งหมดจากไฟล์ Excel (วิทยาลัยรัตภูมิ) แยกตาม 11 หมวดหมู่หลัก
     const rattaData = {
         "สำนักงานฯ - ห้องพักอาจารย์": [
             "1. งานทะเบียนและวัดผล (MS 9105)",
@@ -498,11 +497,10 @@
     let currentActiveRoundText = '';
 
     function navigatePage(key) {
-        const isNumbered = window.location.pathname.includes('_');
-        if (key === 'index') window.location.href = isNumbered ? 'index_5.html' : 'index.html';
-        else if (key === 'owner') window.location.href = isNumbered ? 'owner_dashboard_5.html' : 'owner_dashboard.html';
-        else if (key === 'assessor') window.location.href = isNumbered ? 'assessment_form_8.html' : 'assessment_form.html';
-        else if (key === 'admin') window.location.href = isNumbered ? 'admin_dashboard_10.html' : 'admin_dashboard.html';
+        if (key === 'index') window.location.href = 'index.html';
+        else if (key === 'owner') window.location.href = 'owner_dashboard.html';
+        else if (key === 'assessor') window.location.href = 'assessment_form.html';
+        else if (key === 'admin') window.location.href = 'admin_dashboard.html';
     }
 
     window.onload = function() {
@@ -569,9 +567,7 @@
         const isAdmin = user && user.role === 'Admin';
         const assignedVal = user ? user.assignedArea : null;
 
-        // 🔒 ตรวจสอบระบบล็อคพื้นที่ผู้ประเมินตามสิทธิ์ User
         if (isAdmin || !assignedVal) {
-            // ไม่ล็อค สามารถประเมินได้ทุกพื้นที่
             if (catSelect) catSelect.disabled = false;
             if (areaSelect) areaSelect.disabled = false;
             if (lockNoticeTag) lockNoticeTag.style.display = 'none';
@@ -579,7 +575,6 @@
             if (catSelect && !catSelect.value) catSelect.value = "สำนักงานฯ - ห้องพักอาจารย์";
             onCategoryChanged();
         } else {
-            // ล็อคพื้นที่สำหรับ User ที่มีการกำหนดพื้นที่รับผิดชอบไว้
             let lockedCategory = null;
             let lockedRoom = null;
 
@@ -635,17 +630,6 @@
         }
     }
 
-    function getCategoryByRoomName(roomName) {
-        if (!roomName) return "สำนักงานฯ - ห้องพักอาจารย์";
-        for (const [cat, rooms] of Object.entries(rattaData)) {
-            if (rooms.some(r => r.includes(roomName) || roomName.includes(r))) {
-                return cat;
-            }
-        }
-        return "สำนักงานฯ - ห้องพักอาจารย์";
-    }
-
-    // 📌 ดึงรายการห้องจาก Excel (rattaData) แสดงผลใน Dropdown ให้ครบ 100%
     function onCategoryChanged() {
         const cat = document.getElementById('categorySelect').value;
         const areaSelect = document.getElementById('areaSelect');
@@ -665,7 +649,6 @@
 
         const addedNames = new Set();
 
-        // 1. เพิ่มห้องทั้งหมดจากไฟล์ Excel
         excelRooms.forEach(roomText => {
             const dbMatch = dbMatchingRooms.find(db => 
                 db.areaName === roomText || 
@@ -682,7 +665,6 @@
             }
         });
 
-        // 2. เพิ่มห้องที่อาจจะมาจาก DB เพิ่มเติม
         dbMatchingRooms.forEach(db => {
             if (!addedNames.has(db.areaName)) {
                 areaSelect.innerHTML += `<option value="${db._id}">${db.areaName}</option>`;
