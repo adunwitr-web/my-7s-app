@@ -417,14 +417,45 @@
         else if (key === 'admin') window.location.href = 'admin_dashboard.html';
     }
 
-    window.onload = function() {
+
+    // ✅ ดึงข้อมูลสิทธิ์ล่าสุดจากเซิร์ฟเวอร์ทุกครั้งที่เปิดหน้า (แก้ปัญหา assignedArea ค้างใน localStorage)
+    async function refreshUserData() {
+        const token = localStorage.getItem('authToken');
+        let old = null;
+        try { old = JSON.parse(localStorage.getItem('userData') || 'null'); } catch (e) {}
+        try {
+            const res = await fetch(`${API_URL}/auth/me?_t=${Date.now()}`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+                cache: 'no-store'
+            });
+            if (res.status === 401) {
+                localStorage.clear();
+                navigatePage('index');
+                return null;
+            }
+            if (res.ok) {
+                const d = await res.json();
+                const fresh = d.user || d;
+                if (fresh && fresh.username) {
+                    // ต้อง set assignedArea ชัดเจน ไม่งั้นค่าเก่าจะค้างเมื่อ server ไม่ส่ง key นี้มา (null/"")
+                    const merged = { ...old, ...fresh, assignedArea: fresh.assignedArea ?? '' };
+                    localStorage.setItem('userData', JSON.stringify(merged));
+                    return merged;
+                }
+            }
+        } catch (e) { console.warn('refreshUserData failed, using cached user', e); }
+        return old;
+    }
+
+    window.onload = async function() {
         const token = localStorage.getItem('authToken');
         const userStr = localStorage.getItem('userData');
         if (!token || !userStr) {
             navigatePage('index');
             return;
         }
-        const user = JSON.parse(userStr);
+        const user = await refreshUserData();
+        if (!user) return;
         document.getElementById('ownerName').innerText = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
         
         if (user.role && user.role.includes('&')) {
