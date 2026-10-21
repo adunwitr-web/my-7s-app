@@ -1201,7 +1201,6 @@
             let matched = false;
             for(let i = 0; i < editSelect.options.length; i++) {
                 const optVal = editSelect.options[i].value;
-                // แก้บั๊กตรงนี้: ห้ามให้ optVal เป็นค่าว่างไปเข้าเงื่อนไข .includes() เด็ดขาด
                 if(optVal !== "" && (optVal === currentArea || currentArea.includes(optVal))) {
                     editSelect.value = optVal;
                     matched = true;
@@ -1213,6 +1212,11 @@
             }
         }
         document.getElementById('editUserModal').style.display = 'flex';
+    }
+
+    // 🚨 ฟังก์ชันนี้แหละที่หายไป กูเติมกลับมาให้แล้ว!
+    function closeEditModal() {
+        document.getElementById('editUserModal').style.display = 'none';
     }
 
     async function submitEditUser() {
@@ -1232,7 +1236,7 @@
             firstName, 
             lastName, 
             role, 
-            assignedArea: assignedArea ? assignedArea : "" // ส่งค่าว่างไปแทน null เพื่อให้ Database อัปเดตเคลียร์ค่าได้ชัวร์กว่า
+            assignedArea: assignedArea ? assignedArea : "" 
         };
         
         if (password) {
@@ -1256,8 +1260,8 @@
 
             if (res.ok) {
                 alert('✅ ปรับปรุงข้อมูลทะเบียนบุคลากรสำเร็จ');
-                closeEditModal();
-                loadUsers(); // โหลดตารางใหม่ทันที
+                closeEditModal(); // พอมันเจอคำสั่งนี้ มันจะปิดหน้าต่างได้ปกติแล้ว
+                loadUsers(); 
             } else {
                 const data = await res.json().catch(() => ({}));
                 alert('❌ ปรับปรุงข้อมูลไม่สำเร็จ: ' + (data.message || 'ข้อมูลอาจซ้ำซ้อน'));
