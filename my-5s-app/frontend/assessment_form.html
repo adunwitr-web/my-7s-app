@@ -503,14 +503,49 @@
         else if (key === 'admin') window.location.href = 'admin_dashboard.html';
     }
 
-    window.onload = function() {
+
+    // ✅ ดึงสิทธิ์ล่าสุดจากเซิร์ฟเวอร์ทุกครั้งที่เปิดหน้า (แก้ปัญหาสิทธิ์พื้นที่ค้างใน localStorage ตอน Login)
+    async function refreshUserData() {
+        const token = localStorage.getItem('authToken');
+        let old = null;
+        try { old = JSON.parse(localStorage.getItem('userData') || 'null'); } catch (e) {}
+        try {
+            const res = await fetch(`${API_URL}/auth/me?_t=${Date.now()}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 401) {
+                localStorage.clear();
+                navigatePage('index');
+                return null;
+            }
+            if (res.ok) {
+                const d = await res.json();
+                const fresh = d.user || d;
+                if (fresh && fresh.username) {
+                    // ระบุฟิลด์สิทธิ์พื้นที่ชัดเจน เพื่อไม่ให้ค่าเก่าค้างเมื่อถูกปลดล็อค ("" / null)
+                    const merged = {
+                        ...old, ...fresh,
+                        assignedArea: fresh.assignedArea || '',
+                        assignedAreaName: fresh.assignedAreaName || '',
+                        assignedCategory: fresh.assignedCategory || ''
+                    };
+                    localStorage.setItem('userData', JSON.stringify(merged));
+                    return merged;
+                }
+            }
+        } catch (e) { console.warn('refreshUserData failed, using cached user', e); }
+        return old;
+    }
+
+    window.onload = async function() {
         const token = localStorage.getItem('authToken');
         const userStr = localStorage.getItem('userData');
         if (!token || !userStr) {
             navigatePage('index');
             return;
         }
-        const user = JSON.parse(userStr);
+        const user = await refreshUserData();
+        if (!user) return;
         const name = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
         document.getElementById('assessorName').innerText = name;
 
@@ -565,17 +600,29 @@
         const lockNoticeTag = document.getElementById('lockNoticeTag');
 
         const isAdmin = user && user.role === 'Admin';
-        let assignedVal = user ? user.assignedArea : null;
+        // ✅ สิทธิ์ล็อคพื้นที่ มี 2 ระดับ (ตรงกับที่ Admin ตั้งในทะเบียนบุคลากร)
+        //   - assignedCategory : ล็อคทั้งหมวดหมู่
+        //   - assignedArea     : ล็อคเฉพาะห้อง (id ของห้อง) — จะมี assignedCategory ของห้องนั้นคู่กันเสมอ
+        let assignedVal = '';
+        let lockedAreaId = '';
+        let lockedAreaName = '';
+        if (user && !isAdmin) {
+            assignedVal = String(user.assignedCategory || '').trim();
+            lockedAreaId = user.assignedArea ? String(user.assignedArea._id || user.assignedArea).trim() : '';
+            lockedAreaName = String(user.assignedAreaName || '').trim();
 
-        if (assignedVal && typeof assignedVal === 'object') {
-            assignedVal = assignedVal.category || assignedVal.areaName || assignedVal.name || "";
-        }
-        if (typeof assignedVal === 'string') {
-            assignedVal = assignedVal.trim();
+            // รองรับข้อมูลเก่าที่ยังไม่มี assignedCategory: หาหมวดหมู่จากห้องที่ล็อค
+            if (lockedAreaId) {
+                const lockedRoom = allAreasData.find(a => a._id === lockedAreaId);
+                if (lockedRoom) {
+                    assignedVal = assignedVal || String(lockedRoom.category || '').trim();
+                    lockedAreaName = lockedAreaName || lockedRoom.areaName;
+                }
+            }
         }
 
         // กรณี Admin หรือ พวกที่ไม่ล็อคพื้นที่ (ประเมินได้หมด)
-        if (isAdmin || !assignedVal || assignedVal === "" || assignedVal.includes("ไม่ล็อค")) {
+        if (isAdmin || (!assignedVal && !lockedAreaId) || assignedVal.includes("ไม่ล็อค")) {
             if (catSelect) {
                 catSelect.disabled = false;
                 catSelect.style.backgroundColor = "#ffffff";
@@ -605,35 +652,43 @@
             // 🚨 กรณี User ถูกล็อคพื้นที่!
             let lockedCategory = assignedVal;
 
-            if (!rattaData[lockedCategory]) {
-                for (const [cat, rooms] of Object.entries(rattaData)) {
-                    if (rooms.some(r => r.includes(lockedCategory) || lockedCategory.includes(r))) {
-                        lockedCategory = cat;
-                        break;
-                    }
+            // ชื่อหมวดหมู่จาก DB (Excel) อาจต่างจากรายการในฟอร์มเล็กน้อย -> จับคู่แบบยืดหยุ่น
+            const knownCats = Object.keys(rattaData);
+            if (!knownCats.includes(lockedCategory)) {
+                const fuzzy = knownCats.find(c => c.includes(lockedCategory) || lockedCategory.includes(c));
+                if (fuzzy) lockedCategory = fuzzy;
+            }
+
+            if (catSelect) {
+                // ลบ Option อื่นทิ้งให้หมด บังคับให้มีแค่หมวดหมู่ที่ถูกล็อค
+                catSelect.innerHTML = `<option value="${lockedCategory}" selected>${lockedCategory}</option>`;
+                catSelect.disabled = true;
+                catSelect.style.backgroundColor = "#e2e8f0";
+            }
+
+            onCategoryChanged();
+
+            let lockedRoomLabel = '';
+            if (areaSelect) {
+                if (lockedAreaId) {
+                    // ล็อคระดับห้อง: เหลือเฉพาะห้องที่ Admin มอบหมาย
+                    const lockedRoom = allAreasData.find(a => a._id === lockedAreaId);
+                    lockedRoomLabel = lockedRoom ? lockedRoom.areaName : (lockedAreaName || 'พื้นที่ที่ได้รับมอบหมาย');
+                    areaSelect.innerHTML = `<option value="${lockedAreaId}" selected>${lockedRoomLabel}</option>`;
+                    areaSelect.disabled = true;
+                    areaSelect.style.backgroundColor = "#e2e8f0";
+                    onAreaChanged();
+                } else {
+                    // ล็อคระดับหมวดหมู่: เลือกห้องย่อยในหมวดนี้ได้ตามปกติ
+                    areaSelect.disabled = false;
                 }
             }
 
-            if (lockedCategory && rattaData[lockedCategory]) {
-                if (catSelect) {
-                    // 🚀 ไม้ตาย: ลบ Option อื่นทิ้งให้หมด บังคับให้มีแค่ตัวเดียวที่โดนล็อค!
-                    catSelect.innerHTML = `<option value="${lockedCategory}" selected>${lockedCategory}</option>`;
-                    catSelect.disabled = true; // ปิดไม่ให้กด
-                    catSelect.style.backgroundColor = "#e2e8f0"; 
-                }
-                
-                onCategoryChanged();
-
-                if (areaSelect) {
-                    areaSelect.disabled = false; 
-                }
-
-                if (lockNoticeTag) {
-                    lockNoticeTag.style.display = 'inline-block';
-                    lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategory})`;
-                }
-            } else {
-                onCategoryChanged();
+            if (lockNoticeTag) {
+                lockNoticeTag.style.display = 'inline-block';
+                lockNoticeTag.innerText = lockedAreaId
+                    ? `🔒 (ระบบล็อคสิทธิ์เฉพาะห้อง: ${lockedRoomLabel})`
+                    : `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategory})`;
             }
         }
     }

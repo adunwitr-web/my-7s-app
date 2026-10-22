@@ -417,14 +417,49 @@
         else if (key === 'admin') window.location.href = 'admin_dashboard.html';
     }
 
-    window.onload = function() {
+
+    // ✅ ดึงสิทธิ์ล่าสุดจากเซิร์ฟเวอร์ทุกครั้งที่เปิดหน้า (แก้ปัญหาสิทธิ์พื้นที่ค้างใน localStorage ตอน Login)
+    async function refreshUserData() {
+        const token = localStorage.getItem('authToken');
+        let old = null;
+        try { old = JSON.parse(localStorage.getItem('userData') || 'null'); } catch (e) {}
+        try {
+            const res = await fetch(`${API_URL}/auth/me?_t=${Date.now()}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 401) {
+                localStorage.clear();
+                navigatePage('index');
+                return null;
+            }
+            if (res.ok) {
+                const d = await res.json();
+                const fresh = d.user || d;
+                if (fresh && fresh.username) {
+                    // ระบุฟิลด์สิทธิ์พื้นที่ชัดเจน เพื่อไม่ให้ค่าเก่าค้างเมื่อถูกปลดล็อค ("" / null)
+                    const merged = {
+                        ...old, ...fresh,
+                        assignedArea: fresh.assignedArea || '',
+                        assignedAreaName: fresh.assignedAreaName || '',
+                        assignedCategory: fresh.assignedCategory || ''
+                    };
+                    localStorage.setItem('userData', JSON.stringify(merged));
+                    return merged;
+                }
+            }
+        } catch (e) { console.warn('refreshUserData failed, using cached user', e); }
+        return old;
+    }
+
+    window.onload = async function() {
         const token = localStorage.getItem('authToken');
         const userStr = localStorage.getItem('userData');
         if (!token || !userStr) {
             navigatePage('index');
             return;
         }
-        const user = JSON.parse(userStr);
+        const user = await refreshUserData();
+        if (!user) return;
         document.getElementById('ownerName').innerText = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username;
         
         if (user.role && user.role.includes('&')) {

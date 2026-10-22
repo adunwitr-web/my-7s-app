@@ -441,7 +441,7 @@
                 </select>
                 <!-- 🟢 1. กล่องพื้นที่หลัก (จะเรียงต่อใน Grid อย่างสวยงาม) -->
                 <select id="newCategory" onchange="filterRoomsForNew()" class="form-control">
-                    <option value="">-- เลือกหมวดหมู่ / พื้นที่หลัก --</option>
+                    <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
                 </select>
 
                 <!-- 🟢 2. กล่องห้องย่อย (จะเรียงต่อใน Grid เช่นกัน) -->
@@ -502,7 +502,7 @@
         <div style="margin-bottom:12px;">
             <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">หมวดหมู่ / พื้นที่หลัก:</label>
             <select id="editCategory" onchange="filterRoomsForEdit()" class="form-control">
-                <option value="">-- เลือกหมวดหมู่ / พื้นที่หลัก --</option>
+                <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
             </select>
         </div>
 
@@ -1103,7 +1103,7 @@
                 // ตัดช่องว่างหน้า-หลังคำ ป้องกันปัญหาพิมพ์ผิดใน Excel
                 const categories = [...new Set(allAreasData.map(area => area.category ? area.category.trim() : ''))].filter(cat => cat !== '');
                 
-                let catOptions = '<option value="">-- เลือกหมวดหมู่ / พื้นที่หลัก --</option>';
+                let catOptions = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
                 categories.forEach(cat => {
                     catOptions += `<option value="${cat}">${cat}</option>`;
                 });
@@ -1138,7 +1138,7 @@
             }
 
             roomSelect.disabled = false;
-            let roomOptions = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
+            let roomOptions = '<option value="">-- ทุกห้องในหมวดนี้ (ล็อคทั้งหมวดหมู่) --</option>';
             
             // ดึงมาเฉพาะห้องที่ตรงกับหมวด (ใช้ trim() ให้ตรงกัน)
             const filteredRooms = allAreasData.filter(area => area.category && area.category.trim() === category);
@@ -1181,18 +1181,12 @@
 
             users.forEach(u => {
                 let areaDisplay = '<span style="color:#64748b;">ทุกพื้นที่ (ไม่ล็อค)</span>';
-                
-                // ดักจับให้ชัวร์ว่ามีค่า และไม่เป็นค่าว่าง
-                if (u.assignedArea && u.assignedArea !== "" && u.assignedArea !== "null") {
-                    let aVal = '';
-                    if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
-                        aVal = u.assignedArea.areaName || u.assignedArea.category || '-';
-                    } else {
-                        // ค้นหาชื่อห้องจากข้อมูลพื้นที่ทั้งหมด แทนที่จะแสดงเป็น ID ยาวๆ
-                        const foundArea = allAreasData.find(a => a._id === u.assignedArea || a.areaName === u.assignedArea);
-                        aVal = foundArea ? foundArea.areaName : u.assignedArea;
-                    }
-                    areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${aVal}</b>`;
+                const lockCat = String(u.assignedCategory || '').trim();
+                const lockRoom = String(u.assignedAreaName || '').trim();
+                if (lockRoom) {
+                    areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${lockRoom}</b><br><small style="color:#64748b;">${lockCat}</small>`;
+                } else if (lockCat) {
+                    areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ทั้งหมวด: ${lockCat}</b>`;
                 }
                 
                 tbody.innerHTML += `
@@ -1221,6 +1215,7 @@
         const lastName = document.getElementById('newLastName').value.trim();
         const role = document.getElementById('newRole').value;
         const assignedArea = document.getElementById('newAssignedArea').value;
+        const assignedCategory = (document.getElementById('newCategory')?.value || '').trim();
 
         if (!username || !email || !firstName) {
             alert('โปรดกรอกข้อมูลสำคัญให้ครบถ้วน');
@@ -1243,7 +1238,8 @@
                     lastName, 
                     role, 
                     // 🚀 บังคับส่งค่า "" ไปตรงๆ ถ้าไม่ล็อคพื้นที่
-                    assignedArea: assignedArea === "" ? "" : assignedArea 
+                    assignedCategory: assignedCategory,
+                    assignedArea: assignedArea
                 })
             });
 
@@ -1256,7 +1252,8 @@
                 document.getElementById('newEmail').value = '';
                 document.getElementById('newFirstName').value = '';
                 document.getElementById('newLastName').value = '';
-                document.getElementById('newAssignedArea').value = '';
+                document.getElementById('newCategory').value = '';
+                populateRooms('', 'newAssignedArea');
                 loadUsers();
             } else {
                 alert('❌ สร้างไม่สำเร็จ: ' + (data.message || 'ข้อมูลอาจซ้ำ'));
@@ -1287,30 +1284,16 @@
             editSelect.disabled = true;
         }
 
-        if (user.assignedArea && user.assignedArea !== "" && user.assignedArea !== "null") {
-            let assignedId = "";
-            let categoryName = "";
-
-            // ตรวจสอบข้อมูลห้องที่ผูกมา
-            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
-                assignedId = user.assignedArea._id || user.assignedArea;
-                categoryName = user.assignedArea.category || "";
-            } else {
-                assignedId = user.assignedArea;
-                // หาหมวดหมู่หลักจาก ID ห้อง
-                const foundArea = allAreasData.find(a => a._id === assignedId || a.areaName === assignedId);
-                if (foundArea) {
-                    categoryName = foundArea.category;
-                    assignedId = foundArea._id;
-                }
+        const lockCat = String(user.assignedCategory || '').trim();
+        const lockAreaId = user.assignedArea ? String(user.assignedArea._id || user.assignedArea) : '';
+        if (lockCat && editCategory) {
+            // ถ้าหมวดหมู่ยังไม่มีใน Dropdown ให้เพิ่มตัวเลือกชั่วคราว (กันกรณีโหลดพื้นที่ไม่ทัน)
+            if (![...editCategory.options].some(o => o.value === lockCat)) {
+                editCategory.insertAdjacentHTML('beforeend', `<option value="${lockCat}">${lockCat}</option>`);
             }
-
-            // ถ้าเจอข้อมูล ให้เซ็ตค่า Dropdown ทั้งสองช่องให้ตรงกับของเดิม
-            if (categoryName && editCategory && editSelect) {
-                editCategory.value = categoryName.trim();
-                filterRoomsForEdit(); // เรียกฟังก์ชันเปิด Dropdown ห้องย่อย
-                editSelect.value = assignedId; // เลือกห้องย่อยของ User คนนี้
-            }
+            editCategory.value = lockCat;
+            filterRoomsForEdit(); // เปิด Dropdown ห้องย่อยตามหมวดหมู่
+            if (editSelect && lockAreaId) editSelect.value = lockAreaId; // ว่าง = ล็อคทั้งหมวด
         }
         document.getElementById('editUserModal').style.display = 'flex';
     }
@@ -1328,6 +1311,7 @@
         const role = document.getElementById('editRole').value;
         const password = document.getElementById('editPassword').value.trim();
         const assignedArea = document.getElementById('editAssignedArea').value;
+        const assignedCategory = (document.getElementById('editCategory')?.value || '').trim();
 
         const token = localStorage.getItem('authToken');
         
@@ -1338,7 +1322,8 @@
             lastName, 
             role, 
             // 🚀 บังคับส่งค่า "" ไปตรงๆ ถ้าต้องการล้างการล็อคพื้นที่
-            assignedArea: assignedArea === "" ? "" : assignedArea 
+            assignedCategory: assignedCategory,
+                    assignedArea: assignedArea
         };
         
         if (password) {
@@ -1382,7 +1367,10 @@
 
     async function loadSettings() {
         try {
-            const res = await fetch(`${API_URL}/systemConfig`);
+            const res = await fetch(`${API_URL}/system-config`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+            });
+            if (!res.ok) return;
             const data = await res.json();
             document.getElementById('settingAdminEmail').value = data.adminEmail || '';
             document.getElementById('settingAppPassword').value = '';
@@ -1395,9 +1383,9 @@
         const adminEmail = document.getElementById('settingAdminEmail').value.trim();
         const appPassword = document.getElementById('settingAppPassword').value.trim();
         try {
-            const res = await fetch(`${API_URL}/systemConfig`, {
+            const res = await fetch(`${API_URL}/system-config`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
                 body: JSON.stringify({ adminEmail, appPassword })
             });
             if (res.ok) {
