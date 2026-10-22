@@ -600,34 +600,14 @@
         const lockNoticeTag = document.getElementById('lockNoticeTag');
 
         const isAdmin = user && user.role === 'Admin';
-        // ✅ สิทธิ์ล็อคพื้นที่ มี 2 ระดับ (ตรงกับที่ Admin ตั้งในทะเบียนบุคลากร)
-        //   - assignedCategory : ล็อคทั้งหมวดหมู่
-        //   - assignedArea     : ล็อคเฉพาะห้อง (id ของห้อง) — จะมี assignedCategory ของห้องนั้นคู่กันเสมอ
-        let assignedVal = '';
-        let lockedAreaId = '';
-        let lockedAreaName = '';
-        if (user && !isAdmin) {
-            assignedVal = String(user.assignedCategory || '').trim();
-            lockedAreaId = user.assignedArea ? String(user.assignedArea._id || user.assignedArea).trim() : '';
-            lockedAreaName = String(user.assignedAreaName || '').trim();
+        // 🔒 ล็อคเฉพาะ "ส่วนพื้นที่ / หมวดหมู่" ที่รับผิดชอบ — ห้องย่อยเลือกได้ตามปกติ
+        const lockedCategory = (user && !isAdmin) ? String(user.assignedCategory || '').trim() : '';
+        const isLocked = !!lockedCategory && !lockedCategory.includes('ไม่ล็อค');
 
-            // รองรับข้อมูลเก่าที่ยังไม่มี assignedCategory: หาหมวดหมู่จากห้องที่ล็อค
-            if (lockedAreaId) {
-                const lockedRoom = allAreasData.find(a => a._id === lockedAreaId);
-                if (lockedRoom) {
-                    assignedVal = assignedVal || String(lockedRoom.category || '').trim();
-                    lockedAreaName = lockedAreaName || lockedRoom.areaName;
-                }
-            }
-        }
-
-        // กรณี Admin หรือ พวกที่ไม่ล็อคพื้นที่ (ประเมินได้หมด)
-        if (isAdmin || (!assignedVal && !lockedAreaId) || assignedVal.includes("ไม่ล็อค")) {
+        if (!isLocked) {
             if (catSelect) {
                 catSelect.disabled = false;
                 catSelect.style.backgroundColor = "#ffffff";
-                
-                // ดึงหมวดหมู่กลับมาให้ครบเผื่อโดนลบทิ้งไปตอนแรก
                 catSelect.innerHTML = `
                     <option value="">-- โปรดเลือกประเภทพื้นที่ --</option>
                     <option value="สำนักงานฯ - ห้องพักอาจารย์">สำนักงานฯ - ห้องพักอาจารย์</option>
@@ -649,46 +629,27 @@
             if (catSelect && !catSelect.value) catSelect.value = "สำนักงานฯ - ห้องพักอาจารย์";
             onCategoryChanged();
         } else {
-            // 🚨 กรณี User ถูกล็อคพื้นที่!
-            let lockedCategory = assignedVal;
-
-            // ชื่อหมวดหมู่จาก DB (Excel) อาจต่างจากรายการในฟอร์มเล็กน้อย -> จับคู่แบบยืดหยุ่น
+            // 🚨 ล็อคหมวดหมู่: ผู้ใช้เลือกประเภทไม่ได้ แต่เลือกห้องย่อยในหมวดนี้ได้
+            let category = lockedCategory;
             const knownCats = Object.keys(rattaData);
-            if (!knownCats.includes(lockedCategory)) {
-                const fuzzy = knownCats.find(c => c.includes(lockedCategory) || lockedCategory.includes(c));
-                if (fuzzy) lockedCategory = fuzzy;
+            if (!knownCats.includes(category)) {
+                const fuzzy = knownCats.find(c => c.includes(category) || category.includes(c));
+                if (fuzzy) category = fuzzy;
             }
 
             if (catSelect) {
-                // ลบ Option อื่นทิ้งให้หมด บังคับให้มีแค่หมวดหมู่ที่ถูกล็อค
-                catSelect.innerHTML = `<option value="${lockedCategory}" selected>${lockedCategory}</option>`;
+                catSelect.innerHTML = `<option value="${category}" selected>${category}</option>`;
                 catSelect.disabled = true;
                 catSelect.style.backgroundColor = "#e2e8f0";
             }
 
             onCategoryChanged();
 
-            let lockedRoomLabel = '';
-            if (areaSelect) {
-                if (lockedAreaId) {
-                    // ล็อคระดับห้อง: เหลือเฉพาะห้องที่ Admin มอบหมาย
-                    const lockedRoom = allAreasData.find(a => a._id === lockedAreaId);
-                    lockedRoomLabel = lockedRoom ? lockedRoom.areaName : (lockedAreaName || 'พื้นที่ที่ได้รับมอบหมาย');
-                    areaSelect.innerHTML = `<option value="${lockedAreaId}" selected>${lockedRoomLabel}</option>`;
-                    areaSelect.disabled = true;
-                    areaSelect.style.backgroundColor = "#e2e8f0";
-                    onAreaChanged();
-                } else {
-                    // ล็อคระดับหมวดหมู่: เลือกห้องย่อยในหมวดนี้ได้ตามปกติ
-                    areaSelect.disabled = false;
-                }
-            }
+            if (areaSelect) areaSelect.disabled = false;
 
             if (lockNoticeTag) {
                 lockNoticeTag.style.display = 'inline-block';
-                lockNoticeTag.innerText = lockedAreaId
-                    ? `🔒 (ระบบล็อคสิทธิ์เฉพาะห้อง: ${lockedRoomLabel})`
-                    : `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategory})`;
+                lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${category})`;
             }
         }
     }
