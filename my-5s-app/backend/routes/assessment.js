@@ -6,6 +6,8 @@ const Assessment = require('../models/Assessment');
 const Area = require('../models/Area');
 const User = require('../models/user');
 const { verifyToken, checkRole } = require('../middleware/auth');
+const SystemConfig = require('../models/SystemConfig');
+const { notify } = require('../utils/mailer');
 
 const adminOnly = checkRole(['Admin']);
 
@@ -19,6 +21,45 @@ function categoryMatches(a, b) {
     const y = String(b || '').trim().toLowerCase();
     if (!x || !y) return false;
     return x === y || x.includes(y) || y.includes(x);
+}
+
+// ---- การแจ้งเตือนทางอีเมล ----
+// เจ้าของพื้นที่ = Area.owner -> อีเมลของผู้ใช้คนนั้น (ถ้าไม่มี ส่งเข้าบัญชีผู้ดูแลระบบแทน)
+async function getAdminEmail() {
+    const cfg = await SystemConfig.findOne().lean();
+    return (cfg && cfg.adminEmail) || '';
+}
+
+const MAIL_FOOTER = '\n\n— ระบบ Green 7S Plus วิทยาลัยรัตภูมิ\n(อีเมลนี้ส่งอัตโนมัติ กรุณาอย่าตอบกลับ)';
+
+// แจ้งเจ้าของพื้นที่ (หรือผู้ดูแลระบบถ้าพื้นที่ไม่มีเจ้าของ)
+function notifyAreaOwner(area, subject, body) {
+    (async () => {
+        let to = '';
+        let greeting = 'เรียน เจ้าของพื้นที่';
+        if (area && area.owner) {
+            const owner = await User.findById(area.owner).select('email firstName lastName fullName').lean();
+            if (owner && owner.email) {
+                to = owner.email;
+                greeting = `เรียน ${owner.fullName || `${owner.firstName || ''} ${owner.lastName || ''}`.trim()}`;
+            }
+        }
+        if (!to) {
+            to = await getAdminEmail();
+            greeting = `เรียน ผู้ดูแลระบบ (พื้นที่ "${area ? area.areaName : '-'}" ยังไม่มีเจ้าของที่มีอีเมล)`;
+        }
+        if (!to) return console.warn('⚠️ ไม่มีอีเมลผู้รับสำหรับการแจ้งเตือน:', area && area.areaName);
+        notify({ to, subject, text: `${greeting}\n\n${body}${MAIL_FOOTER}` });
+    })().catch(err => console.error('❌ เตรียมอีเมลแจ้งเตือนไม่สำเร็จ:', err.message));
+}
+
+// แจ้งผู้ดูแลระบบ
+function notifyAdmin(subject, body) {
+    (async () => {
+        const to = await getAdminEmail();
+        if (!to) return console.warn('⚠️ ยังไม่ได้ตั้งอีเมลผู้ดูแลระบบ จึงไม่ส่งการแจ้งเตือน');
+        notify({ to, subject, text: `เรียน ผู้ดูแลระบบ\n\n${body}${MAIL_FOOTER}` });
+    })().catch(err => console.error('❌ เตรียมอีเมลแจ้งเตือนไม่สำเร็จ:', err.message));
 }
 
 // 1. บันทึกผลการตรวจประเมิน (พร้อมป้องกันการส่งซ้ำในรอบเดียวกัน)
@@ -103,6 +144,21 @@ router.post('/', verifyToken, async (req, res) => {
         });
 
         await newAssessment.save();
+
+        // แจ้งเจ้าของพื้นที่เมื่อผลต่ำกว่าเกณฑ์ (ส่งหลังบันทึกสำเร็จ ไม่กระทบการตอบกลับ)
+        if (evaluationStatus === 'Needs Improvement') {
+            const targetArea = await Area.findById(area).lean();
+            if (targetArea) {
+                notifyAreaOwner(
+                    targetArea,
+                    `[Green 7S Plus] ผลการประเมินต่ำกว่าเกณฑ์: ${targetArea.areaName}`,
+                    `สถานที่ "${targetArea.areaName}" มีผลการประเมินร้อยละ ${percentage} (ต่ำกว่าเกณฑ์มาตรฐานร้อยละ 80)\n` +
+                    `รอบการประเมิน: ${assessmentRound}\n` +
+                    (assessorComment ? `ข้อเสนอแนะ: ${assessorComment}\n` : '') +
+                    `\nกรุณาเข้าสู่ระบบเพื่อดำเนินการปรับปรุงแก้ไขและส่งรายงานผล`
+                );
+            }
+        }
 
         res.status(201).json({
             success: true,
@@ -210,6 +266,15 @@ router.patch('/:id/resolve', verifyToken, async (req, res) => {
         };
 
         await assessment.save();
+
+        const areaDoc = await Area.findById(assessment.area).lean();
+        notifyAdmin(
+            `[Green 7S Plus] มีรายงานการแก้ไขรอการรับรอง: ${areaDoc ? areaDoc.areaName : ''}`,
+            `สถานที่ "${areaDoc ? areaDoc.areaName : '-'}" มีการส่งรายงานการแก้ไขแล้ว\n` +
+            (detail ? `รายละเอียด: ${detail}\n` : '') +
+            `\nกรุณาเข้าสู่ระบบเพื่อตรวจสอบและรับรองผล`
+        );
+
         res.json({ success: true, message: 'ส่งรายงานผลการปรับปรุงสถานที่เรียบร้อยแล้ว' });
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล' });
@@ -225,6 +290,15 @@ router.patch('/:id/approve', verifyToken, adminOnly, async (req, res) => {
             { new: true }
         );
         if (!assessment) return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
+
+        const areaDoc = await Area.findById(assessment.area).lean();
+        if (areaDoc) {
+            notifyAreaOwner(
+                areaDoc,
+                `[Green 7S Plus] รับรองผลการประเมินแล้ว: ${areaDoc.areaName}`,
+                `ผลการประเมินของสถานที่ "${areaDoc.areaName}" ได้รับการรับรองเรียบร้อยแล้ว`
+            );
+        }
 
         res.json({ success: true, message: 'รับรองผลการประเมินมาตรฐานเรียบร้อยแล้ว' });
     } catch (error) {
@@ -249,6 +323,17 @@ router.patch('/:id/reject', verifyToken, adminOnly, async (req, res) => {
         };
 
         await assessment.save();
+
+        const areaDoc = await Area.findById(assessment.area).lean();
+        if (areaDoc) {
+            notifyAreaOwner(
+                areaDoc,
+                `[Green 7S Plus] ผลการประเมินถูกส่งกลับให้แก้ไข: ${areaDoc.areaName}`,
+                `สถานที่ "${areaDoc.areaName}" ถูกส่งกลับเพื่อดำเนินการปรับปรุงแก้ไข\n` +
+                `เหตุผล: ${reason || 'ไม่ผ่านเกณฑ์มาตรฐาน'}\n\nกรุณาเข้าสู่ระบบเพื่อแก้ไขและส่งรายงานอีกครั้ง`
+            );
+        }
+
         res.json({ success: true, message: 'ส่งเรื่องกลับให้ดำเนินการปรับปรุงแก้ไขเรียบร้อยแล้ว' });
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการส่งกลับข้อมูล' });

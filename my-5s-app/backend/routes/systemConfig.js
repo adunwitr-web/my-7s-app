@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const SystemConfig = require('../models/SystemConfig');
 const { verifyToken, checkRole } = require('../middleware/auth');
+const { sendMail } = require('../utils/mailer');
 
 const adminOnly = checkRole(['Admin']);
 
@@ -37,10 +38,11 @@ router.post('/', verifyToken, adminOnly, async (req, res) => {
         let config = await SystemConfig.findOne();
 
         if (!config) {
-            config = new SystemConfig({ adminEmail: adminEmail || '', appPassword: appPassword || '' });
+            config = new SystemConfig({ adminEmail: adminEmail || '', appPassword: String(appPassword || '').replace(/\s+/g, '') });
         } else {
             if (adminEmail !== undefined) config.adminEmail = adminEmail;
-            if (appPassword && String(appPassword).trim() !== '') config.appPassword = String(appPassword).trim();
+            const pass = String(appPassword || '').replace(/\s+/g, '');
+            if (pass !== '') config.appPassword = pass;
         }
 
         await config.save();
@@ -89,6 +91,26 @@ router.post('/round', verifyToken, adminOnly, async (req, res) => {
     } catch (error) {
         console.error('Error updating round config:', error);
         res.status(500).json({ message: 'เซิร์ฟเวอร์เกิดข้อผิดพลาดในการบันทึกรอบประเมิน' });
+    }
+});
+
+// POST /api/system-config/test-mail (Admin) — ส่งอีเมลทดสอบไปยังบัญชีผู้ส่งเพื่อยืนยันว่าตั้งค่าถูกต้อง
+router.post('/test-mail', verifyToken, adminOnly, async (req, res) => {
+    try {
+        const config = await SystemConfig.findOne().lean();
+        const to = (config && config.adminEmail) || '';
+        if (!to) return res.status(400).json({ message: 'ยังไม่ได้ตั้งค่าบัญชีผู้ส่ง (Gmail)' });
+
+        const result = await sendMail({
+            to,
+            subject: '[Green 7S Plus] ทดสอบระบบส่งอีเมลแจ้งเตือน',
+            text: 'ระบบส่งอีเมลแจ้งเตือนของ Green 7S Plus ทำงานปกติ'
+        });
+        if (result.skipped) return res.status(400).json({ message: result.reason });
+        res.json({ success: true, message: `ส่งอีเมลทดสอบไปที่ ${to} แล้ว` });
+    } catch (error) {
+        console.error('❌ test-mail error:', error.message);
+        res.status(500).json({ message: 'ส่งอีเมลไม่สำเร็จ: ' + error.message });
     }
 });
 
