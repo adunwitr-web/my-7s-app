@@ -439,8 +439,14 @@
                     <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบหมวดหมู่</option>
                     <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
                 </select>
-                <select id="newAssignedArea" class="form-control">
-                    <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
+                <!-- 🟢 1. กล่องพื้นที่หลัก (จะเรียงต่อใน Grid อย่างสวยงาม) -->
+                <select id="newCategory" onchange="filterRoomsForNew()" class="form-control">
+                    <option value="">-- เลือกหมวดหมู่ / พื้นที่หลัก --</option>
+                </select>
+
+                <!-- 🟢 2. กล่องห้องย่อย (จะเรียงต่อใน Grid เช่นกัน) -->
+                <select id="newAssignedArea" class="form-control" disabled>
+                    <option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>
                 </select>
             </div>
             <button onclick="createUser()" class="btn-table" style="background: var(--gov-primary); color:white; margin-top:12px; padding:8px 20px;">
@@ -493,10 +499,17 @@
                 <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
             </select>
         </div>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">หมวดหมู่ / พื้นที่หลัก:</label>
+            <select id="editCategory" onchange="filterRoomsForEdit()" class="form-control">
+                <option value="">-- เลือกหมวดหมู่ / พื้นที่หลัก --</option>
+            </select>
+        </div>
+
         <div style="margin-bottom:15px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">พื้นที่รับผิดชอบ:</label>
-            <select id="editAssignedArea" class="form-control">
-                <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
+            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">พื้นที่รับผิดชอบ (ห้องย่อย):</label>
+            <select id="editAssignedArea" class="form-control" disabled>
+                <option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>
             </select>
         </div>
         <div style="background:#fff1f2; padding:12px; border-radius:4px; border-left:4px solid #b91c1c; margin-bottom:15px;">
@@ -688,80 +701,86 @@
     }
 
     async function loadAdminData() {
-        const token = localStorage.getItem('authToken');
-        try {
-            const res = await fetch(`${API_URL}/assessment`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            rawAdminData = data;
-            
-            document.getElementById('statTotal').innerText = data.length;
+    const token = localStorage.getItem('authToken');
+    try {
+        const res = await fetch(`${API_URL}/assessment`, { // แนะนำให้ใช้พาธเต็ม ป้องกัน API_URL มีปัญหา
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        rawAdminData = data;
+        
+        document.getElementById('statTotal').innerText = data.length;
 
-            if (data.length > 0) {
-                let pendingCount = 0;
-                let totalScore = 0;
-                data.forEach(item => {
-                    if (item.status === 'Needs Improvement' || item.status === 'Corrected') pendingCount++;
-                    totalScore += Number(item.percentage) || 0;
-                });
-                document.getElementById('statPending').innerText = pendingCount;
-                document.getElementById('statAverage').innerText = `${(totalScore / data.length).toFixed(1)}%`;
-            }
-
-            initAdminDashboard(data);
-
-            const tbNeedsFix = document.getElementById('tableNeedsImprovement');
-            const tbPendingPass = document.getElementById('tablePendingPass');
-            const tbPendingReview = document.getElementById('tablePendingReview');
-            const tbHistoryDirect = document.getElementById('tableHistoryDirectPass');
-            const tbHistoryCorrected = document.getElementById('tableHistoryCorrectedPass');
-
-            if (tbNeedsFix) tbNeedsFix.innerHTML = '';
-            tbPendingPass.innerHTML = '';
-            tbPendingReview.innerHTML = '';
-            tbHistoryDirect.innerHTML = '';
-            tbHistoryCorrected.innerHTML = '';
-
+        if (data.length > 0) {
+            let pendingCount = 0;
+            let totalScore = 0;
             data.forEach(item => {
-                const date = new Date(item.createdAt).toLocaleDateString('th-TH');
-                const location = item.area ? (typeof item.area === 'object' ? (item.area.areaName || item.area.category || 'ไม่ระบุ') : item.area) : 'ไม่ระบุ';
-                const assessor = item.assessor ? `${item.assessor.firstName || ''} ${item.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
-
-                const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">ดูบันทึกตรวจ</button>`;
-                const btnApprove = `<button onclick="approveCorrection('${item._id}')" class="btn-table btn-approve">รับรองผล</button>`;
-                const btnReject = `<button onclick="rejectCorrection('${item._id}')" class="btn-table btn-reject">ส่งกลับแก้ไข</button>`;
-                const btnEdit = `<button onclick="editAssessment('${item._id}')" class="btn-table" style="background:#f59e0b; color:white;">แก้ไข</button>`;
-                const btnPDF = `<button onclick="downloadPDF('${item._id}')" class="btn-table" style="background:#0ea5e9; color:white;">โหลด PDF</button>`;
-
-                if (item.status === 'Needs Improvement') {
-                    if (tbNeedsFix) tbNeedsFix.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b style="color:#b91c1c;">${item.percentage}%</b></td><td>${btnView} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
-                } else if (item.status === 'Passed') {
-                    tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
-                } else if (item.status === 'Corrected') {
-                    const submitDate = item.correctionData?.submittedAt ? new Date(item.correctionData.submittedAt).toLocaleDateString('th-TH') : date;
-                    tbPendingReview.innerHTML += `<tr><td>${submitDate}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
-                } else if (item.status === 'Approved') {
-                    const row = `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td>${item.percentage}%</td><td><span style="color:#15803d; font-weight:600;">ผ่านการรับรองแล้ว</span></td><td>${btnView} ${btnPDF}</td></tr>`;
-                    if (item.correctionData && item.correctionData.submittedAt) {
-                        tbHistoryCorrected.innerHTML += row;
-                    } else {
-                        tbHistoryDirect.innerHTML += row;
-                    }
-                }
+                if (item.status === 'Needs Improvement' || item.status === 'Corrected') pendingCount++;
+                totalScore += Number(item.percentage) || 0;
             });
-
-            if (tbNeedsFix && !tbNeedsFix.innerHTML) tbNeedsFix.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการที่ต้องปรับปรุง</td></tr>';
-            if (!tbPendingPass.innerHTML) tbPendingPass.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr>';
-            if (!tbPendingReview.innerHTML) tbPendingReview.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr>';
-            if (!tbHistoryDirect.innerHTML) tbHistoryDirect.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr>';
-            if (!tbHistoryCorrected.innerHTML) tbHistoryCorrected.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr>';
-
-        } catch (err) {
-            console.error(err);
+            document.getElementById('statPending').innerText = pendingCount;
+            document.getElementById('statAverage').innerText = `${(totalScore / data.length).toFixed(1)}%`;
         }
-    }
 
+        initAdminDashboard(data);
+
+        const tbNeedsFix = document.getElementById('tableNeedsImprovement');
+        const tbPendingPass = document.getElementById('tablePendingPass');
+        const tbPendingReview = document.getElementById('tablePendingReview');
+        const tbHistoryDirect = document.getElementById('tableHistoryDirectPass');
+        const tbHistoryCorrected = document.getElementById('tableHistoryCorrectedPass');
+
+        if (tbNeedsFix) tbNeedsFix.innerHTML = '';
+        if (tbPendingPass) tbPendingPass.innerHTML = '';
+        if (tbPendingReview) tbPendingReview.innerHTML = '';
+        if (tbHistoryDirect) tbHistoryDirect.innerHTML = '';
+        if (tbHistoryCorrected) tbHistoryCorrected.innerHTML = '';
+
+        data.forEach(item => {
+            const date = new Date(item.createdAt).toLocaleDateString('th-TH');
+            const location = item.area ? (typeof item.area === 'object' ? (item.area.areaName || item.area.category || 'ไม่ระบุ') : item.area) : 'ไม่ระบุ';
+            const assessor = item.assessor ? `${item.assessor.firstName || ''} ${item.assessor.lastName || ''}`.trim() : 'ไม่ระบุ';
+
+            const btnView = `<button onclick="viewDetails('${item._id}')" class="btn-table btn-view">ดูบันทึกตรวจ</button>`;
+            const btnApprove = `<button onclick="approveCorrection('${item._id}')" class="btn-table btn-approve">รับรองผล</button>`;
+            const btnReject = `<button onclick="rejectCorrection('${item._id}')" class="btn-table btn-reject">ส่งกลับแก้ไข</button>`;
+            const btnEdit = `<button onclick="editAssessment('${item._id}')" class="btn-table" style="background:#f59e0b; color:white;">แก้ไข</button>`;
+            const btnPDF = `<button onclick="downloadPDF('${item._id}')" class="btn-table" style="background:#0ea5e9; color:white;">โหลด PDF</button>`;
+
+            // 🟢 จุดที่แก้ไข: แยกเงื่อนไขปุ่มให้ชัดเจน 
+            if (item.status === 'Needs Improvement') {
+                // ถ้าส่งกลับไปแล้ว ให้ขึ้นสถานะว่ารอเจ้าของพื้นที่ แทนที่จะเป็นปุ่มส่งกลับซ้ำ
+                const waitingStatus = `<span style="color:#b91c1c; font-weight:600; padding: 5px; background: #fee2e2; border-radius: 4px;">⏳ รอเจ้าของพื้นที่แก้ไข</span>`;
+                if (tbNeedsFix) tbNeedsFix.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b style="color:#b91c1c;">${item.percentage}%</b></td><td>${waitingStatus} <br><br> ${btnView} ${btnEdit} ${btnPDF}</td></tr>`;
+            
+            } else if (item.status === 'Passed') {
+                tbPendingPass.innerHTML += `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
+            
+            } else if (item.status === 'Corrected') {
+                const submitDate = item.correctionData?.submittedAt ? new Date(item.correctionData.submittedAt).toLocaleDateString('th-TH') : date;
+                tbPendingReview.innerHTML += `<tr><td>${submitDate}</td><td><b>${location}</b></td><td>${assessor}</td><td><b>${item.percentage}%</b></td><td>${btnView} ${btnApprove} ${btnReject} ${btnEdit} ${btnPDF}</td></tr>`;
+            
+            } else if (item.status === 'Approved') {
+                const row = `<tr><td>${date}</td><td><b>${location}</b></td><td>${assessor}</td><td>${item.percentage}%</td><td><span style="color:#15803d; font-weight:600;">✅ ผ่านการรับรองแล้ว</span></td><td>${btnView} ${btnPDF}</td></tr>`;
+                if (item.correctionData && item.correctionData.submittedAt) {
+                    tbHistoryCorrected.innerHTML += row;
+                } else {
+                    tbHistoryDirect.innerHTML += row;
+                }
+            }
+        });
+
+        // จัดการตารางว่าง
+        if (tbNeedsFix && !tbNeedsFix.innerHTML) tbNeedsFix.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการที่ต้องปรับปรุง</td></tr>';
+        if (tbPendingPass && !tbPendingPass.innerHTML) tbPendingPass.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอดำเนินการ</td></tr>';
+        if (tbPendingReview && !tbPendingReview.innerHTML) tbPendingReview.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gov-muted);">ไม่มีรายการรอตรวจรับงาน</td></tr>';
+        if (tbHistoryDirect && !tbHistoryDirect.innerHTML) tbHistoryDirect.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr>';
+        if (tbHistoryCorrected && !tbHistoryCorrected.innerHTML) tbHistoryCorrected.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gov-muted);">ไม่มีข้อมูล</td></tr>';
+
+    } catch (err) {
+        console.error(err);
+    }
+}
     function initAdminDashboard(data) {
         const yearSelect = document.getElementById('adminYearFilter');
         const areaSelect = document.getElementById('adminAreaFilter');
@@ -1035,7 +1054,7 @@
             });
             if (res.ok) {
                 alert('ส่งเรื่องกลับให้ปรับปรุงแก้ไขเรียบร้อยแล้ว');
-                loadAdminData();
+                location.reload();
             }
         } catch (err) {
             alert('ระบบขัดข้อง');
@@ -1053,18 +1072,83 @@
 
     function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
 
-    async function loadAreasForSelect() {
-        let optionsHtml = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
+    let allAreasData = []; 
 
-        categoriesList.forEach(cat => {
-            optionsHtml += `<option value="${cat}">${cat}</option>`;
-        });
+        // 1. ฟังก์ชันโหลดหมวดหมู่หลัก
+        async function loadAreasForSelect() {
+            try {
+                let token = localStorage.getItem('authToken'); 
+                
+                if (token && token.startsWith('"') && token.endsWith('"')) {
+                    token = token.slice(1, -1);
+                }
 
-        const newSelect = document.getElementById('newAssignedArea');
-        const editSelect = document.getElementById('editAssignedArea');
-        if (newSelect) newSelect.innerHTML = optionsHtml;
-        if (editSelect) editSelect.innerHTML = optionsHtml;
-    }
+                const response = await fetch('${API_URL}/areas', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    console.error("🚨 หลังบ้านตอบกลับมาว่า (Error Details):", errorDetails);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                allAreasData = await response.json();
+                console.log(`✅ โหลดข้อมูลพื้นที่สำเร็จ! จำนวนทั้งหมด: ${allAreasData.length} ห้อง`);
+
+                // ตัดช่องว่างหน้า-หลังคำ ป้องกันปัญหาพิมพ์ผิดใน Excel
+                const categories = [...new Set(allAreasData.map(area => area.category ? area.category.trim() : ''))].filter(cat => cat !== '');
+                
+                let catOptions = '<option value="">-- เลือกหมวดหมู่ / พื้นที่หลัก --</option>';
+                categories.forEach(cat => {
+                    catOptions += `<option value="${cat}">${cat}</option>`;
+                });
+
+                const newCatSelect = document.getElementById('newCategory');
+                const editCatSelect = document.getElementById('editCategory');
+                if (newCatSelect) newCatSelect.innerHTML = catOptions;
+                if (editCatSelect) editCatSelect.innerHTML = catOptions;
+
+            } catch (error) {
+                console.error("โหลดข้อมูลพื้นที่ไม่สำเร็จ:", error);
+            }
+        }
+
+        // 2. ฟังก์ชันเมื่อเลือกพื้นที่หลัก ให้ปลดล็อคและแสดงห้องย่อย
+        function filterRoomsForNew() {
+            populateRooms(document.getElementById('newCategory').value, 'newAssignedArea');
+        }
+
+        function filterRoomsForEdit() {
+            populateRooms(document.getElementById('editCategory').value, 'editAssignedArea');
+        }
+
+        // 3. ฟังก์ชันเติมข้อมูลห้องย่อย
+        function populateRooms(category, targetSelectId) {
+            const roomSelect = document.getElementById(targetSelectId);
+            
+            if (!category) {
+                roomSelect.innerHTML = '<option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>';
+                roomSelect.disabled = true;
+                return;
+            }
+
+            roomSelect.disabled = false;
+            let roomOptions = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
+            
+            // ดึงมาเฉพาะห้องที่ตรงกับหมวด (ใช้ trim() ให้ตรงกัน)
+            const filteredRooms = allAreasData.filter(area => area.category && area.category.trim() === category);
+            
+            filteredRooms.forEach(room => {
+                roomOptions += `<option value="${room._id}">${room.areaName}</option>`;
+            });
+
+            roomSelect.innerHTML = roomOptions;
+        }
 
     async function loadUsers() {
         const token = localStorage.getItem('authToken');
