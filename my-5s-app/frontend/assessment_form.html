@@ -573,27 +573,23 @@
 
             onCategoryChanged();
 
-            let lockedRoomLabel = '';
+            // 🔓 ไม่ล็อคห้องย่อย: ล็อคเฉพาะหมวดหมู่ ห้องย่อยในหมวดนี้เลือกได้ทุกห้อง
+            // (ห้องที่ผูกไว้กับผู้ใช้ยังเป็นค่าเริ่มต้นได้ แต่ไม่บังคับ)
             if (areaSelect) {
+                areaSelect.disabled = false;
+                areaSelect.style.backgroundColor = "#ffffff";
                 if (lockedAreaId) {
-                    // ล็อคระดับห้อง: เหลือเฉพาะห้องที่ Admin มอบหมาย
                     const lockedRoom = allAreasData.find(a => a._id === lockedAreaId);
-                    lockedRoomLabel = lockedRoom ? lockedRoom.areaName : (lockedAreaName || 'พื้นที่ที่ได้รับมอบหมาย');
-                    areaSelect.innerHTML = `<option value="${lockedAreaId}" selected>${lockedRoomLabel}</option>`;
-                    areaSelect.disabled = true;
-                    areaSelect.style.backgroundColor = "#e2e8f0";
-                    onAreaChanged();
-                } else {
-                    // ล็อคระดับหมวดหมู่: เลือกห้องย่อยในหมวดนี้ได้ตามปกติ
-                    areaSelect.disabled = false;
+                    if (lockedRoom && [...areaSelect.options].some(o => o.value === lockedAreaId)) {
+                        areaSelect.value = lockedAreaId;
+                        onAreaChanged();
+                    }
                 }
             }
 
             if (lockNoticeTag) {
                 lockNoticeTag.style.display = 'inline-block';
-                lockNoticeTag.innerText = lockedAreaId
-                    ? `🔒 (ระบบล็อคสิทธิ์เฉพาะห้อง: ${lockedRoomLabel})`
-                    : `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategory})`;
+                lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategory})`;
             }
         }
     }
