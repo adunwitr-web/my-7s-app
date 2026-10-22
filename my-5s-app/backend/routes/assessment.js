@@ -50,16 +50,13 @@ router.post('/', verifyToken, async (req, res) => {
         // 🔒 2. ตรวจสิทธิ์ล็อคพื้นที่ฝั่งเซิร์ฟเวอร์ (กันการข้ามสิทธิ์ที่ Admin ตั้งไว้)
         const me = await User.findById(req.user.userId).select('role assignedArea assignedCategory').lean();
         if (me && me.role !== 'Admin') {
+            // 🔒 ล็อคเฉพาะ "ส่วนพื้นที่ / หมวดหมู่" ที่รับผิดชอบ — ห้องย่อยไม่ถูกล็อค
+            // ตรวจจากหมวดของห้องใน DB เท่านั้น ไม่เชื่อค่า category ที่ Frontend ส่งมา
             const lock = await User.describeAssignment(me);
-            if (lock.assignedArea) {
-                if (!foundArea || String(foundArea._id) !== lock.assignedArea) {
-                    return res.status(403).json({ message: 'คุณมีสิทธิ์ประเมินเฉพาะพื้นที่ที่ได้รับมอบหมายเท่านั้น' });
-                }
-            } else if (lock.assignedCategory) {
-                const ok = categoryMatches(category, lock.assignedCategory) ||
-                    (foundArea && categoryMatches(foundArea.category, lock.assignedCategory));
-                if (!ok) {
-                    return res.status(403).json({ message: `คุณมีสิทธิ์ประเมินเฉพาะหมวดหมู่ "${lock.assignedCategory}" เท่านั้น` });
+            const lockCat = String(lock.assignedCategory || '').trim();
+            if (lockCat && !lockCat.includes('ไม่ล็อค')) {
+                if (!foundArea || !categoryMatches(foundArea.category, lockCat)) {
+                    return res.status(403).json({ message: `คุณมีสิทธิ์ประเมินเฉพาะหมวดหมู่ "${lockCat}" เท่านั้น` });
                 }
             }
         }
@@ -146,12 +143,12 @@ router.get('/pending', verifyToken, async (req, res) => {
 
         // ห้อง/หมวดหมู่ที่ Admin มอบหมายไว้ในทะเบียนบุคลากร
         if (currentUser) {
+            // 🔒 ทุกห้องในหมวดหมู่ที่รับผิดชอบ (ห้องที่เป็นเจ้าของเพิ่มไว้ด้านบนแล้ว)
             const lock = await User.describeAssignment(currentUser);
-            if (lock.assignedArea) {
-                idSet.add(lock.assignedArea);
-            } else if (lock.assignedCategory) {
+            const lockCat = String(lock.assignedCategory || '').trim();
+            if (lockCat && !lockCat.includes('ไม่ล็อค')) {
                 const catAreas = await Area.find({
-                    category: new RegExp(escapeRegex(lock.assignedCategory), 'i')
+                    category: new RegExp(escapeRegex(lockCat), 'i')
                 }).select('_id');
                 catAreas.forEach(a => idSet.add(String(a._id)));
             }

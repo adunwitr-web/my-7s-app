@@ -37,10 +37,13 @@ router.get('/', verifyToken, async (req, res) => {
                 const me = await User.findById(userId).select('firstName assignedArea assignedCategory').lean();
                 if (me) {
                     const lock = await User.describeAssignment(me);
+                    // 🔒 หมวดหมู่ที่รับผิดชอบ (ทุกห้องในหมวด)
+                    if (lock.assignedCategory && !lock.assignedCategory.includes('ไม่ล็อค')) {
+                        orConditions.push({ category: { $regex: new RegExp(escapeRegex(lock.assignedCategory), 'i') } });
+                    }
+                    // ห้องที่ผูกไว้กับเจ้าของพื้นที่
                     if (lock.assignedArea) {
                         orConditions.push({ _id: lock.assignedArea });
-                    } else if (lock.assignedCategory) {
-                        orConditions.push({ category: { $regex: new RegExp(escapeRegex(lock.assignedCategory), 'i') } });
                     }
 
                     const firstName = String(me.firstName || '').replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
