@@ -49,7 +49,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 })();
 
 // Connect MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/my-5s-db')
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/green7s')
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 

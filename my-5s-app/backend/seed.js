@@ -8,7 +8,7 @@ const Area = require('./models/Area');
 
 const seedData = async () => {
     try {
-        const dbUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/my-5s-db';
+        const dbUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/green7s';
         console.log('⏳ กำลังเชื่อมต่อไปยัง MongoDB...');
         await mongoose.connect(dbUri);
         console.log('✅ Connected to MongoDB');

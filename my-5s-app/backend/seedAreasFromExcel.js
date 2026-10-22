@@ -5,7 +5,7 @@ require('dotenv').config();
 
 async function importExcelData() {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/my-5s-db');
+        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/green7s');
         console.log('✅ เชื่อมต่อ MongoDB สำเร็จ');
 
         // 1. ล้างข้อมูล Area ขยะเดิมทิ้งทั้งหมด
