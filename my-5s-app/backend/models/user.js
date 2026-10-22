@@ -1,116 +1,124 @@
+const express = require('express');
+const router = express.Router();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const User = require('../models/user');
+const { verifyToken } = require('../middleware/auth');
+const Area = require('../models/Area');
 
-const HEX24 = /^[0-9a-fA-F]{24}$/;
-
-function clean(v) {
-    const s = String(v === null || v === undefined ? '' : v).trim();
-    if (!s || s === 'null' || s === 'undefined' || s.includes('ไม่ล็อค')) return '';
-    return s;
-}
-
-function idOf(v) {
-    if (v === null || v === undefined) return '';
-    if (typeof v === 'object' && v._id) v = v._id;
-    return clean(String(v));
-}
-
-const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-
-    role: {
-        type: String,
-        enum: [
-            'Admin',
-            'Internal Assessor',
-            'External Assessor',
-            'Area Owner',
-            'Internal Assessor & Area Owner',
-            'External Assessor & Area Owner'
-        ],
-        required: true
-    },
-
-    // ล็อคระดับ "ห้อง/สถานที่" (เลือกห้องย่อยตอนตั้งสิทธิ์) — null = ไม่ได้ล็อคห้อง
-    assignedArea: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Area',
-        default: null
-    },
-
-    // ล็อคระดับ "หมวดหมู่" — ใช้เมื่อเลือกแค่หมวดหมู่ ไม่เลือกห้อง (หรือเก็บหมวดของห้องที่ล็อค)
-    // "" = ไม่ล็อคหมวดหมู่
-    assignedCategory: { type: String, default: '', trim: true },
-
-    firstName: { type: String, required: true },
-    lastName: { type: String, default: '' },
-    fullName: { type: String, default: '' },
-    email: { type: String, required: true },
-
-    position: { type: String, default: '' },
-    affiliation: { type: String, default: '' },
-    expertise: { type: String, default: '' },
-    contactInfo: { type: String, default: '' },
-
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now }
+router.get('/', verifyToken, async (req, res) => {
+    try {
+        const users = await User.find({ role: { $ne: 'Admin' } })
+            .select('-password')
+            .populate('assignedArea')
+            .catch(async () => {
+                return await User.find({ role: { $ne: 'Admin' } }).select('-password');
+            });
+        res.json(users);
+    } catch (error) {
+        console.error('Error GET /user:', error.message);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้', error: error.message });
+    }
 });
 
-/**
- * แปลงข้อมูลที่ Frontend ส่งมา ({ assignedArea, assignedCategory }) ให้เป็นค่าที่เก็บลง DB
- *  - assignedArea เป็น ObjectId ของห้องที่มีจริง  -> ล็อคห้อง (+เก็บหมวดของห้องนั้นอัตโนมัติ)
- *  - ไม่มีห้อง แต่มี assignedCategory              -> ล็อคทั้งหมวดหมู่
- *  - ทั้งคู่ว่าง ("" / null / "ไม่ล็อค...")          -> ปลดล็อคทั้งหมด
- *  - (รองรับของเก่า) assignedArea ส่งมาเป็นชื่อหมวดหมู่ที่ไม่ใช่ ObjectId -> ถือเป็นการล็อคหมวดหมู่
- */
-UserSchema.statics.normalizeAssignment = async function (input) {
-    input = input || {};
-    const rawArea = idOf(input.assignedArea);
-    const rawCat = clean(input.assignedCategory);
+router.post('/', verifyToken, async (req, res) => {
+    try {
+        const { username, password, email, firstName, lastName, role, assignedArea } = req.body;
 
-    if (rawArea && HEX24.test(rawArea)) {
-        try {
-            const Area = mongoose.models.Area || require('./Area');
-            const area = await Area.findById(rawArea).select('category').lean();
-            if (area) {
-                return { assignedArea: area._id, assignedCategory: String(area.category || '').trim() };
-            }
-        } catch (e) { /* ตกไปใช้หมวดหมู่ด้านล่าง */ }
-    }
-
-    const cat = rawCat || (rawArea && !HEX24.test(rawArea) ? rawArea : '');
-    return { assignedArea: null, assignedCategory: cat };
-};
-
-/**
- * แปลงข้อมูลสิทธิ์ของ user (จาก DB) เป็นรูปแบบที่ Frontend ใช้ (ทุกหน้าใช้ชุดเดียวกัน)
- *  { assignedArea: 'idห้อง' | '', assignedAreaName: 'ชื่อห้อง' | '', assignedCategory: 'หมวด' | '' }
- * ถ้าห้องที่ผูกไว้ถูกลบไปแล้ว (เช่น รัน seed ใหม่) จะถือว่าไม่ได้ล็อคห้อง
- */
-UserSchema.statics.describeAssignment = async function (user) {
-    user = user || {};
-    let areaId = idOf(user.assignedArea);
-    let category = clean(user.assignedCategory);
-    let areaName = '';
-
-    if (areaId && HEX24.test(areaId)) {
-        try {
-            const Area = mongoose.models.Area || require('./Area');
-            const area = await Area.findById(areaId).select('areaName category').lean();
-            if (area) {
-                areaName = String(area.areaName || '').trim();
-                category = String(area.category || '').trim() || category;
-            } else {
-                areaId = '';
-            }
-        } catch (e) {
-            areaId = '';
+        const existingUser = await User.findOne({ $or: [{ username: username }, { email: email }] });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username หรือ Email นี้ถูกใช้งานแล้ว' });
         }
-    } else {
-        areaId = '';
+
+        const validArea = (assignedArea && mongoose.Types.ObjectId.isValid(assignedArea)) ? assignedArea : null;
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password || '123456', salt);
+
+        const fName = firstName || '';
+        const lName = lastName || '';
+        const fullNameStr = (fName + ' ' + lName).trim();
+
+        const newUser = new User({
+            username: username,
+            password: hashedPassword,
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            fullName: fullNameStr,
+            role: role,
+            assignedArea: validArea
+        });
+        await newUser.save();
+
+        if (role === 'Area Owner' && validArea) {
+            await Area.findByIdAndUpdate(validArea, { owner: newUser._id });
+        }
+
+        res.json({ success: true, message: 'สร้างผู้ใช้งานสำเร็จ' });
+    } catch (error) {
+        console.error('Error POST /user:', error.message);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาด: ' + error.message });
     }
+});
 
-    return { assignedArea: areaId, assignedAreaName: areaName, assignedCategory: category };
-};
+router.delete('/:id', verifyToken, async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        await Area.updateMany({ owner: req.params.id }, { $unset: { owner: 1 } });
+        res.json({ success: true, message: 'ลบผู้ใช้งานสำเร็จ' });
+    } catch (error) {
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบข้อมูล' });
+    }
+});
 
-module.exports = mongoose.models.User || mongoose.model('User', UserSchema);
+router.patch('/:id', verifyToken, async (req, res) => {
+    try {
+        const { username, email, firstName, lastName, role, password, assignedArea } = req.body;
+
+        if (username) {
+            const existingUser = await User.findOne({ username: username, _id: { $ne: req.params.id } });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Username นี้มีคนใช้แล้ว กรุณาใช้ชื่ออื่น' });
+            }
+        }
+
+        const validArea = (assignedArea && mongoose.Types.ObjectId.isValid(assignedArea)) ? assignedArea : null;
+
+        let updateData = {};
+        if (username) updateData.username = username;
+        if (email) updateData.email = email;
+        if (firstName) updateData.firstName = firstName;
+        if (lastName) updateData.lastName = lastName;
+        if (firstName || lastName) {
+            const fName = firstName || '';
+            const lName = lastName || '';
+            updateData.fullName = (fName + ' ' + lName).trim();
+        }
+        if (role) updateData.role = role;
+        if (assignedArea !== undefined) updateData.assignedArea = validArea;
+
+        if (password && password.trim() !== '') {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
+        }
+
+        if (updatedUser.role === 'Area Owner' && validArea) {
+            await Area.updateMany({ owner: updatedUser._id, _id: { $ne: validArea } }, { $unset: { owner: 1 } });
+            await Area.findByIdAndUpdate(validArea, { owner: updatedUser._id });
+        }
+
+        res.json({ success: true, message: 'อัปเดตข้อมูลและรหัสผ่านสำเร็จ' });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + error.message });
+    }
+});
+
+module.exports = router;
