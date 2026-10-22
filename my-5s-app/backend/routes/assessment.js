@@ -1,4 +1,5 @@
 const express = require('express');
+console.log("🎯 ไฟล์ assessment.js อัปเดตล่าสุดถูกเรียกใช้งานแล้ว!");
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
@@ -69,7 +70,8 @@ router.post('/', verifyToken, async (req, res) => {
         // 🟢 2. ป้องกันการส่งแบบประเมินซ้ำในสถานที่เดียวกัน และรอบประเมินเดียวกัน
         const existingCheck = await Assessment.findOne({
             area: area,
-            assessmentRound: assessmentRound
+            assessmentRound: assessmentRound,
+            assessor: req.user._id
         });
 
         if (existingCheck) {
@@ -120,13 +122,19 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// 3. ดึงรายการประเมินสำหรับ Owner Dashboard
+// 3. ดึงรายการประเมินสำหรับ Owner Dashboard (เวอร์ชันติดตัวสแกนหาปัญหา)
 router.get('/pending', verifyToken, async (req, res) => {
     try {
         const userId = req.user.userId || req.user.id || req.user._id;
         const currentUser = await User.findById(userId);
-        let myAreaIds = [];
+        
+        // 🟢 จุดที่เพิ่มเข้ามา: สแกนดูว่า User คนนี้มีสิทธิ์อะไรบ้าง
+        console.log("\n-----------------------------------------");
+        console.log("🔍 [Owner Dashboard] ตรวจสอบสิทธิ์เจ้าของห้อง");
+        console.log("👤 User ID ที่ล็อกอิน:", userId);
+        console.log("📝 พื้นที่รับผิดชอบในโปรไฟล์ (assignedArea):", currentUser?.assignedArea);
 
+        let myAreaIds = [];
         const ownedAreas = await Area.find({ owner: userId });
         ownedAreas.forEach(a => myAreaIds.push(a._id));
 
@@ -152,16 +160,26 @@ router.get('/pending', verifyToken, async (req, res) => {
                 });
             }
         }
+        
+        // 🟢 สรุปผลการค้นหาห้อง
+        console.log("📍 สรุป รหัสพื้นที่ (Area IDs) ที่ระบบหาเจอ:", myAreaIds);
 
-        if (myAreaIds.length === 0) return res.json([]);
+        if (myAreaIds.length === 0) {
+            console.log("⚠️ ผลลัพธ์: ไม่พบพื้นที่ที่เชื่อมโยงกับ User นี้เลย (ส่งค่าว่างกลับไป)");
+            return res.json([]);
+        }
 
         const tasks = await Assessment.find({ area: { $in: myAreaIds } })
             .populate('area', 'areaName category owner')
             .populate('assessor', 'firstName lastName fullName username')
             .sort({ createdAt: -1 });
+            
+        console.log("📋 จำนวนใบประเมินที่เจอในห้องนี้:", tasks.length);
+        console.log("-----------------------------------------\n");
 
         res.json(tasks);
     } catch (error) {
+        console.error('Error fetching pending tasks:', error);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลงาน' });
     }
 });

@@ -3,52 +3,15 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { verifyToken } = require('../middleware/auth');
 
-function escapeRegex(text) {
-    return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-// รูปแบบข้อมูล user ที่ส่งกลับให้ Frontend (ใช้ร่วมกันทั้ง /login และ /me)
-async function buildUserPayload(user) {
-    const assignedArea = await User.resolveAssignedCategory(user.assignedArea);
-    const fullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim();
-    return {
-        id: user._id,
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        fullName,
-        assignedArea // เป็น String เสมอ ("" = ไม่ล็อค)
-    };
-}
-
-// POST /api/auth/login  (รองรับทั้ง username และ อีเมลองค์กร ตามที่หน้า Login ระบุไว้)
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
     try {
-        const identifier = String(req.body.username || '').trim();
-        const password = String(req.body.password || '');
-
-        if (!identifier || !password) {
-            return res.status(400).json({ message: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่านให้ครบถ้วน' });
-        }
-
-        const user = await User.findOne({
-            $or: [
-                { username: identifier },
-                { email: new RegExp('^' + escapeRegex(identifier) + '$', 'i') }
-            ]
-        });
+        const { username, password } = req.body;
+        const user = await User.findOne({ username });
 
         if (!user) {
             return res.status(400).json({ message: 'ไม่พบผู้ใช้นี้ในระบบ' });
-        }
-
-        if (user.isActive === false) {
-            return res.status(403).json({ message: 'บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -62,24 +25,19 @@ router.post('/login', async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        res.json({ token, user: await buildUserPayload(user) });
+        res.json({
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                assignedArea: user.assignedArea
+            }
+        });
     } catch (error) {
         console.error('Login Error:', error);
-        res.status(500).json({ message: 'เกิดข้อผิดพลาดทางเซิร์ฟเวอร์' });
-    }
-});
-
-// GET /api/auth/me  — ดึงสิทธิ์ล่าสุดจาก Database (แก้ปัญหาสิทธิ์ค้างใน localStorage)
-router.get('/me', verifyToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId).select('-password');
-        if (!user || user.isActive === false) {
-            return res.status(401).json({ message: 'ไม่พบบัญชีผู้ใช้ หรือบัญชีถูกระงับ' });
-        }
-        res.set('Cache-Control', 'no-store');
-        res.json({ user: await buildUserPayload(user) });
-    } catch (error) {
-        console.error('Auth /me Error:', error);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดทางเซิร์ฟเวอร์' });
     }
 });

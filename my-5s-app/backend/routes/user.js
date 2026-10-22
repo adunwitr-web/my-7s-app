@@ -3,192 +3,121 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const { verifyToken } = require('../middleware/auth');
 const Area = require('../models/Area');
-const { verifyToken, checkRole } = require('../middleware/auth');
 
-// ทุก endpoint จัดการผู้ใช้ ต้องเป็น Admin เท่านั้น
-const adminOnly = [verifyToken, checkRole(['Admin'])];
-
-function escapeRegex(text) {
-    return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function has(obj, key) {
-    return Object.prototype.hasOwnProperty.call(obj, key);
-}
-
-function handleError(res, error, fallbackMsg) {
-    if (error && error.code === 11000) {
-        return res.status(400).json({ message: 'Username หรือ Email นี้ถูกใช้งานแล้ว' });
-    }
-    if (error && error.name === 'ValidationError') {
-        return res.status(400).json({ message: 'ข้อมูลไม่ถูกต้อง: ' + error.message });
-    }
-    console.error(fallbackMsg, error);
-    return res.status(500).json({ message: fallbackMsg + ': ' + (error.message || '') });
-}
-
-// GET /api/user  — รายชื่อผู้ใช้ (ไม่รวม Admin)
-router.get('/', adminOnly, async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
     try {
         const users = await User.find({ role: { $ne: 'Admin' } })
             .select('-password')
-            .sort({ createdAt: -1 })
-            .lean();
-
-        // แปลง assignedArea ให้เป็นชื่อหมวดหมู่ (String) เสมอ รวมถึงข้อมูลเก่าที่เป็น ObjectId
-        const result = await Promise.all(users.map(async (u) => ({
-            ...u,
-            assignedArea: await User.resolveAssignedCategory(u.assignedArea)
-        })));
-
-        res.set('Cache-Control', 'no-store');
-        res.json(result);
+            .populate('assignedArea')
+            .catch(async () => {
+                return await User.find({ role: { $ne: 'Admin' } }).select('-password');
+            });
+        res.json(users);
     } catch (error) {
         console.error('Error GET /user:', error.message);
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้', error: error.message });
     }
 });
 
-// POST /api/user  — สร้างผู้ใช้
-router.post('/', adminOnly, async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
     try {
-        const b = req.body || {};
-        const username = String(b.username || '').trim();
-        const email = String(b.email || '').trim();
-        const firstName = String(b.firstName || '').trim();
-        const lastName = String(b.lastName || '').trim();
+        const { username, password, email, firstName, lastName, role, assignedArea } = req.body;
 
-        if (!username || !email || !firstName || !b.role) {
-            return res.status(400).json({ message: 'กรุณากรอก Username, Email, ชื่อจริง และสิทธิ์หน้าที่ให้ครบถ้วน' });
-        }
-
-        const existingUser = await User.findOne({
-            $or: [
-                { username },
-                { email: new RegExp('^' + escapeRegex(email) + '$', 'i') }
-            ]
-        });
+        const existingUser = await User.findOne({ $or: [{ username: username }, { email: email }] });
         if (existingUser) {
             return res.status(400).json({ message: 'Username หรือ Email นี้ถูกใช้งานแล้ว' });
         }
 
-        // "" / null = ไม่ล็อค, ค่าอื่น = ชื่อหมวดหมู่
-        const assignedArea = await User.resolveAssignedCategory(b.assignedArea);
+        const validArea = (assignedArea && mongoose.Types.ObjectId.isValid(assignedArea)) ? assignedArea : null;
 
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(String(b.password || '').trim() || '123456', salt);
+        const hashedPassword = await bcrypt.hash(password || '123456', salt);
+
+        const fName = firstName || '';
+        const lName = lastName || '';
+        const fullNameStr = (fName + ' ' + lName).trim();
 
         const newUser = new User({
-            username,
+            username: username,
             password: hashedPassword,
-            email,
-            firstName,
-            lastName,
-            fullName: (firstName + ' ' + lastName).trim(),
-            role: b.role,
-            assignedArea
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            fullName: fullNameStr,
+            role: role,
+            assignedArea: validArea
         });
         await newUser.save();
 
+        if (role === 'Area Owner' && validArea) {
+            await Area.findByIdAndUpdate(validArea, { owner: newUser._id });
+        }
+
         res.json({ success: true, message: 'สร้างผู้ใช้งานสำเร็จ' });
     } catch (error) {
-        handleError(res, error, 'เกิดข้อผิดพลาดในการสร้างผู้ใช้');
+        console.error('Error POST /user:', error.message);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาด: ' + error.message });
     }
 });
 
-// PATCH /api/user/:id  — แก้ไขผู้ใช้
-router.patch('/:id', adminOnly, async (req, res) => {
+router.delete('/:id', verifyToken, async (req, res) => {
     try {
-        const id = req.params.id;
-        if (!mongoose.isValidObjectId(id)) {
-            return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
-        }
-
-        const current = await User.findById(id);
-        if (!current) {
-            return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
-        }
-
-        const b = req.body || {};
-        const update = {};
-
-        const username = typeof b.username === 'string' ? b.username.trim() : '';
-        if (username) {
-            const dup = await User.findOne({ username, _id: { $ne: id } });
-            if (dup) {
-                return res.status(400).json({ message: 'Username นี้มีคนใช้แล้ว กรุณาใช้ชื่ออื่น' });
-            }
-            update.username = username;
-        }
-
-        const email = typeof b.email === 'string' ? b.email.trim() : '';
-        if (email) {
-            const dup = await User.findOne({ email: new RegExp('^' + escapeRegex(email) + '$', 'i'), _id: { $ne: id } });
-            if (dup) {
-                return res.status(400).json({ message: 'Email นี้มีคนใช้แล้ว กรุณาใช้อีเมลอื่น' });
-            }
-            update.email = email;
-        }
-
-        const firstName = typeof b.firstName === 'string' ? b.firstName.trim() : '';
-        if (firstName) update.firstName = firstName;
-
-        // นามสกุลอนุญาตให้ล้างเป็นค่าว่างได้
-        if (has(b, 'lastName')) update.lastName = String(b.lastName || '').trim();
-
-        if (b.role) update.role = b.role;
-
-        // ✅ จุดสำคัญ: เช็คว่า "มี key ส่งมาไหม" (ไม่ใช่เช็ค truthy) เพื่อให้ "" = ปลดล็อคได้จริง
-        if (has(b, 'assignedArea')) {
-            update.assignedArea = await User.resolveAssignedCategory(b.assignedArea);
-        }
-
-        if (has(update, 'firstName') || has(update, 'lastName')) {
-            const f = has(update, 'firstName') ? update.firstName : (current.firstName || '');
-            const l = has(update, 'lastName') ? update.lastName : (current.lastName || '');
-            update.fullName = (f + ' ' + l).trim();
-        }
-
-        if (typeof b.password === 'string' && b.password.trim() !== '') {
-            const salt = await bcrypt.genSalt(10);
-            update.password = await bcrypt.hash(b.password.trim(), salt);
-        }
-
-        const updated = await User.findByIdAndUpdate(
-            id,
-            { $set: update },
-            { new: true, runValidators: true }
-        ).select('-password').lean();
-
-        if (!updated) {
-            return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
-        }
-
-        updated.assignedArea = await User.resolveAssignedCategory(updated.assignedArea);
-        res.json({ success: true, message: 'อัปเดตข้อมูลและรหัสผ่านสำเร็จ', user: updated });
-    } catch (error) {
-        handleError(res, error, 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
-    }
-});
-
-// DELETE /api/user/:id
-router.delete('/:id', adminOnly, async (req, res) => {
-    try {
-        const id = req.params.id;
-        if (!mongoose.isValidObjectId(id)) {
-            return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
-        }
-        if (String(id) === String(req.user.userId)) {
-            return res.status(400).json({ message: 'ไม่สามารถลบบัญชีของตนเองได้' });
-        }
-
-        await User.findByIdAndDelete(id);
-        await Area.updateMany({ owner: id }, { $unset: { owner: 1 } });
-        await Area.updateMany({ assignedUsers: id }, { $pull: { assignedUsers: id } });
+        await User.findByIdAndDelete(req.params.id);
+        await Area.updateMany({ owner: req.params.id }, { $unset: { owner: 1 } });
         res.json({ success: true, message: 'ลบผู้ใช้งานสำเร็จ' });
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลบข้อมูล' });
+    }
+});
+
+router.patch('/:id', verifyToken, async (req, res) => {
+    try {
+        const { username, email, firstName, lastName, role, password, assignedArea } = req.body;
+
+        if (username) {
+            const existingUser = await User.findOne({ username: username, _id: { $ne: req.params.id } });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Username นี้มีคนใช้แล้ว กรุณาใช้ชื่ออื่น' });
+            }
+        }
+
+        const validArea = (assignedArea && mongoose.Types.ObjectId.isValid(assignedArea)) ? assignedArea : null;
+
+        let updateData = {};
+        if (username) updateData.username = username;
+        if (email) updateData.email = email;
+        if (firstName) updateData.firstName = firstName;
+        if (lastName) updateData.lastName = lastName;
+        if (firstName || lastName) {
+            const fName = firstName || '';
+            const lName = lastName || '';
+            updateData.fullName = (fName + ' ' + lName).trim();
+        }
+        if (role) updateData.role = role;
+        if (assignedArea !== undefined) updateData.assignedArea = validArea;
+
+        if (password && password.trim() !== '') {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: updateData }, { new: true });
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'ไม่พบผู้ใช้งานนี้ในระบบ' });
+        }
+
+        if (updatedUser.role === 'Area Owner' && validArea) {
+            await Area.updateMany({ owner: updatedUser._id, _id: { $ne: validArea } }, { $unset: { owner: 1 } });
+            await Area.findByIdAndUpdate(validArea, { owner: updatedUser._id });
+        }
+
+        res.json({ success: true, message: 'อัปเดตข้อมูลและรหัสผ่านสำเร็จ' });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + error.message });
     }
 });
 
