@@ -31,15 +31,14 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
 
-    // ล็อคระดับ "ห้อง/สถานที่" (เลือกห้องย่อยตอนตั้งสิทธิ์) — null = ไม่ได้ล็อคห้อง
+    // ห้องที่ผูกกับเจ้าของพื้นที่ (ใช้กำหนด Area.owner) — ไม่ใช้ล็อคผู้ประเมิน
     assignedArea: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Area',
         default: null
     },
 
-    // ล็อคระดับ "หมวดหมู่" — ใช้เมื่อเลือกแค่หมวดหมู่ ไม่เลือกห้อง (หรือเก็บหมวดของห้องที่ล็อค)
-    // "" = ไม่ล็อคหมวดหมู่
+    // 🔒 ล็อคระดับ "ส่วนพื้นที่ / หมวดหมู่" — ใช้ล็อคสิทธิ์ผู้ประเมิน ("" = ไม่ล็อค)
     assignedCategory: { type: String, default: '', trim: true },
 
     firstName: { type: String, required: true },
@@ -57,45 +56,53 @@ const UserSchema = new mongoose.Schema({
 });
 
 /**
- * แปลงข้อมูลที่ Frontend ส่งมา ({ assignedArea, assignedCategory }) ให้เป็นค่าที่เก็บลง DB
- *  - assignedArea เป็น ObjectId ของห้องที่มีจริง  -> ล็อคห้อง (+เก็บหมวดของห้องนั้นอัตโนมัติ)
- *  - ไม่มีห้อง แต่มี assignedCategory              -> ล็อคทั้งหมวดหมู่
- *  - ทั้งคู่ว่าง ("" / null / "ไม่ล็อค...")          -> ปลดล็อคทั้งหมด
- *  - (รองรับของเก่า) assignedArea ส่งมาเป็นชื่อหมวดหมู่ที่ไม่ใช่ ObjectId -> ถือเป็นการล็อคหมวดหมู่
+ * แปลงค่าที่ Admin ส่งมา ให้เป็นค่าที่เก็บลง DB
+ *  - assignedCategory ที่มีค่า           -> ล็อคทั้งหมวดหมู่นั้น
+ *  - เลือกห้อง (assignedArea เป็น id จริง) -> เก็บห้องไว้ (ใช้กำหนดเจ้าของ) และดึงหมวดของห้องมาเป็นการล็อค
+ *                                          ถ้าไม่ได้ส่งหมวดมาด้วย
+ *  - ทั้งคู่ว่าง                          -> ปลดล็อคทั้งหมด
+ *  - รองรับของเก่า: assignedArea เป็นชื่อหมวดหมู่ (ไม่ใช่ ObjectId) -> ถือเป็นการล็อคหมวด
  */
 UserSchema.statics.normalizeAssignment = async function (input) {
     input = input || {};
+    const Area = mongoose.models.Area || require('./Area');
+
     const rawArea = idOf(input.assignedArea);
     const rawCat = clean(input.assignedCategory);
 
+    let assignedArea = null;
+    let assignedCategory = rawCat;
+
     if (rawArea && HEX24.test(rawArea)) {
         try {
-            const Area = mongoose.models.Area || require('./Area');
             const area = await Area.findById(rawArea).select('category').lean();
             if (area) {
-                return { assignedArea: area._id, assignedCategory: String(area.category || '').trim() };
+                assignedArea = area._id;
+                assignedCategory = String(area.category || '').trim() || rawCat;
             }
-        } catch (e) { /* ตกไปใช้หมวดหมู่ด้านล่าง */ }
+        } catch (e) { /* ไม่พบห้อง -> ไม่ผูกห้อง */ }
+    } else if (rawArea && !rawCat) {
+        assignedCategory = rawArea; // ข้อมูลรูปแบบเก่า
     }
 
-    const cat = rawCat || (rawArea && !HEX24.test(rawArea) ? rawArea : '');
-    return { assignedArea: null, assignedCategory: cat };
+    return { assignedArea, assignedCategory };
 };
 
 /**
- * แปลงข้อมูลสิทธิ์ของ user (จาก DB) เป็นรูปแบบที่ Frontend ใช้ (ทุกหน้าใช้ชุดเดียวกัน)
+ * แปลงสิทธิ์ของ user เป็นรูปแบบที่ Frontend ใช้ทุกหน้า
  *  { assignedArea: 'idห้อง' | '', assignedAreaName: 'ชื่อห้อง' | '', assignedCategory: 'หมวด' | '' }
- * ถ้าห้องที่ผูกไว้ถูกลบไปแล้ว (เช่น รัน seed ใหม่) จะถือว่าไม่ได้ล็อคห้อง
+ * ถ้าห้องที่ผูกไว้ถูกลบไปแล้ว จะถือว่าไม่มีห้องผูกไว้
  */
 UserSchema.statics.describeAssignment = async function (user) {
     user = user || {};
+    const Area = mongoose.models.Area || require('./Area');
+
     let areaId = idOf(user.assignedArea);
     let category = clean(user.assignedCategory);
     let areaName = '';
 
     if (areaId && HEX24.test(areaId)) {
         try {
-            const Area = mongoose.models.Area || require('./Area');
             const area = await Area.findById(areaId).select('areaName category').lean();
             if (area) {
                 areaName = String(area.areaName || '').trim();
