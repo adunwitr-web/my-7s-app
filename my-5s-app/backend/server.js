@@ -11,6 +11,43 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+// ตรวจว่าอัปโหลดไฟล์ครบและวางถูกโฟลเดอร์ (ไฟล์ชื่อซ้ำ เช่น auth.js / user.js วางสลับกันได้ง่าย)
+(function selfCheck() {
+    const problems = [];
+    try {
+        const U = require('./models/user');
+        if (typeof U.findOne !== 'function') {
+            problems.push('models/user.js ไม่ใช่ Mongoose Model (อาจเอาไฟล์ routes/user.js ไปวางทับ)');
+        } else if (typeof U.describeAssignment !== 'function' || typeof U.normalizeAssignment !== 'function') {
+            problems.push('models/user.js ยังเป็นเวอร์ชันเก่า (ไม่มี describeAssignment / normalizeAssignment)');
+        }
+    } catch (e) { problems.push('models/user.js โหลดไม่ได้: ' + e.message); }
+
+    try {
+        const A = require('./middleware/auth');
+        if (typeof A.verifyToken !== 'function' || typeof A.checkRole !== 'function') {
+            problems.push('middleware/auth.js ไม่ถูกต้อง (อาจเอาไฟล์ routes/auth.js ไปวางทับ)');
+        }
+    } catch (e) { problems.push('middleware/auth.js โหลดไม่ได้: ' + e.message); }
+
+    try {
+        const Ar = require('./models/Area');
+        if (!Ar.schema || !Ar.schema.path('owner')) {
+            problems.push('models/Area.js ยังเป็นเวอร์ชันเก่า (ไม่มีฟิลด์ owner)');
+        }
+    } catch (e) { problems.push('models/Area.js โหลดไม่ได้: ' + e.message); }
+
+    if (!process.env.JWT_SECRET) {
+        problems.push('ไม่พบ JWT_SECRET ใน Environment Variables ของ Render');
+    }
+
+    if (problems.length) {
+        problems.forEach(p => console.error('❌ [SELF-CHECK] ' + p));
+    } else {
+        console.log('✅ [SELF-CHECK] ไฟล์และค่าตั้งต้นครบถ้วน');
+    }
+})();
+
 // Connect MongoDB
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/my-5s-db')
     .then(() => console.log('✅ Connected to MongoDB'))
