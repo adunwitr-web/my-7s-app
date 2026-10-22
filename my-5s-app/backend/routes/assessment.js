@@ -48,15 +48,16 @@ router.post('/', verifyToken, async (req, res) => {
         }
 
         // 🔒 2. ตรวจสิทธิ์ล็อคพื้นที่ฝั่งเซิร์ฟเวอร์ (กันการข้ามสิทธิ์ที่ Admin ตั้งไว้)
-        const me = await User.findById(req.user.userId).select('role assignedArea assignedCategory').lean();
+        const me = await User.findById(req.user.userId).select('role assignedArea assignedCategory assignedCategories').lean();
         if (me && me.role !== 'Admin') {
             // 🔒 ล็อคเฉพาะ "ส่วนพื้นที่ / หมวดหมู่" ที่รับผิดชอบ — ห้องย่อยไม่ถูกล็อค
             // ตรวจจากหมวดของห้องใน DB เท่านั้น ไม่เชื่อค่า category ที่ Frontend ส่งมา
             const lock = await User.describeAssignment(me);
-            const lockCat = String(lock.assignedCategory || '').trim();
-            if (lockCat && !lockCat.includes('ไม่ล็อค')) {
-                if (!foundArea || !categoryMatches(foundArea.category, lockCat)) {
-                    return res.status(403).json({ message: `คุณมีสิทธิ์ประเมินเฉพาะหมวดหมู่ "${lockCat}" เท่านั้น` });
+            const lockCats = lock.assignedCategories;
+            if (lockCats.length) {
+                const allowed = !!foundArea && lockCats.some(c => categoryMatches(foundArea.category, c));
+                if (!allowed) {
+                    return res.status(403).json({ message: `คุณมีสิทธิ์ประเมินเฉพาะหมวดหมู่ "${lockCats.join('", "')}" เท่านั้น` });
                 }
             }
         }
@@ -133,7 +134,7 @@ router.get('/', verifyToken, adminOnly, async (req, res) => {
 router.get('/pending', verifyToken, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const currentUser = await User.findById(userId).select('assignedArea assignedCategory').lean();
+        const currentUser = await User.findById(userId).select('assignedArea assignedCategory assignedCategories').lean();
 
         const idSet = new Set();
 
@@ -145,11 +146,8 @@ router.get('/pending', verifyToken, async (req, res) => {
         if (currentUser) {
             // 🔒 ทุกห้องในหมวดหมู่ที่รับผิดชอบ (ห้องที่เป็นเจ้าของเพิ่มไว้ด้านบนแล้ว)
             const lock = await User.describeAssignment(currentUser);
-            const lockCat = String(lock.assignedCategory || '').trim();
-            if (lockCat && !lockCat.includes('ไม่ล็อค')) {
-                const catAreas = await Area.find({
-                    category: new RegExp(escapeRegex(lockCat), 'i')
-                }).select('_id');
+            if (lock.assignedCategories.length) {
+                const catAreas = await Area.find({ category: { $in: lock.assignedCategories } }).select('_id');
                 catAreas.forEach(a => idSet.add(String(a._id)));
             }
         }
