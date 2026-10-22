@@ -1,33 +1,25 @@
 const express = require('express');
-console.log("🎯 ไฟล์ assessment.js อัปเดตล่าสุดถูกเรียกใช้งานแล้ว!");
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const mongoose = require('mongoose');
 
 const Assessment = require('../models/Assessment');
 const Area = require('../models/Area');
 const User = require('../models/user');
-const SystemConfig = require('../models/SystemConfig');
+const { verifyToken, checkRole } = require('../middleware/auth');
+
+const adminOnly = checkRole(['Admin']);
 
 function escapeRegex(text) {
-    return text ? text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+    return text ? String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
 }
 
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) {
-        return res.status(403).json({ message: 'กรุณาเข้าสู่ระบบงานสารสนเทศก่อนทำรายการ' });
-    }
-    const token = authHeader.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey5s', (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ message: 'กุญแจยืนยันตัวตนหมดอายุหรือไม่ถูกต้อง' });
-        }
-        req.user = decoded;
-        next();
-    });
-};
+// เทียบชื่อหมวดหมู่แบบยืดหยุ่น (กันชื่อจาก Excel กับชื่อในฟอร์มต่างกันเล็กน้อย)
+function categoryMatches(a, b) {
+    const x = String(a || '').trim().toLowerCase();
+    const y = String(b || '').trim().toLowerCase();
+    if (!x || !y) return false;
+    return x === y || x.includes(y) || y.includes(x);
+}
 
 // 1. บันทึกผลการตรวจประเมิน (พร้อมป้องกันการส่งซ้ำในรอบเดียวกัน)
 router.post('/', verifyToken, async (req, res) => {
@@ -55,28 +47,46 @@ router.post('/', verifyToken, async (req, res) => {
             });
         }
 
+        // 🔒 2. ตรวจสิทธิ์ล็อคพื้นที่ฝั่งเซิร์ฟเวอร์ (กันการข้ามสิทธิ์ที่ Admin ตั้งไว้)
+        const me = await User.findById(req.user.userId).select('role assignedArea assignedCategory').lean();
+        if (me && me.role !== 'Admin') {
+            const lock = await User.describeAssignment(me);
+            if (lock.assignedArea) {
+                if (!foundArea || String(foundArea._id) !== lock.assignedArea) {
+                    return res.status(403).json({ message: 'คุณมีสิทธิ์ประเมินเฉพาะพื้นที่ที่ได้รับมอบหมายเท่านั้น' });
+                }
+            } else if (lock.assignedCategory) {
+                const ok = categoryMatches(category, lock.assignedCategory) ||
+                    (foundArea && categoryMatches(foundArea.category, lock.assignedCategory));
+                if (!ok) {
+                    return res.status(403).json({ message: `คุณมีสิทธิ์ประเมินเฉพาะหมวดหมู่ "${lock.assignedCategory}" เท่านั้น` });
+                }
+            }
+        }
+
         if (foundArea) {
             area = foundArea._id;
         } else {
-            // สร้าง Area ใหม่ถ้ายังไม่มีในระบบ
-            const newArea = new Area({ 
-                areaName: String(area).replace(/^\d+\.\s*/, '').trim(), 
+            // สร้าง Area ใหม่ถ้ายังไม่มีในระบบ (ต้องมี department ตาม Schema)
+            const newArea = new Area({
+                department: 'วิทยาลัยรัตภูมิ',
+                areaName: String(area).replace(/^\d+\.\s*/, '').trim(),
                 category: category || 'สำนักงาน'
             });
             const savedArea = await newArea.save();
             area = savedArea._id;
         }
 
-        // 🟢 2. ป้องกันการส่งแบบประเมินซ้ำในสถานที่เดียวกัน และรอบประเมินเดียวกัน
+        // 🟢 3. ป้องกันการส่งแบบประเมินซ้ำ (พื้นที่เดียวกัน + รอบเดียวกัน + ผู้ประเมินคนเดียวกัน)
         const existingCheck = await Assessment.findOne({
             area: area,
             assessmentRound: assessmentRound,
-            assessor: req.user._id
+            assessor: req.user.userId
         });
 
         if (existingCheck) {
-            return res.status(400).json({ 
-                message: `สถานที่นี้ได้รับการตรวจประเมินในรอบ "${assessmentRound}" เรียบร้อยแล้ว ไม่สามารถส่งแบบประเมินซ้ำได้` 
+            return res.status(400).json({
+                message: `สถานที่นี้ได้รับการตรวจประเมินในรอบ "${assessmentRound}" เรียบร้อยแล้ว ไม่สามารถส่งแบบประเมินซ้ำได้`
             });
         }
 
@@ -84,7 +94,7 @@ router.post('/', verifyToken, async (req, res) => {
 
         const newAssessment = new Assessment({
             area: area,
-            assessor: req.user.userId || req.user.id || req.user._id,
+            assessor: req.user.userId,
             assessmentRound: assessmentRound,
             scores: scores || [],
             items: items || [],
@@ -97,8 +107,8 @@ router.post('/', verifyToken, async (req, res) => {
 
         await newAssessment.save();
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             message: 'บันทึกผลการตรวจประเมินเรียบร้อยแล้ว'
         });
 
@@ -109,7 +119,7 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 // 2. ดึงข้อมูลการประเมินทั้งหมดสำหรับ Admin
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', verifyToken, adminOnly, async (req, res) => {
     try {
         const assessments = await Assessment.find()
             .populate('area', 'areaName category owner')
@@ -122,60 +132,39 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// 3. ดึงรายการประเมินสำหรับ Owner Dashboard (เวอร์ชันติดตัวสแกนหาปัญหา)
+// 3. ดึงรายการประเมินสำหรับ Owner Dashboard
 router.get('/pending', verifyToken, async (req, res) => {
     try {
-        const userId = req.user.userId || req.user.id || req.user._id;
-        const currentUser = await User.findById(userId);
-        
-        // 🟢 จุดที่เพิ่มเข้ามา: สแกนดูว่า User คนนี้มีสิทธิ์อะไรบ้าง
-        console.log("\n-----------------------------------------");
-        console.log("🔍 [Owner Dashboard] ตรวจสอบสิทธิ์เจ้าของห้อง");
-        console.log("👤 User ID ที่ล็อกอิน:", userId);
-        console.log("📝 พื้นที่รับผิดชอบในโปรไฟล์ (assignedArea):", currentUser?.assignedArea);
+        const userId = req.user.userId;
+        const currentUser = await User.findById(userId).select('assignedArea assignedCategory').lean();
 
-        let myAreaIds = [];
-        const ownedAreas = await Area.find({ owner: userId });
-        ownedAreas.forEach(a => myAreaIds.push(a._id));
+        const idSet = new Set();
 
-        if (currentUser && currentUser.assignedArea) {
-            const assigned = currentUser.assignedArea;
-            if (mongoose.Types.ObjectId.isValid(assigned)) {
-                if (!myAreaIds.some(id => id.toString() === assigned.toString())) {
-                    myAreaIds.push(assigned);
-                }
-            } else {
-                const cleanName = String(assigned).replace(/^\d+\.\s*/, '').trim();
-                const matchedAreas = await Area.find({
-                    $or: [
-                        { areaName: assigned },
-                        { areaName: cleanName },
-                        { areaName: new RegExp(escapeRegex(cleanName), 'i') }
-                    ]
-                });
-                matchedAreas.forEach(a => {
-                    if (!myAreaIds.some(id => id.toString() === a._id.toString())) {
-                        myAreaIds.push(a._id);
-                    }
-                });
+        // ห้องที่ผู้ใช้เป็นเจ้าของ (Area.owner)
+        const ownedAreas = await Area.find({ owner: userId }).select('_id');
+        ownedAreas.forEach(a => idSet.add(String(a._id)));
+
+        // ห้อง/หมวดหมู่ที่ Admin มอบหมายไว้ในทะเบียนบุคลากร
+        if (currentUser) {
+            const lock = await User.describeAssignment(currentUser);
+            if (lock.assignedArea) {
+                idSet.add(lock.assignedArea);
+            } else if (lock.assignedCategory) {
+                const catAreas = await Area.find({
+                    category: new RegExp(escapeRegex(lock.assignedCategory), 'i')
+                }).select('_id');
+                catAreas.forEach(a => idSet.add(String(a._id)));
             }
         }
-        
-        // 🟢 สรุปผลการค้นหาห้อง
-        console.log("📍 สรุป รหัสพื้นที่ (Area IDs) ที่ระบบหาเจอ:", myAreaIds);
 
-        if (myAreaIds.length === 0) {
-            console.log("⚠️ ผลลัพธ์: ไม่พบพื้นที่ที่เชื่อมโยงกับ User นี้เลย (ส่งค่าว่างกลับไป)");
-            return res.json([]);
-        }
+        if (idSet.size === 0) return res.json([]);
+
+        const myAreaIds = [...idSet].map(id => new mongoose.Types.ObjectId(id));
 
         const tasks = await Assessment.find({ area: { $in: myAreaIds } })
             .populate('area', 'areaName category owner')
             .populate('assessor', 'firstName lastName fullName username')
             .sort({ createdAt: -1 });
-            
-        console.log("📋 จำนวนใบประเมินที่เจอในห้องนี้:", tasks.length);
-        console.log("-----------------------------------------\n");
 
         res.json(tasks);
     } catch (error) {
@@ -187,6 +176,9 @@ router.get('/pending', verifyToken, async (req, res) => {
 // 4. ดึงข้อมูลแบบระบุ ID
 router.get('/:id', verifyToken, async (req, res) => {
     try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(404).json({ message: 'ไม่พบบันทึกการประเมินนี้ในระบบ' });
+        }
         const assessment = await Assessment.findById(req.params.id)
             .populate('area', 'areaName category owner')
             .populate('assessor', 'firstName lastName fullName username');
@@ -203,6 +195,11 @@ router.get('/:id', verifyToken, async (req, res) => {
 // 5. เจ้าของสถานที่ส่งรายงานการแก้ไข
 router.patch('/:id/resolve', verifyToken, async (req, res) => {
     try {
+        const role = String(req.user.role || '');
+        if (role !== 'Admin' && !role.includes('Area Owner')) {
+            return res.status(403).json({ message: 'เฉพาะเจ้าของพื้นที่เท่านั้นที่ส่งรายงานการแก้ไขได้' });
+        }
+
         const { detail, photoUrl } = req.body;
         const assessment = await Assessment.findById(req.params.id);
 
@@ -223,7 +220,7 @@ router.patch('/:id/resolve', verifyToken, async (req, res) => {
 });
 
 // 6. Admin รับรองผลการประเมิน
-router.patch('/:id/approve', verifyToken, async (req, res) => {
+router.patch('/:id/approve', verifyToken, adminOnly, async (req, res) => {
     try {
         const assessment = await Assessment.findByIdAndUpdate(
             req.params.id,
@@ -239,7 +236,7 @@ router.patch('/:id/approve', verifyToken, async (req, res) => {
 });
 
 // 7. Admin ส่งกลับไปแก้ไข
-router.patch('/:id/reject', verifyToken, async (req, res) => {
+router.patch('/:id/reject', verifyToken, adminOnly, async (req, res) => {
     try {
         const { reason } = req.body;
         const assessment = await Assessment.findById(req.params.id);
@@ -262,7 +259,7 @@ router.patch('/:id/reject', verifyToken, async (req, res) => {
 });
 
 // 8. Admin แก้ไขคะแนนและข้อมูลประเมิน
-router.patch('/:id/edit', verifyToken, async (req, res) => {
+router.patch('/:id/edit', verifyToken, adminOnly, async (req, res) => {
     try {
         const { percentage, createdAt, items, totalScore, scores } = req.body;
         const assessment = await Assessment.findById(req.params.id);

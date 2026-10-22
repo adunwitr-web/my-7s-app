@@ -1,24 +1,49 @@
 const express = require('express');
 const router = express.Router();
 const FormTemplate = require('../models/FormTemplate');
+const { verifyToken, checkRole } = require('../middleware/auth');
+
+const adminOnly = checkRole(['Admin']);
+
+// ทุก endpoint ต้อง Login (Frontend ส่ง Token มาทุกครั้งอยู่แล้ว)
+router.use(verifyToken);
 
 // ฟังก์ชันสำหรับ Escape อักขระพิเศษใน Regex ป้องกันการค้นหาผิดพลาด
 function escapeRegex(text) {
     return text ? String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
 }
 
-// 1. API สำหรับบันทึกแบบฟอร์มใหม่เข้าระบบ (จาก Excel / Admin)
-router.post('/upload', async (req, res) => {
+// เงื่อนไข "ฟอร์มพร้อมใช้งาน" — ใช้ $and เพราะเดิมเขียน $or ซ้ำ 2 ครั้งใน object เดียว
+// ทำให้เงื่อนไขแรก (isActive) ถูกทับหายไป
+function activeFilter(currentDate) {
+    return {
+        $and: [
+            { $or: [{ isActive: true }, { isActive: { $exists: false } }] },
+            {
+                $or: [
+                    { publishMode: 'immediate' },
+                    { publishMode: 'scheduled', publishDate: { $lte: currentDate } },
+                    { publishMode: { $exists: false } }
+                ]
+            }
+        ]
+    };
+}
+
+const EDITABLE_FIELDS = ['formName', 'targetAreas', 'categories', 'publishMode', 'publishDate'];
+
+// 1. บันทึกแบบฟอร์มใหม่เข้าระบบ (Admin)
+router.post('/upload', adminOnly, async (req, res) => {
     try {
         const { formName, targetAreas, categories, publishMode, publishDate } = req.body;
 
-        const newForm = new FormTemplate({ 
-            formName, 
-            targetAreas: Array.isArray(targetAreas) ? targetAreas : [targetAreas], 
+        const newForm = new FormTemplate({
+            formName,
+            targetAreas: Array.isArray(targetAreas) ? targetAreas : [targetAreas],
             categories,
             publishMode: publishMode || 'immediate',
             publishDate: publishDate || null,
-            isActive: true // 🟢 ตั้งค่าเป็น true อัตโนมัติ เพื่อให้ค้นหาเจอในระบบผู้ประเมิน
+            isActive: true
         });
         await newForm.save();
 
@@ -29,11 +54,11 @@ router.post('/upload', async (req, res) => {
     }
 });
 
-// 2. API สำหรับดึงฟอร์มที่ตรงกับประเภทพื้นที่ (สำหรับหน้าผู้ประเมิน)
+// 2. ดึงฟอร์มที่ตรงกับประเภทพื้นที่ (สำหรับหน้าผู้ประเมิน)
 router.get('/match', async (req, res) => {
     try {
-        const { areaType } = req.query; 
-        
+        const { areaType } = req.query;
+
         if (!areaType) {
             return res.status(400).json({ message: 'กรุณาระบุประเภทพื้นที่' });
         }
@@ -42,43 +67,24 @@ router.get('/match', async (req, res) => {
         const cleanAreaType = String(areaType).trim();
         const safeRegex = escapeRegex(cleanAreaType);
 
-        // 🟢 2.1 ค้นหาแบบฟอร์มเวอร์ชันล่าสุดที่สถานะพร้อมใช้งาน และชื่อหมวดตรงกัน
+        // 2.1 ค้นหาเวอร์ชันล่าสุดที่พร้อมใช้งาน และชื่อหมวดตรงกัน
         let form = await FormTemplate.findOne({
-            $or: [
-                { isActive: true },
-                { isActive: { $exists: false } }
-            ],
-            targetAreas: { $regex: new RegExp(safeRegex, 'i') },
-            $or: [
-                { publishMode: 'immediate' },
-                { publishMode: 'scheduled', publishDate: { $lte: currentDate } },
-                { publishMode: { $exists: false } }
-            ]
+            ...activeFilter(currentDate),
+            targetAreas: { $regex: new RegExp(safeRegex, 'i') }
         }).sort({ createdAt: -1 });
 
-        // 🟢 2.2 หากไม่เจอแบบตรงตัว ให้ดึงคลังฟอร์มทั้งหมดมาค้นหาแบบยืดหยุ่น (Fuzzy Matching)
+        // 2.2 ไม่เจอแบบตรงตัว -> ค้นหาแบบยืดหยุ่น (Fuzzy Matching)
         if (!form) {
-            const activeForms = await FormTemplate.find({
-                $or: [
-                    { isActive: true },
-                    { isActive: { $exists: false } }
-                ],
-                $or: [
-                    { publishMode: 'immediate' },
-                    { publishMode: 'scheduled', publishDate: { $lte: currentDate } },
-                    { publishMode: { $exists: false } }
-                ]
-            }).sort({ createdAt: -1 });
+            const activeForms = await FormTemplate.find(activeFilter(currentDate)).sort({ createdAt: -1 });
 
-            // แมปชื่อ เช่น "สำนักงาน" เข้ากับ "สำนักงาน และห้องพักอาจารย์"
-            form = activeForms.find(f => 
-                f.targetAreas && f.targetAreas.some(t => 
-                    t.toLowerCase().includes(cleanAreaType.toLowerCase()) || 
-                    cleanAreaType.toLowerCase().includes(t.toLowerCase())
+            form = activeForms.find(f =>
+                f.targetAreas && f.targetAreas.some(t =>
+                    String(t).toLowerCase().includes(cleanAreaType.toLowerCase()) ||
+                    cleanAreaType.toLowerCase().includes(String(t).toLowerCase())
                 )
             );
 
-            // 🟢 2.3 หากยังหาไม่เจอจริงๆ ให้ใช้แบบฟอร์มล่าสุดที่มีอยู่ในระบบเป็นค่าสำรอง (ป้องกันหน้าเว็บล่ม)
+            // 2.3 ยังไม่เจอ -> ใช้ฟอร์มล่าสุดเป็นค่าสำรอง (ป้องกันหน้าเว็บล่ม)
             if (!form && activeForms.length > 0) {
                 form = activeForms[0];
             }
@@ -96,8 +102,8 @@ router.get('/match', async (req, res) => {
     }
 });
 
-// 3. API สำหรับดึงฟอร์มทั้งหมดในระบบ (สำหรับ Admin)
-router.get('/all', async (req, res) => {
+// 3. ดึงฟอร์มทั้งหมดในระบบ (Admin)
+router.get('/all', adminOnly, async (req, res) => {
     try {
         const forms = await FormTemplate.find().sort({ createdAt: -1 });
         res.status(200).json(forms);
@@ -107,7 +113,7 @@ router.get('/all', async (req, res) => {
     }
 });
 
-// 4. API สำหรับดึงฟอร์มล่าสุดแบบทั่วไป
+// 4. ดึงฟอร์มล่าสุดแบบทั่วไป
 router.get('/current', async (req, res) => {
     try {
         const form = await FormTemplate.findOne().sort({ createdAt: -1 });
@@ -117,8 +123,8 @@ router.get('/current', async (req, res) => {
     }
 });
 
-// 5. API ลบแบบฟอร์ม
-router.delete('/:id', async (req, res) => {
+// 5. ลบแบบฟอร์ม (Admin)
+router.delete('/:id', adminOnly, async (req, res) => {
     try {
         await FormTemplate.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'ลบแบบฟอร์มสำเร็จ!' });
@@ -127,13 +133,13 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// 6. API เปลี่ยนสถานะเป็น "ใช้งานจริง" (Publish)
-router.patch('/:id/publish', async (req, res) => {
+// 6. เปลี่ยนสถานะเป็น "ใช้งานจริง" (Publish) (Admin)
+router.patch('/:id/publish', adminOnly, async (req, res) => {
     try {
-        await FormTemplate.findByIdAndUpdate(req.params.id, { 
-            publishMode: 'immediate', 
+        await FormTemplate.findByIdAndUpdate(req.params.id, {
+            publishMode: 'immediate',
             publishDate: null,
-            isActive: true 
+            isActive: true
         });
         res.status(200).json({ message: 'นำแบบฟอร์มไปใช้งานจริงสำเร็จ!' });
     } catch (error) {
@@ -141,21 +147,28 @@ router.patch('/:id/publish', async (req, res) => {
     }
 });
 
-// 7. API อัปเดตข้อมูลแบบฟอร์ม (Edit)
-router.put('/:id', async (req, res) => {
+// 7. อัปเดตข้อมูลแบบฟอร์ม (Edit) (Admin) — รับเฉพาะฟิลด์ที่แก้ไขได้
+router.put('/:id', adminOnly, async (req, res) => {
     try {
-        await FormTemplate.findByIdAndUpdate(req.params.id, {
-            ...req.body,
-            isActive: true
+        const update = { isActive: true };
+        EDITABLE_FIELDS.forEach(f => {
+            if (req.body[f] !== undefined) update[f] = req.body[f];
         });
+        if (update.targetAreas !== undefined && !Array.isArray(update.targetAreas)) {
+            update.targetAreas = [update.targetAreas];
+        }
+
+        const form = await FormTemplate.findByIdAndUpdate(req.params.id, { $set: update });
+        if (!form) return res.status(404).json({ message: 'ไม่พบแบบฟอร์มนี้ในระบบ' });
+
         res.status(200).json({ message: 'อัปเดตข้อมูลแบบฟอร์มสำเร็จ!' });
     } catch (error) {
         res.status(500).json({ message: 'เกิดข้อผิดพลาดในการแก้ไขฟอร์ม' });
     }
 });
 
-// 8. API พักการใช้งานแบบฟอร์ม (Pause/Draft)
-router.patch('/:id/pause', async (req, res) => {
+// 8. พักการใช้งานแบบฟอร์ม (Pause/Draft) (Admin)
+router.patch('/:id/pause', adminOnly, async (req, res) => {
     try {
         await FormTemplate.findByIdAndUpdate(req.params.id, { publishMode: 'draft' });
         res.status(200).json({ message: 'พักการใช้งานแบบฟอร์มสำเร็จ!' });

@@ -2,12 +2,8 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Area = require('../models/Area');
-const authModule = require('../middleware/auth');
-
-// ดึง middleware function ยืดหยุ่นรองรับทุกรูปแบบ export
-const auth = typeof authModule === 'function' 
-    ? authModule 
-    : (authModule.auth || authModule.protect || authModule.verifyToken || ((req, res, next) => next()));
+const User = require('../models/user');
+const { verifyToken, checkRole } = require('../middleware/auth');
 
 // ฟังก์ชันช่วย Escape เครื่องหมายพิเศษสำหรับ Regex
 function escapeRegex(text) {
@@ -16,7 +12,7 @@ function escapeRegex(text) {
 }
 
 // 🟢 GET: ดึงรายการพื้นที่
-router.get('/', auth, async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
     try {
         const { category } = req.query;
         let query = {};
@@ -26,30 +22,36 @@ router.get('/', auth, async (req, res) => {
             query.category = { $regex: new RegExp(escapeRegex(category.trim()), 'i') };
         }
 
-        // 2. ตรวจสอบสิทธิ์ User แบบปลอดภัย (กัน undefined)
-        const userRole = (req.user && req.user.role) ? String(req.user.role) : '';
+        // 2. ตรวจสอบสิทธิ์: Admin / Assessor เห็นทุกพื้นที่, เจ้าของพื้นที่เห็นเฉพาะที่เกี่ยวข้อง
+        const userRole = req.user && req.user.role ? String(req.user.role) : '';
         const isAdminOrAssessor = userRole === 'Admin' || userRole.includes('Assessor');
 
-        if (req.user && !isAdminOrAssessor) {
-            const userId = req.user._id || req.user.id || req.user.userId;
-            const userName = req.user.firstName || req.user.fullName || req.user.username || '';
-            const firstName = String(userName).split(' ')[0].replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
-
+        if (!isAdminOrAssessor) {
+            const userId = req.user.userId;
             const orConditions = [];
 
-            // 🟢 เช็กว่าเป็น Valid Mongo ObjectId ก่อนใส่ใน Query (กัน CastError 500)
             if (userId && mongoose.Types.ObjectId.isValid(userId)) {
                 orConditions.push({ assignedUsers: userId });
                 orConditions.push({ owner: userId });
+
+                const me = await User.findById(userId).select('firstName assignedArea assignedCategory').lean();
+                if (me) {
+                    const lock = await User.describeAssignment(me);
+                    if (lock.assignedArea) {
+                        orConditions.push({ _id: lock.assignedArea });
+                    } else if (lock.assignedCategory) {
+                        orConditions.push({ category: { $regex: new RegExp(escapeRegex(lock.assignedCategory), 'i') } });
+                    }
+
+                    const firstName = String(me.firstName || '').replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
+                    if (firstName.length > 0) {
+                        orConditions.push({ responsiblePersons: { $regex: escapeRegex(firstName), $options: 'i' } });
+                    }
+                }
             }
 
-            if (firstName.length > 0) {
-                orConditions.push({ responsiblePersons: { $regex: escapeRegex(firstName), $options: 'i' } });
-            }
-
-            if (orConditions.length > 0) {
-                query.$or = orConditions;
-            }
+            if (orConditions.length === 0) return res.json([]);
+            query.$or = orConditions;
         }
 
         // 3. ดึงข้อมูลแบบปลอดภัย (ถ้า populate พัง ให้ดึงเฉพาะข้อมูลหลักแทน เซิร์ฟเวอร์จะไม่ล่ม)
@@ -64,26 +66,27 @@ router.get('/', auth, async (req, res) => {
             areas = await Area.find(query).exec();
         }
 
+        res.set('Cache-Control', 'no-store');
         return res.json(areas);
 
     } catch (err) {
         console.error('❌ Error fetching areas:', err);
-        return res.status(500).json({ 
-            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่', 
-            error: err.message 
+        return res.status(500).json({
+            message: 'เกิดข้อผิดพลาดในการดึงข้อมูลพื้นที่',
+            error: err.message
         });
     }
 });
 
-// 🟢 POST: เพิ่มพื้นที่ใหม่
-router.post('/', auth, async (req, res) => {
+// 🟢 POST: เพิ่มพื้นที่ใหม่ (Admin เท่านั้น)
+router.post('/', verifyToken, checkRole(['Admin']), async (req, res) => {
     try {
         const { department, areaName, category, building, responsiblePersons, owner } = req.body;
-        
-        const newArea = new Area({ 
+
+        const newArea = new Area({
             department: department || 'วิทยาลัยรัตภูมิ',
-            areaName, 
-            category, 
+            areaName,
+            category,
             building: building || '',
             responsiblePersons: responsiblePersons || [],
             owner: (owner && mongoose.Types.ObjectId.isValid(owner)) ? owner : null
