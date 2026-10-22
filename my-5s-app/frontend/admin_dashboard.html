@@ -1186,9 +1186,11 @@
                 if (u.assignedArea && u.assignedArea !== "" && u.assignedArea !== "null") {
                     let aVal = '';
                     if (typeof u.assignedArea === 'object' && u.assignedArea !== null) {
-                        aVal = u.assignedArea.category || u.assignedArea.areaName || '-';
+                        aVal = u.assignedArea.areaName || u.assignedArea.category || '-';
                     } else {
-                        aVal = u.assignedArea;
+                        // ค้นหาชื่อห้องจากข้อมูลพื้นที่ทั้งหมด แทนที่จะแสดงเป็น ID ยาวๆ
+                        const foundArea = allAreasData.find(a => a._id === u.assignedArea || a.areaName === u.assignedArea);
+                        aVal = foundArea ? foundArea.areaName : u.assignedArea;
                     }
                     areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${aVal}</b>`;
                 }
@@ -1275,31 +1277,39 @@
         document.getElementById('editRole').value = user.role || 'Internal Assessor';
         document.getElementById('editPassword').value = '';
 
+        const editCategory = document.getElementById('editCategory');
         const editSelect = document.getElementById('editAssignedArea');
+        
+        // รีเซ็ตค่าหน้าต่างให้ว่างก่อน
+        if (editCategory) editCategory.value = "";
         if (editSelect) {
-            editSelect.value = ""; // รีเซ็ตก่อน
-            let currentArea = "";
-            
-            // แปลงค่าที่มาจาก DB ให้เป็น String 
-            if (user.assignedArea) {
-                if (typeof user.assignedArea === 'object' && user.assignedArea.category) {
-                    currentArea = user.assignedArea.category.trim();
-                } else if (typeof user.assignedArea === 'string') {
-                    currentArea = user.assignedArea.trim();
+            editSelect.innerHTML = '<option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>';
+            editSelect.disabled = true;
+        }
+
+        if (user.assignedArea && user.assignedArea !== "" && user.assignedArea !== "null") {
+            let assignedId = "";
+            let categoryName = "";
+
+            // ตรวจสอบข้อมูลห้องที่ผูกมา
+            if (typeof user.assignedArea === 'object' && user.assignedArea !== null) {
+                assignedId = user.assignedArea._id || user.assignedArea;
+                categoryName = user.assignedArea.category || "";
+            } else {
+                assignedId = user.assignedArea;
+                // หาหมวดหมู่หลักจาก ID ห้อง
+                const foundArea = allAreasData.find(a => a._id === assignedId || a.areaName === assignedId);
+                if (foundArea) {
+                    categoryName = foundArea.category;
+                    assignedId = foundArea._id;
                 }
             }
-            
-            let matched = false;
-            for(let i = 0; i < editSelect.options.length; i++) {
-                const optVal = editSelect.options[i].value;
-                if(optVal !== "" && (optVal === currentArea || currentArea.includes(optVal))) {
-                    editSelect.value = optVal;
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                editSelect.value = ""; 
+
+            // ถ้าเจอข้อมูล ให้เซ็ตค่า Dropdown ทั้งสองช่องให้ตรงกับของเดิม
+            if (categoryName && editCategory && editSelect) {
+                editCategory.value = categoryName.trim();
+                filterRoomsForEdit(); // เรียกฟังก์ชันเปิด Dropdown ห้องย่อย
+                editSelect.value = assignedId; // เลือกห้องย่อยของ User คนนี้
             }
         }
         document.getElementById('editUserModal').style.display = 'flex';
