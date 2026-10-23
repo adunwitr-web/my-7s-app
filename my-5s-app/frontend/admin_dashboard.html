@@ -778,8 +778,11 @@
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
+        if (!res.ok || !Array.isArray(data)) {
+            throw new Error((data && data.message) || `โหลดผลการประเมินไม่สำเร็จ (HTTP ${res.status})`);
+        }
         rawAdminData = data;
-        
+
         document.getElementById('statTotal').innerText = data.length;
 
         if (data.length > 0) {
@@ -850,6 +853,7 @@
 
     } catch (err) {
         console.error(err);
+        alert('❌ โหลดข้อมูลผลการประเมินไม่สำเร็จ: ' + err.message);
     }
 }
     function initAdminDashboard(data) {

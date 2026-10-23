@@ -296,6 +296,10 @@
         <div class="doc-panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <h2 style="color: #0369a1; margin: 0;">📊 แดชบอร์ดสรุปคะแนนประเมินรายเดือน (Monthly Performance)</h2>
             <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-weight: 600; font-size: 0.88em;">เลือกพื้นที่:</label>
+                <select id="ownerAreaFilter" class="form-control" style="width: auto; padding: 4px 10px; max-width: 260px;" onchange="updateOwnerDashboard()">
+                    <option value="ALL">-- ทุกพื้นที่ของฉัน --</option>
+                </select>
                 <label style="font-weight: 600; font-size: 0.88em;">เลือกปีประเมิน:</label>
                 <select id="ownerYearFilter" class="form-control" style="width: auto; padding: 4px 10px;" onchange="updateOwnerDashboard()">
                 </select>
@@ -319,6 +323,14 @@
 
         <div style="position: relative; height: 320px; width: 100%;">
             <canvas id="ownerMonthlyChart"></canvas>
+        </div>
+
+        <div style="margin-top: 22px;">
+            <h4 style="margin: 0 0 8px 0; color: #0369a1; font-size: 0.98em;">🏢 คะแนนเฉลี่ยแยกตามพื้นที่ (ปีที่เลือก)</h4>
+            <div id="ownerAreaEmpty" style="display: none; text-align: center; padding: 18px; color: #64748b;">ยังไม่มีผลการประเมินในปีที่เลือก</div>
+            <div id="ownerAreaBarWrap" style="position: relative; height: 280px; width: 100%;">
+                <canvas id="ownerAreaBarChart"></canvas>
+            </div>
         </div>
     </section>
 
@@ -561,6 +573,80 @@
         }
     }
 
+    let ownerAreaBarInstance = null;
+
+    // รายการงานที่ผ่านตัวกรองพื้นที่ (ใช้กับกราฟรายเดือน/ตัวเลขสรุป)
+    function getScopedTasks() {
+        const areaId = document.getElementById('ownerAreaFilter') ? document.getElementById('ownerAreaFilter').value : 'ALL';
+        if (!areaId || areaId === 'ALL') return currentTasksList;
+        return currentTasksList.filter(item => {
+            const a = item.area;
+            const id = a && typeof a === 'object' ? String(a._id || '') : String(a || '');
+            return id === areaId;
+        });
+    }
+
+    // กราฟคะแนนเฉลี่ยแยกตามพื้นที่ของเจ้าของ (แสดงทุกพื้นที่ที่รับผิดชอบ ไม่ขึ้นกับตัวกรอง)
+    function renderOwnerAreaBars(selectedYearBE) {
+        const byArea = new Map();
+        currentTasksList.forEach(item => {
+            if (!item.createdAt || !item.area || typeof item.area !== 'object') return;
+            if (new Date(item.createdAt).getFullYear() + 543 !== selectedYearBE) return;
+            const key = String(item.area._id);
+            if (!byArea.has(key)) byArea.set(key, { name: item.area.areaName || 'ไม่ระบุ', sum: 0, count: 0 });
+            const e = byArea.get(key);
+            e.sum += parseFloat(item.percentage) || 0;
+            e.count++;
+        });
+
+        const empty = document.getElementById('ownerAreaEmpty');
+        const wrap = document.getElementById('ownerAreaBarWrap');
+        if (byArea.size === 0) {
+            if (ownerAreaBarInstance) { ownerAreaBarInstance.destroy(); ownerAreaBarInstance = null; }
+            if (empty) empty.style.display = 'block';
+            if (wrap) wrap.style.display = 'none';
+            return;
+        }
+        if (empty) empty.style.display = 'none';
+        if (wrap) wrap.style.display = 'block';
+
+        const rows = [...byArea.values()].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+        const labels = rows.map(r => r.name.length > 22 ? r.name.substring(0, 20) + '...' : r.name);
+        const values = rows.map(r => +(r.sum / r.count).toFixed(2));
+        const colors = values.map(v => v >= 80 ? '#2e7d32' : '#f59e0b');
+
+        const ctx = document.getElementById('ownerAreaBarChart').getContext('2d');
+        if (ownerAreaBarInstance) ownerAreaBarInstance.destroy();
+        ownerAreaBarInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{ label: `คะแนนเฉลี่ยปี ${selectedYearBE} (%)`, data: values, backgroundColor: colors, borderRadius: 4 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { title: (items) => rows[items[0].dataIndex].name } } },
+                scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
+            }
+        });
+    }
+
+    // เติมตัวเลือกพื้นที่จากงานที่มีจริง (คงค่าที่เลือกไว้ถ้ายังมีอยู่)
+    function populateOwnerAreaFilter(data) {
+        const sel = document.getElementById('ownerAreaFilter');
+        if (!sel) return;
+        const prev = sel.value;
+        const areas = new Map();
+        data.forEach(item => {
+            if (item.area && typeof item.area === 'object') areas.set(String(item.area._id), item.area.areaName || 'ไม่ระบุ');
+        });
+        sel.innerHTML = '<option value="ALL">-- ทุกพื้นที่ของฉัน --</option>' +
+            [...areas.entries()].sort((a, b) => a[1].localeCompare(b[1], 'th'))
+                .map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+        if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+    }
+
     function initOwnerDashboard(data) {
         const yearSelect = document.getElementById('ownerYearFilter');
         const currentYearBE = new Date().getFullYear() + 543;
@@ -576,12 +662,14 @@
         const sortedYears = Array.from(years).sort((a, b) => b - a);
         yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">ปี พ.ศ. ${y}</option>`).join('');
         
+        populateOwnerAreaFilter(data);
         updateOwnerDashboard();
     }
 
     function updateOwnerDashboard() {
         const selectedYearBE = parseInt(document.getElementById('ownerYearFilter').value) || (new Date().getFullYear() + 543);
         const prevYearBE = selectedYearBE - 1;
+        renderOwnerAreaBars(selectedYearBE);
 
         document.querySelectorAll('.lbl-current-year').forEach(el => el.innerText = selectedYearBE);
         document.querySelectorAll('.lbl-prev-year').forEach(el => el.innerText = prevYearBE);
@@ -592,7 +680,7 @@
         const prevYearMonthlyScores = Array(12).fill(null);
         const prevYearMonthlyCounts = Array(12).fill(0);
 
-        currentTasksList.forEach(item => {
+        getScopedTasks().forEach(item => {
             if (!item.createdAt) return;
             const d = new Date(item.createdAt);
             const itemYearBE = d.getFullYear() + 543;
