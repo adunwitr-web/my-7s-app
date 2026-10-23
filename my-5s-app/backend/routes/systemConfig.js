@@ -124,4 +124,58 @@ router.post('/test-mail', verifyToken, adminOnly, async (req, res) => {
     }
 });
 
+// GET /api/system-config/mail-settings (Admin) — ค่าการส่งอีเมลที่ตั้งจากหน้าเว็บ (ไม่ส่งคีย์เต็มกลับ)
+router.get('/mail-settings', verifyToken, adminOnly, async (req, res) => {
+    try {
+        const cfg = (await SystemConfig.findOne().lean()) || {};
+        const key = String(cfg.mailjetApiKey || '');
+        res.set('Cache-Control', 'no-store');
+        res.json({
+            mailProvider: cfg.mailProvider || '',
+            mailFrom: cfg.mailFrom || '',
+            mailjetApiKeyMasked: key ? '•••• ' + key.slice(-4) : '',
+            hasMailjetSecret: !!cfg.mailjetSecretKey
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'โหลดการตั้งค่าอีเมลไม่สำเร็จ: ' + error.message });
+    }
+});
+
+// POST /api/system-config/mail-settings (Admin) — บันทึกค่า Mailjet/ผู้ส่งจากหน้าเว็บ
+// ช่องคีย์ที่ส่งมาว่าง = คงค่าเดิมไว้ (จะได้ไม่ต้องกรอกซ้ำทุกครั้ง)
+router.post('/mail-settings', verifyToken, adminOnly, async (req, res) => {
+    try {
+        const b = req.body || {};
+        const provider = String(b.mailProvider || '').trim();
+        if (!['mailjet', 'smtp', ''].includes(provider)) {
+            return res.status(400).json({ message: 'ผู้ให้บริการไม่ถูกต้อง' });
+        }
+        const from = String(b.mailFrom || '').trim();
+        if (from && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(from)) {
+            return res.status(400).json({ message: 'รูปแบบอีเมลผู้ส่งไม่ถูกต้อง' });
+        }
+
+        let config = await SystemConfig.findOne();
+        if (!config) config = new SystemConfig({ adminEmail: '', appPassword: '' });
+
+        config.mailProvider = provider;
+        config.mailFrom = from;
+        const apiKey = String(b.mailjetApiKey || '').trim();
+        const secret = String(b.mailjetSecretKey || '').trim();
+        if (apiKey) config.mailjetApiKey = apiKey;
+        if (secret) config.mailjetSecretKey = secret;
+
+        if (provider === 'mailjet' && (!config.mailjetApiKey || !config.mailjetSecretKey || !config.mailFrom)) {
+            await config.save();
+            return res.status(400).json({ message: 'บันทึกแล้ว แต่ยังขาดข้อมูล: กรุณากรอก API Key, Secret Key และอีเมลผู้ส่งให้ครบ' });
+        }
+
+        await config.save();
+        res.json({ success: true, message: 'บันทึกการตั้งค่าอีเมลสำเร็จ' });
+    } catch (error) {
+        console.error('Error saving mail settings:', error.message);
+        res.status(500).json({ message: 'บันทึกการตั้งค่าอีเมลไม่สำเร็จ: ' + error.message });
+    }
+});
+
 module.exports = router;

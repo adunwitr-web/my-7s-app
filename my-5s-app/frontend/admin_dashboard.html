@@ -608,6 +608,29 @@
             <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">รหัสผ่านแอปพลิเคชัน (App Password 16 หลัก):</label>
             <input type="password" id="settingAppPassword" class="form-control" placeholder="รหัสผ่านความปลอดภัย 16 หลัก">
         </div>
+        <div style="background:#f8fafc; border:1px solid var(--gov-border); border-radius:6px; padding:12px; margin-bottom:14px;">
+            <div style="font-weight:600; font-size:0.92em; margin-bottom:10px;">✉️ ตั้งค่าการส่งอีเมลแจ้งเตือน (Mailjet)</div>
+            <div style="margin-bottom:10px;">
+                <label style="display:block; font-size:0.85em; font-weight:600; margin-bottom:4px;">ผู้ให้บริการ:</label>
+                <select id="mailProviderSel" class="form-control">
+                    <option value="mailjet">Mailjet (HTTP API — ใช้ได้บน Render)</option>
+                    <option value="smtp">Gmail SMTP (อาจถูกบล็อกบน Render)</option>
+                </select>
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="display:block; font-size:0.85em; font-weight:600; margin-bottom:4px;">อีเมลผู้ส่ง (ต้องยืนยันแล้วใน Mailjet):</label>
+                <input type="email" id="mailFromInput" class="form-control" placeholder="เช่น green7s.notify@gmail.com">
+            </div>
+            <div style="margin-bottom:10px;">
+                <label style="display:block; font-size:0.85em; font-weight:600; margin-bottom:4px;">API Key: <span id="mailjetKeyHint" style="font-weight:400; color:#64748b;"></span></label>
+                <input type="text" id="mailjetApiKeyInput" class="form-control" placeholder="เว้นว่างถ้าไม่เปลี่ยน" autocomplete="off">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="display:block; font-size:0.85em; font-weight:600; margin-bottom:4px;">Secret Key: <span id="mailjetSecretHint" style="font-weight:400; color:#64748b;"></span></label>
+                <input type="password" id="mailjetSecretInput" class="form-control" placeholder="เว้นว่างถ้าไม่เปลี่ยน" autocomplete="new-password">
+            </div>
+            <button onclick="saveMailSettings()" style="width:100%; padding:9px; background:var(--gov-primary); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">บันทึกการตั้งค่าอีเมล</button>
+        </div>
         <div id="mailStatusBox" style="background:#f8fafc; border:1px solid var(--gov-border); border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:0.88em;">กำลังตรวจสถานะอีเมล...</div>
         <div style="margin-bottom:14px;">
             <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">ทดสอบส่งอีเมล (ส่งไปที่):</label>
@@ -1493,12 +1516,53 @@
         document.getElementById('settingsModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
         loadSettings();
+        loadMailSettings();
         loadMailStatus();
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
 
     function mailEsc(t) {
         return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    async function loadMailSettings() {
+        try {
+            const res = await fetch(`${API_URL}/system-config/mail-settings`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+            });
+            const d = await res.json();
+            if (!res.ok) throw new Error(d.message || 'โหลดไม่สำเร็จ');
+            document.getElementById('mailProviderSel').value = d.mailProvider || 'mailjet';
+            document.getElementById('mailFromInput').value = d.mailFrom || '';
+            document.getElementById('mailjetKeyHint').innerText = d.mailjetApiKeyMasked ? `(ตั้งค่าแล้ว ${d.mailjetApiKeyMasked})` : '(ยังไม่ได้ตั้งค่า)';
+            document.getElementById('mailjetSecretHint').innerText = d.hasMailjetSecret ? '(ตั้งค่าแล้ว)' : '(ยังไม่ได้ตั้งค่า)';
+            document.getElementById('mailjetApiKeyInput').value = '';
+            document.getElementById('mailjetSecretInput').value = '';
+        } catch (err) {
+            console.error('โหลดการตั้งค่าอีเมลไม่สำเร็จ:', err.message);
+        }
+    }
+
+    async function saveMailSettings() {
+        const body = {
+            mailProvider: document.getElementById('mailProviderSel').value,
+            mailFrom: document.getElementById('mailFromInput').value.trim(),
+            mailjetApiKey: document.getElementById('mailjetApiKeyInput').value.trim(),
+            mailjetSecretKey: document.getElementById('mailjetSecretInput').value.trim()
+        };
+        try {
+            const res = await fetch(`${API_URL}/system-config/mail-settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            alert(res.ok ? '✅ ' + data.message : '⚠️ ' + (data.message || 'บันทึกไม่สำเร็จ'));
+        } catch (err) {
+            alert('❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+        }
+        loadMailSettings();
+        loadMailStatus();
     }
 
     async function loadMailStatus() {

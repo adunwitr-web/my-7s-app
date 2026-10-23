@@ -1,17 +1,44 @@
 const nodemailer = require('nodemailer');
 const SystemConfig = require('../models/SystemConfig');
 
-// ผู้ให้บริการที่รองรับ (เลือกจาก Environment Variables ของ Render)
-//  1) RESEND_API_KEY  + MAIL_FROM  -> Resend (ต้องยืนยันโดเมนก่อน)
-//  2) BREVO_API_KEY   + MAIL_FROM  -> Brevo (ยืนยันแค่อีเมลผู้ส่งก็ใช้ได้ ไม่ต้องมีโดเมน)
-//  3) ไม่มีทั้งสอง     -> Gmail SMTP (ใช้ไม่ได้บน Render เพราะพอร์ต SMTP ถูกบล็อก)
-// หมายเหตุ: MAIL_FROM = อีเมลผู้ส่งที่ยืนยันแล้วในผู้ให้บริการนั้น
+// ลำดับการเลือกผู้ให้บริการ
+//  1) ค่าที่แอดมินตั้งในหน้าเว็บ (SystemConfig.mailProvider)
+//     - 'mailjet' ใช้ mailjetApiKey / mailjetSecretKey / mailFrom ที่บันทึกไว้
+//     - 'smtp'    ใช้ Gmail ด้วย adminEmail + appPassword (ใช้ไม่ได้บน Render แผนฟรี)
+//  2) ถ้ายังไม่ได้ตั้งในหน้าเว็บ ใช้ Environment Variables: RESEND_API_KEY, BREVO_API_KEY, หรือ MAILJET_API_KEY + MAILJET_SECRET_KEY (พร้อม MAIL_FROM)
+//  3) ไม่มีทั้งหมดจะใช้ SMTP
 
-function activeProvider() {
-    if (process.env.RESEND_API_KEY) return 'resend';
-    if (process.env.BREVO_API_KEY) return 'brevo';
-    if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) return 'mailjet';
-    return 'smtp';
+async function loadConfig() {
+    return (await SystemConfig.findOne().lean()) || {};
+}
+
+async function resolveProvider(cfg) {
+    if (cfg.mailProvider === 'mailjet') {
+        const apiKey = cfg.mailjetApiKey;
+        const secret = cfg.mailjetSecretKey;
+        const from = cfg.mailFrom;
+        return { provider: 'mailjet', apiKey, secret, from, ready: !!(apiKey && secret && from) };
+    }
+    if (cfg.mailProvider === 'smtp') {
+        return { provider: 'smtp', ready: !!(cfg.adminEmail && cfg.appPassword) };
+    }
+    // ยังไม่ได้ตั้งในหน้าเว็บ -> ใช้ Environment Variables
+    if (process.env.RESEND_API_KEY) {
+        return { provider: 'resend', from: process.env.MAIL_FROM, ready: !!process.env.MAIL_FROM };
+    }
+    if (process.env.BREVO_API_KEY) {
+        return { provider: 'brevo', from: process.env.MAIL_FROM, ready: !!process.env.MAIL_FROM };
+    }
+    if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) {
+        return {
+            provider: 'mailjet',
+            apiKey: process.env.MAILJET_API_KEY,
+            secret: process.env.MAILJET_SECRET_KEY,
+            from: process.env.MAIL_FROM,
+            ready: !!process.env.MAIL_FROM
+        };
+    }
+    return { provider: 'smtp', ready: !!(cfg.adminEmail && cfg.appPassword) };
 }
 
 function toRecipients(to) {
@@ -34,24 +61,39 @@ async function recordStatus(ok, to, error) {
     }
 }
 
-async function getSmtpSettings() {
-    const cfg = await SystemConfig.findOne().lean();
-    const user = String((cfg && cfg.adminEmail) || '').trim();
-    const pass = String((cfg && cfg.appPassword) || '').replace(/\s+/g, '');
-    if (!user || !pass) return null;
-    return { user, pass };
-}
-
 function explainHttpError(provider, status, data) {
-    const detail = (data && (data.message || data.error)) || JSON.stringify(data || {});
+    const detail = (data && (data.message || data.error || data.ErrorMessage)) || JSON.stringify(data || {});
     if (status === 401 || status === 403) return `${provider}: คีย์ API ไม่ถูกต้องหรือไม่มีสิทธิ์ (${status}) ${detail}`;
-    if (status === 400 || status === 422) return `${provider}: ข้อมูลอีเมลไม่ถูกต้อง หรือ MAIL_FROM ยังไม่ได้ยืนยัน (${status}) ${detail}`;
+    if (status === 400 || status === 422) return `${provider}: ข้อมูลอีเมลไม่ถูกต้อง หรืออีเมลผู้ส่งยังไม่ได้ยืนยัน (${status}) ${detail}`;
     return `${provider}: ส่งไม่สำเร็จ (${status}) ${detail}`;
 }
 
-async function sendViaResend({ recipients, subject, text, html }) {
-    const from = process.env.MAIL_FROM;
-    if (!from) throw new Error('ยังไม่ได้ตั้งค่า MAIL_FROM ใน Environment Variables');
+async function sendViaMailjet({ apiKey, secret, from, recipients, subject, text, html }) {
+    if (!from) throw new Error('ยังไม่ได้กรอกอีเมลผู้ส่ง (ต้องเป็นอีเมลที่ยืนยันแล้วใน Mailjet)');
+    const auth = Buffer.from(`${apiKey}:${secret}`).toString('base64');
+    const message = {
+        From: { Email: from, Name: 'Green 7S Plus' },
+        To: recipients.map(Email => ({ Email })),
+        Subject: subject,
+        TextPart: text || ' '
+    };
+    if (html) message.HTMLPart = html;
+
+    const res = await fetch('https://api.mailjet.com/v3.1/send', {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Messages: [message] })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(explainHttpError('Mailjet', res.status, data));
+    const first = data.Messages && data.Messages[0];
+    if (!first || first.Status !== 'success') {
+        throw new Error(`Mailjet ตอบสถานะ ${first ? first.Status : 'ไม่ทราบ'}: ${JSON.stringify(data)}`);
+    }
+    return { sent: true, messageId: first.To && first.To[0] && first.To[0].MessageID };
+}
+
+async function sendViaResend({ recipients, subject, text, html, from }) {
     const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
@@ -62,11 +104,9 @@ async function sendViaResend({ recipients, subject, text, html }) {
     return { sent: true, messageId: data.id };
 }
 
-async function sendViaBrevo({ recipients, subject, text, html }) {
-    const sender = process.env.MAIL_FROM;
-    if (!sender) throw new Error('ยังไม่ได้ตั้งค่า MAIL_FROM ใน Environment Variables (ใช้อีเมลผู้ส่งที่ยืนยันใน Brevo แล้ว)');
+async function sendViaBrevo({ recipients, subject, text, html, from }) {
     const body = {
-        sender: { name: 'Green 7S Plus', email: sender },
+        sender: { name: 'Green 7S Plus', email: from },
         to: recipients.map(email => ({ email })),
         subject,
         textContent: text || ' '
@@ -82,46 +122,23 @@ async function sendViaBrevo({ recipients, subject, text, html }) {
     return { sent: true, messageId: data.messageId };
 }
 
-// Mailjet: ใช้ API Key + Secret Key (Basic Auth) ยืนยันแค่อีเมลผู้ส่งก็ใช้ได้ ไม่ต้องมีโดเมน
-async function sendViaMailjet({ recipients, subject, text, html }) {
-    const sender = process.env.MAIL_FROM;
-    if (!sender) throw new Error('ยังไม่ได้ตั้งค่า MAIL_FROM ใน Environment Variables (ใช้อีเมลผู้ส่งที่ยืนยันใน Mailjet แล้ว)');
-    const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString('base64');
-    const message = {
-        From: { Email: sender, Name: 'Green 7S Plus' },
-        To: recipients.map(Email => ({ Email })),
-        Subject: subject,
-        TextPart: text || ' '
-    };
-    if (html) message.HTMLPart = html;
-    const res = await fetch('https://api.mailjet.com/v3.1/send', {
-        method: 'POST',
-        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Messages: [message] })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(explainHttpError('Mailjet', res.status, data));
-    const status = data.Messages && data.Messages[0] && data.Messages[0].Status;
-    if (status !== 'success') throw new Error(`Mailjet ตอบสถานะ ${status || 'ไม่ทราบ'}: ${JSON.stringify(data)}`);
-    return { sent: true, messageId: data.Messages[0].To && data.Messages[0].To[0] && data.Messages[0].To[0].MessageID };
-}
-
-async function sendViaSmtp({ recipients, subject, text, html }) {
-    const settings = await getSmtpSettings();
-    if (!settings) return { skipped: true, reason: 'ยังไม่ได้ตั้งค่าอีเมลผู้ส่งและ App Password ในหน้า Admin' };
+async function sendViaSmtp({ cfg, recipients, subject, text, html }) {
+    const user = String(cfg.adminEmail || '').trim();
+    const pass = String(cfg.appPassword || '').replace(/\s+/g, '');
+    if (!user || !pass) return { skipped: true, reason: 'ยังไม่ได้ตั้งค่าอีเมลผู้ส่งและ App Password ในหน้า Admin' };
 
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
         secure: true,
-        auth: { user: settings.user, pass: settings.pass },
+        auth: { user, pass },
         connectionTimeout: 15000,
         greetingTimeout: 15000,
         socketTimeout: 20000
     });
     try {
         const info = await transporter.sendMail({
-            from: `"Green 7S Plus" <${settings.user}>`,
+            from: `"Green 7S Plus" <${user}>`,
             to: recipients.join(', '),
             subject, text, html
         });
@@ -129,7 +146,7 @@ async function sendViaSmtp({ recipients, subject, text, html }) {
     } catch (err) {
         const code = err.code || '';
         const hint = ['ETIMEDOUT', 'ECONNECTION', 'ESOCKET', 'ECONNREFUSED'].includes(code)
-            ? 'เชื่อมต่อ Gmail SMTP ไม่ได้ (โฮสติ้งบล็อกพอร์ต SMTP) ให้ตั้ง BREVO_API_KEY หรือ RESEND_API_KEY แทน'
+            ? 'เชื่อมต่อ Gmail SMTP ไม่ได้ (โฮสติ้งบล็อกพอร์ต SMTP) ให้เปลี่ยนเป็น Mailjet ในหน้าตั้งค่า'
             : (code === 'EAUTH' ? 'ล็อกอิน Gmail ไม่สำเร็จ ตรวจอีเมลและ App Password' : err.message);
         throw new Error('SMTP: ' + hint);
     }
@@ -143,12 +160,16 @@ async function sendMail({ to, subject, text, html }) {
         return { skipped: true, reason: 'ไม่มีอีเมลผู้รับ' };
     }
 
-    const provider = activeProvider();
+    const cfg = await loadConfig();
+    const p = await resolveProvider(cfg);
     try {
-        const args = { recipients, subject, text, html };
-        const result = provider === 'resend' ? await sendViaResend(args)
-            : provider === 'brevo' ? await sendViaBrevo(args)
-            : provider === 'mailjet' ? await sendViaMailjet(args)
+        if (!p.ready && p.provider !== 'smtp') {
+            throw new Error(`ยังตั้งค่า ${p.provider} ไม่ครบ (กรุณากรอกคีย์และอีเมลผู้ส่งในหน้าตั้งค่า)`);
+        }
+        const args = { recipients, subject, text, html, from: p.from, cfg, apiKey: p.apiKey, secret: p.secret };
+        const result = p.provider === 'mailjet' ? await sendViaMailjet(args)
+            : p.provider === 'resend' ? await sendViaResend(args)
+            : p.provider === 'brevo' ? await sendViaBrevo(args)
             : await sendViaSmtp(args);
 
         if (result.skipped) {
@@ -158,7 +179,7 @@ async function sendMail({ to, subject, text, html }) {
         await recordStatus(true, recipients, '');
         return result;
     } catch (err) {
-        console.error(`❌ ส่งอีเมลไม่สำเร็จ (${provider}):`, err.message);
+        console.error(`❌ ส่งอีเมลไม่สำเร็จ (${p.provider}):`, err.message);
         await recordStatus(false, recipients, err.message);
         throw err;
     }
@@ -171,26 +192,19 @@ function notify(opts) {
         .catch(err => console.error('❌ ส่งอีเมลแจ้งเตือนไม่สำเร็จ:', err.message));
 }
 
-// สถานะระบบอีเมลสำหรับหน้าตรวจสอบ (ไม่ส่งคีย์หรือรหัสผ่านกลับ)
+// สถานะสำหรับหน้าตรวจสอบ (ไม่ส่งคีย์หรือรหัสผ่านกลับ)
 async function getMailStatus() {
-    const cfg = await SystemConfig.findOne().lean();
-    const provider = activeProvider();
-    const smtpReady = !!(cfg && cfg.adminEmail && cfg.appPassword);
-    const httpReady = provider === 'resend'
-        ? !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM)
-        : provider === 'brevo' ? !!(process.env.BREVO_API_KEY && process.env.MAIL_FROM)
-        : provider === 'mailjet' ? !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY && process.env.MAIL_FROM)
-        : false;
+    const cfg = await loadConfig();
+    const p = await resolveProvider(cfg);
     return {
-        provider,
-        ready: provider === 'smtp' ? smtpReady : httpReady,
-        mailFrom: process.env.MAIL_FROM || '',
-        smtpReady,
-        adminEmail: (cfg && cfg.adminEmail) || '',
-        lastMailOk: cfg ? cfg.lastMailOk : null,
-        lastMailAt: cfg ? cfg.lastMailAt : null,
-        lastMailTo: cfg ? cfg.lastMailTo : '',
-        lastMailError: cfg ? cfg.lastMailError : ''
+        provider: p.provider,
+        ready: !!p.ready,
+        mailFrom: p.from || cfg.mailFrom || '',
+        adminEmail: cfg.adminEmail || '',
+        lastMailOk: cfg.lastMailOk ?? null,
+        lastMailAt: cfg.lastMailAt || null,
+        lastMailTo: cfg.lastMailTo || '',
+        lastMailError: cfg.lastMailError || ''
     };
 }
 

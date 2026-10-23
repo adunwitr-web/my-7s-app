@@ -7,7 +7,13 @@ const systemConfigSchema = new mongoose.Schema({
     roundStartDate: { type: Date },
     roundEndDate: { type: Date },
 
-    // ผลการส่งอีเมลล่าสุด (ใช้ตรวจสอบระบบแจ้งเตือน)
+    // ค่าการส่งอีเมลที่แอดมินตั้งจากหน้าเว็บ
+    mailProvider: { type: String, default: '' },          // 'mailjet' | 'smtp' | ''
+    mailFrom: { type: String, default: '' },              // อีเมลผู้ส่งที่ยืนยันแล้วใน Mailjet
+    mailjetApiKey: { type: String, default: '' },
+    mailjetSecretKey: { type: String, default: '' },
+
+    // ผลการส่งอีเมลล่าสุด
     lastMailOk: { type: Boolean, default: null },
     lastMailAt: { type: Date },
     lastMailTo: { type: String, default: '' },
