@@ -37,18 +37,18 @@ router.get('/', verifyToken, async (req, res) => {
                 const me = await User.findById(userId).select('firstName assignedArea assignedCategory').lean();
                 if (me) {
                     const lock = await User.describeAssignment(me);
-                    // 🔒 หมวดหมู่ที่รับผิดชอบ (ทุกห้องในหมวด)
-                    if (lock.assignedCategory && !lock.assignedCategory.includes('ไม่ล็อค')) {
-                        orConditions.push({ category: { $regex: new RegExp(escapeRegex(lock.assignedCategory), 'i') } });
-                    }
-                    // ห้องที่ผูกไว้กับเจ้าของพื้นที่
                     if (lock.assignedArea) {
+                        // เจ้าของห้อง: เห็นเฉพาะห้องของตัวเอง (ไม่เห็นห้องอื่นในหมวดเดียวกัน)
                         orConditions.push({ _id: lock.assignedArea });
-                    }
-
-                    const firstName = String(me.firstName || '').replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
-                    if (firstName.length > 0) {
-                        orConditions.push({ responsiblePersons: { $regex: escapeRegex(firstName), $options: 'i' } });
+                    } else {
+                        // ไม่ได้ผูกห้อง: เห็นทุกห้องในหมวดที่รับผิดชอบ
+                        if (lock.assignedCategory && !lock.assignedCategory.includes('ไม่ล็อค')) {
+                            orConditions.push({ category: { $regex: new RegExp(escapeRegex(lock.assignedCategory), 'i') } });
+                        }
+                        const firstName = String(me.firstName || '').replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
+                        if (firstName.length > 0) {
+                            orConditions.push({ responsiblePersons: { $regex: escapeRegex(firstName), $options: 'i' } });
+                        }
                     }
                 }
             }

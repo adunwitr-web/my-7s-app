@@ -197,16 +197,20 @@ router.get('/pending', verifyToken, async (req, res) => {
         const ownedAreas = await Area.find({ owner: userId }).select('_id');
         ownedAreas.forEach(a => idSet.add(String(a._id)));
 
-        // ห้อง/หมวดหมู่ที่ Admin มอบหมายไว้ในทะเบียนบุคลากร
+        // ขอบเขตของเจ้าของ: ถ้าผูกกับ "ห้อง" จะเห็นเฉพาะห้องนั้น (ไม่เห็นห้องอื่นในหมวดเดียวกัน)
+        // ถ้าไม่ได้ผูกห้อง แต่มีหมวดรับผิดชอบ จะเห็นทุกห้องในหมวดนั้น
         if (currentUser) {
-            // 🔒 ทุกห้องในหมวดหมู่ที่รับผิดชอบ (ห้องที่เป็นเจ้าของเพิ่มไว้ด้านบนแล้ว)
             const lock = await User.describeAssignment(currentUser);
-            const lockCat = String(lock.assignedCategory || '').trim();
-            if (lockCat && !lockCat.includes('ไม่ล็อค')) {
-                const catAreas = await Area.find({
-                    category: new RegExp(escapeRegex(lockCat), 'i')
-                }).select('_id');
-                catAreas.forEach(a => idSet.add(String(a._id)));
+            if (lock.assignedArea) {
+                idSet.add(lock.assignedArea);
+            } else {
+                const lockCat = String(lock.assignedCategory || '').trim();
+                if (lockCat && !lockCat.includes('ไม่ล็อค')) {
+                    const catAreas = await Area.find({
+                        category: new RegExp(escapeRegex(lockCat), 'i')
+                    }).select('_id');
+                    catAreas.forEach(a => idSet.add(String(a._id)));
+                }
             }
         }
 
