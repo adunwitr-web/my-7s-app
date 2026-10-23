@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const SystemConfig = require('../models/SystemConfig');
 const { verifyToken, checkRole } = require('../middleware/auth');
-const { sendMail } = require('../utils/mailer');
+const { sendMail, getMailStatus } = require('../utils/mailer');
 
 const adminOnly = checkRole(['Admin']);
 
@@ -94,12 +94,22 @@ router.post('/round', verifyToken, adminOnly, async (req, res) => {
     }
 });
 
-// POST /api/system-config/test-mail (Admin) — ส่งอีเมลทดสอบไปยังบัญชีผู้ส่งเพื่อยืนยันว่าตั้งค่าถูกต้อง
+// GET /api/system-config/mail-status (Admin) — ตรวจสถานะระบบอีเมล (ไม่แสดงรหัสผ่าน)
+router.get('/mail-status', verifyToken, adminOnly, async (req, res) => {
+    try {
+        res.set('Cache-Control', 'no-store');
+        res.json(await getMailStatus());
+    } catch (error) {
+        res.status(500).json({ message: 'ตรวจสถานะอีเมลไม่สำเร็จ: ' + error.message });
+    }
+});
+
+// POST /api/system-config/test-mail (Admin) — ส่งอีเมลทดสอบ (ส่งไปที่ body.to ถ้ามี ไม่งั้นส่งไปบัญชีผู้ส่ง)
 router.post('/test-mail', verifyToken, adminOnly, async (req, res) => {
     try {
         const config = await SystemConfig.findOne().lean();
-        const to = (config && config.adminEmail) || '';
-        if (!to) return res.status(400).json({ message: 'ยังไม่ได้ตั้งค่าบัญชีผู้ส่ง (Gmail)' });
+        const to = String((req.body && req.body.to) || (config && config.adminEmail) || '').trim();
+        if (!to) return res.status(400).json({ message: 'ไม่มีอีเมลผู้รับ กรุณาระบุอีเมลปลายทาง' });
 
         const result = await sendMail({
             to,
@@ -110,7 +120,7 @@ router.post('/test-mail', verifyToken, adminOnly, async (req, res) => {
         res.json({ success: true, message: `ส่งอีเมลทดสอบไปที่ ${to} แล้ว` });
     } catch (error) {
         console.error('❌ test-mail error:', error.message);
-        res.status(500).json({ message: 'ส่งอีเมลไม่สำเร็จ: ' + error.message });
+        res.status(500).json({ message: error.message });
     }
 });
 

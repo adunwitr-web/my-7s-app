@@ -32,24 +32,38 @@ async function getAdminEmail() {
 
 const MAIL_FOOTER = '\n\n— ระบบ Green 7S Plus วิทยาลัยรัตภูมิ\n(อีเมลนี้ส่งอัตโนมัติ กรุณาอย่าตอบกลับ)';
 
-// แจ้งเจ้าของพื้นที่ (หรือผู้ดูแลระบบถ้าพื้นที่ไม่มีเจ้าของ)
+// ผู้รับแจ้งเตือนของพื้นที่ = เจ้าของที่ผูกกับห้องนี้ตอนสร้างผู้ใช้ (User.assignedArea)
+// รวมกับเจ้าของที่บันทึกไว้ในข้อมูลพื้นที่ (Area.owner) และตัดรายการซ้ำออก
+async function getAreaRecipients(area) {
+    const found = new Map();
+    if (area && area.owner) {
+        const o = await User.findById(area.owner).select('email firstName lastName fullName isActive').lean();
+        if (o && o.isActive !== false && o.email) found.set(String(o._id), o);
+    }
+    if (area && area._id) {
+        const list = await User.find({ assignedArea: area._id, isActive: { $ne: false } })
+            .select('email firstName lastName fullName').lean();
+        list.forEach(u => { if (u.email) found.set(String(u._id), u); });
+    }
+    return [...found.values()];
+}
+
+// แจ้งเจ้าของห้อง (ถ้าไม่มีเจ้าของที่มีอีเมล ส่งเข้าผู้ดูแลระบบแทน)
 function notifyAreaOwner(area, subject, body) {
     (async () => {
-        let to = '';
-        let greeting = 'เรียน เจ้าของพื้นที่';
-        if (area && area.owner) {
-            const owner = await User.findById(area.owner).select('email firstName lastName fullName').lean();
-            if (owner && owner.email) {
-                to = owner.email;
-                greeting = `เรียน ${owner.fullName || `${owner.firstName || ''} ${owner.lastName || ''}`.trim()}`;
-            }
+        const owners = await getAreaRecipients(area);
+        if (owners.length > 0) {
+            const names = owners.map(o => o.fullName || `${o.firstName || ''} ${o.lastName || ''}`.trim()).join(', ');
+            notify({ to: owners.map(o => o.email), subject, text: `เรียน ${names}\n\n${body}${MAIL_FOOTER}` });
+            return;
         }
-        if (!to) {
-            to = await getAdminEmail();
-            greeting = `เรียน ผู้ดูแลระบบ (พื้นที่ "${area ? area.areaName : '-'}" ยังไม่มีเจ้าของที่มีอีเมล)`;
-        }
+        const to = await getAdminEmail();
         if (!to) return console.warn('⚠️ ไม่มีอีเมลผู้รับสำหรับการแจ้งเตือน:', area && area.areaName);
-        notify({ to, subject, text: `${greeting}\n\n${body}${MAIL_FOOTER}` });
+        notify({
+            to,
+            subject,
+            text: `เรียน ผู้ดูแลระบบ (พื้นที่ "${area ? area.areaName : '-'}" ยังไม่มีเจ้าของที่มีอีเมลในระบบ)\n\n${body}${MAIL_FOOTER}`
+        });
     })().catch(err => console.error('❌ เตรียมอีเมลแจ้งเตือนไม่สำเร็จ:', err.message));
 }
 
@@ -256,10 +270,20 @@ router.patch('/:id/resolve', verifyToken, async (req, res) => {
             return res.status(403).json({ message: 'เฉพาะเจ้าของพื้นที่เท่านั้นที่ส่งรายงานการแก้ไขได้' });
         }
 
-        const { detail, photoUrl } = req.body;
+        const { detail, photoUrl, topicPhotos } = req.body;
         const assessment = await Assessment.findById(req.params.id);
 
         if (!assessment) return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
+
+        // รูปหลังแก้ไขแยกตามหัวข้อใหญ่ (เก็บที่ items[index].topicPhoto เพื่อให้หน้าแอดมินแสดงตรงหัวข้อ)
+        if (Array.isArray(topicPhotos)) {
+            for (const tp of topicPhotos) {
+                const idx = Number(tp && tp.index);
+                if (Number.isInteger(idx) && idx >= 0 && idx < assessment.items.length && tp.photo) {
+                    assessment.items[idx].topicPhoto = String(tp.photo);
+                }
+            }
+        }
 
         assessment.status = 'Corrected';
         assessment.correctionData = {
