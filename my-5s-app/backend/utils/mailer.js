@@ -1,26 +1,21 @@
 const nodemailer = require('nodemailer');
 const SystemConfig = require('../models/SystemConfig');
 
-// ---- ตั้งค่า ----
-// ทางเลือก 1 (แนะนำถ้า server โฮสต์บนบริการที่บล็อกพอร์ต SMTP เช่น Render แผนฟรี):
-//   ตั้ง RESEND_API_KEY และ MAIL_FROM ใน Environment Variables (MAIL_FROM ต้องเป็นอีเมลของโดเมนที่ยืนยันใน Resend แล้ว)
-// ทางเลือก 2: ใช้ Gmail SMTP ด้วย adminEmail + App Password ที่บันทึกในหน้า Admin
+// ผู้ให้บริการที่รองรับ (เลือกจาก Environment Variables ของ Render)
+//  1) RESEND_API_KEY  + MAIL_FROM  -> Resend (ต้องยืนยันโดเมนก่อน)
+//  2) BREVO_API_KEY   + MAIL_FROM  -> Brevo (ยืนยันแค่อีเมลผู้ส่งก็ใช้ได้ ไม่ต้องมีโดเมน)
+//  3) ไม่มีทั้งสอง     -> Gmail SMTP (ใช้ไม่ได้บน Render เพราะพอร์ต SMTP ถูกบล็อก)
+// หมายเหตุ: MAIL_FROM = อีเมลผู้ส่งที่ยืนยันแล้วในผู้ให้บริการนั้น
+
+function activeProvider() {
+    if (process.env.RESEND_API_KEY) return 'resend';
+    if (process.env.BREVO_API_KEY) return 'brevo';
+    return 'smtp';
+}
 
 function toRecipients(to) {
     const list = Array.isArray(to) ? to : String(to || '').split(',');
     return [...new Set(list.map(s => String(s).trim()).filter(Boolean))];
-}
-
-function explainSmtpError(err) {
-    const code = err && err.code;
-    const msg = (err && err.message) || String(err);
-    if (code === 'EAUTH' || /Invalid login|535/.test(msg)) {
-        return 'ล็อกอิน Gmail ไม่สำเร็จ: ตรวจอีเมลผู้ส่งและ App Password (ต้องเปิดยืนยันตัวตน 2 ขั้นตอน และใช้ App Password 16 หลัก)';
-    }
-    if (['ETIMEDOUT', 'ECONNECTION', 'ESOCKET', 'ECONNREFUSED'].includes(code)) {
-        return 'เชื่อมต่อเซิร์ฟเวอร์ Gmail ไม่ได้ (พอร์ต SMTP อาจถูกบล็อกบนโฮสติ้ง) แนะนำให้ตั้ง RESEND_API_KEY และ MAIL_FROM แทน';
-    }
-    return 'ส่งอีเมลไม่สำเร็จ: ' + msg;
 }
 
 async function recordStatus(ok, to, error) {
@@ -46,20 +41,44 @@ async function getSmtpSettings() {
     return { user, pass };
 }
 
+function explainHttpError(provider, status, data) {
+    const detail = (data && (data.message || data.error)) || JSON.stringify(data || {});
+    if (status === 401 || status === 403) return `${provider}: คีย์ API ไม่ถูกต้องหรือไม่มีสิทธิ์ (${status}) ${detail}`;
+    if (status === 400 || status === 422) return `${provider}: ข้อมูลอีเมลไม่ถูกต้อง หรือ MAIL_FROM ยังไม่ได้ยืนยัน (${status}) ${detail}`;
+    return `${provider}: ส่งไม่สำเร็จ (${status}) ${detail}`;
+}
+
 async function sendViaResend({ recipients, subject, text, html }) {
     const from = process.env.MAIL_FROM;
     if (!from) throw new Error('ยังไม่ได้ตั้งค่า MAIL_FROM ใน Environment Variables');
     const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ from, to: recipients, subject, text, html })
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(`Resend ตอบกลับ ${res.status}: ${data.message || JSON.stringify(data)}`);
+    if (!res.ok) throw new Error(explainHttpError('Resend', res.status, data));
     return { sent: true, messageId: data.id };
+}
+
+async function sendViaBrevo({ recipients, subject, text, html }) {
+    const sender = process.env.MAIL_FROM;
+    if (!sender) throw new Error('ยังไม่ได้ตั้งค่า MAIL_FROM ใน Environment Variables (ใช้อีเมลผู้ส่งที่ยืนยันใน Brevo แล้ว)');
+    const body = {
+        sender: { name: 'Green 7S Plus', email: sender },
+        to: recipients.map(email => ({ email })),
+        subject,
+        textContent: text || ' '
+    };
+    if (html) body.htmlContent = html;
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(explainHttpError('Brevo', res.status, data));
+    return { sent: true, messageId: data.messageId };
 }
 
 async function sendViaSmtp({ recipients, subject, text, html }) {
@@ -83,12 +102,15 @@ async function sendViaSmtp({ recipients, subject, text, html }) {
         });
         return { sent: true, messageId: info.messageId };
     } catch (err) {
-        console.error('❌ SMTP error:', err.code || '', err.message);
-        throw new Error(explainSmtpError(err));
+        const code = err.code || '';
+        const hint = ['ETIMEDOUT', 'ECONNECTION', 'ESOCKET', 'ECONNREFUSED'].includes(code)
+            ? 'เชื่อมต่อ Gmail SMTP ไม่ได้ (โฮสติ้งบล็อกพอร์ต SMTP) ให้ตั้ง BREVO_API_KEY หรือ RESEND_API_KEY แทน'
+            : (code === 'EAUTH' ? 'ล็อกอิน Gmail ไม่สำเร็จ ตรวจอีเมลและ App Password' : err.message);
+        throw new Error('SMTP: ' + hint);
     }
 }
 
-// ส่งอีเมล (to เป็นข้อความหรืออาร์เรย์ก็ได้) — throw ถ้าไม่สำเร็จ และบันทึกผลไว้เสมอ
+// ส่งอีเมล (to เป็นข้อความหรืออาร์เรย์) — throw ถ้าไม่สำเร็จ และบันทึกผลไว้เสมอ
 async function sendMail({ to, subject, text, html }) {
     const recipients = toRecipients(to);
     if (recipients.length === 0) {
@@ -96,10 +118,12 @@ async function sendMail({ to, subject, text, html }) {
         return { skipped: true, reason: 'ไม่มีอีเมลผู้รับ' };
     }
 
+    const provider = activeProvider();
     try {
-        const result = process.env.RESEND_API_KEY
-            ? await sendViaResend({ recipients, subject, text, html })
-            : await sendViaSmtp({ recipients, subject, text, html });
+        const args = { recipients, subject, text, html };
+        const result = provider === 'resend' ? await sendViaResend(args)
+            : provider === 'brevo' ? await sendViaBrevo(args)
+            : await sendViaSmtp(args);
 
         if (result.skipped) {
             await recordStatus(false, recipients, result.reason);
@@ -108,6 +132,7 @@ async function sendMail({ to, subject, text, html }) {
         await recordStatus(true, recipients, '');
         return result;
     } catch (err) {
+        console.error(`❌ ส่งอีเมลไม่สำเร็จ (${provider}):`, err.message);
         await recordStatus(false, recipients, err.message);
         throw err;
     }
@@ -120,14 +145,19 @@ function notify(opts) {
         .catch(err => console.error('❌ ส่งอีเมลแจ้งเตือนไม่สำเร็จ:', err.message));
 }
 
-// สถานะระบบอีเมลสำหรับหน้าตรวจสอบ (ไม่ส่งรหัสผ่านกลับ)
+// สถานะระบบอีเมลสำหรับหน้าตรวจสอบ (ไม่ส่งคีย์หรือรหัสผ่านกลับ)
 async function getMailStatus() {
     const cfg = await SystemConfig.findOne().lean();
+    const provider = activeProvider();
+    const smtpReady = !!(cfg && cfg.adminEmail && cfg.appPassword);
+    const httpReady = provider === 'resend'
+        ? !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM)
+        : provider === 'brevo' ? !!(process.env.BREVO_API_KEY && process.env.MAIL_FROM) : false;
     return {
-        provider: process.env.RESEND_API_KEY ? 'resend' : 'smtp',
-        resendReady: !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM),
+        provider,
+        ready: provider === 'smtp' ? smtpReady : httpReady,
         mailFrom: process.env.MAIL_FROM || '',
-        smtpReady: !!(cfg && cfg.adminEmail && cfg.appPassword),
+        smtpReady,
         adminEmail: (cfg && cfg.adminEmail) || '',
         lastMailOk: cfg ? cfg.lastMailOk : null,
         lastMailAt: cfg ? cfg.lastMailAt : null,
