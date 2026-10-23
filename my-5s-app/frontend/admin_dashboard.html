@@ -440,7 +440,7 @@
                     <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
                 </select>
                 <!-- 🟢 1. กล่องพื้นที่หลัก (จะเรียงต่อใน Grid อย่างสวยงาม) -->
-                <select id="newCategory" onchange="filterRoomsForNew()" class="form-control">
+                <select id="newCategory" multiple size="6" onchange="filterRoomsForNew()" class="form-control">
                     <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
                 </select>
 
@@ -501,7 +501,7 @@
         </div>
         <div style="margin-bottom:12px;">
             <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">หมวดหมู่ / พื้นที่หลัก:</label>
-            <select id="editCategory" onchange="filterRoomsForEdit()" class="form-control">
+            <select id="editCategory" multiple size="6" onchange="filterRoomsForEdit()" class="form-control">
                 <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
             </select>
         </div>
@@ -1104,7 +1104,7 @@
                 const categories = [...new Set(allAreasData.map(area => area.category ? area.category.trim() : ''))]
                     .filter(cat => cat !== '' && !/^\s*[*(\[]|ปิดใช้/.test(cat)); // ตัดหมายเหตุของห้อง (เช่น *(ปิดใช้...)) ออกจากหมวดหมู่
                 
-                let catOptions = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
+                let catOptions = '';
                 categories.forEach(cat => {
                     catOptions += `<option value="${cat}">${cat}</option>`;
                 });
@@ -1121,15 +1121,19 @@
 
         // 2. ฟังก์ชันเมื่อเลือกพื้นที่หลัก ให้ปลดล็อคและแสดงห้องย่อย
         function filterRoomsForNew() {
-            populateRooms(document.getElementById('newCategory').value, 'newAssignedArea');
+            populateRooms(getSelectedCats('newCategory'), 'newAssignedArea');
         }
 
         function filterRoomsForEdit() {
-            populateRooms(document.getElementById('editCategory').value, 'editAssignedArea');
+            populateRooms(getSelectedCats('editCategory'), 'editAssignedArea');
         }
 
         // 3. ฟังก์ชันเติมข้อมูลห้องย่อย
-        function populateRooms(category, targetSelectId) {
+        function populateRooms(categoryInput, targetSelectId) {
+            // รับได้ทั้งหมวดเดียว (ข้อความ) หรือหลายหมวด (อาร์เรย์) — ห้องจากทุกหมวดที่เลือกจะขึ้นให้เลือก
+            const cats = (Array.isArray(categoryInput) ? categoryInput : [categoryInput])
+                .map(c => String(c || '').trim()).filter(Boolean);
+            const category = cats[0] || '';
             const roomSelect = document.getElementById(targetSelectId);
             
             if (!category) {
@@ -1142,7 +1146,7 @@
             let roomOptions = '<option value="">-- ทุกห้องในหมวดนี้ (ล็อคทั้งหมวดหมู่) --</option>';
             
             // ดึงมาเฉพาะห้องที่ตรงกับหมวด (ใช้ trim() ให้ตรงกัน)
-            const filteredRooms = allAreasData.filter(area => area.category && area.category.trim() === category);
+            const filteredRooms = allAreasData.filter(area => area.category && cats.includes(area.category.trim()));
             
             filteredRooms.forEach(room => {
                 roomOptions += `<option value="${room._id}">${room.areaName}</option>`;
@@ -1150,6 +1154,17 @@
 
             roomSelect.innerHTML = roomOptions;
         }
+
+    // ---- หมวดหมู่หลายรายการ: อ่าน/ตั้งค่าจาก dropdown แบบ multiple ----
+    function getSelectedCats(id) {
+        const el = document.getElementById(id);
+        return el ? [...el.options].filter(o => o.selected && o.value).map(o => o.value) : [];
+    }
+    function setSelectedCats(id, values) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        [...el.options].forEach(o => { o.selected = values.includes(o.value); });
+    }
 
     async function loadUsers() {
         const token = localStorage.getItem('authToken');
@@ -1182,7 +1197,7 @@
 
             users.forEach(u => {
                 let areaDisplay = '<span style="color:#64748b;">ทุกพื้นที่ (ไม่ล็อค)</span>';
-                const lockCat = String(u.assignedCategory || '').trim();
+                const lockCat = (Array.isArray(u.assignedCategories) && u.assignedCategories.length ? u.assignedCategories : [u.assignedCategory || '']).filter(Boolean).join(', ');
                 const lockRoom = String(u.assignedAreaName || '').trim();
                 if (lockRoom) {
                     areaDisplay = `<b style="color:var(--gov-primary-dark);">🔒 ${lockRoom}</b><br><small style="color:#64748b;">${lockCat}</small>`;
@@ -1216,7 +1231,7 @@
         const lastName = document.getElementById('newLastName').value.trim();
         const role = document.getElementById('newRole').value;
         const assignedArea = document.getElementById('newAssignedArea').value;
-        const assignedCategory = (document.getElementById('newCategory')?.value || '').trim();
+        const assignedCategories = getSelectedCats('newCategory');
 
         if (!username || !email || !firstName) {
             alert('โปรดกรอกข้อมูลสำคัญให้ครบถ้วน');
@@ -1239,7 +1254,7 @@
                     lastName, 
                     role, 
                     // 🚀 บังคับส่งค่า "" ไปตรงๆ ถ้าไม่ล็อคพื้นที่
-                    assignedCategory: assignedCategory,
+                    assignedCategories: assignedCategories,
                     assignedArea: assignedArea
                 })
             });
@@ -1253,7 +1268,7 @@
                 document.getElementById('newEmail').value = '';
                 document.getElementById('newFirstName').value = '';
                 document.getElementById('newLastName').value = '';
-                document.getElementById('newCategory').value = '';
+                setSelectedCats('newCategory', []);
                 populateRooms('', 'newAssignedArea');
                 loadUsers();
             } else {
@@ -1285,16 +1300,17 @@
             editSelect.disabled = true;
         }
 
-        const lockCat = String(user.assignedCategory || '').trim();
+        const lockCats = (Array.isArray(user.assignedCategories) && user.assignedCategories.length ? user.assignedCategories : [user.assignedCategory || '']).filter(Boolean);
         const lockAreaId = user.assignedArea ? String(user.assignedArea._id || user.assignedArea) : '';
-        if (lockCat && editCategory) {
-            // ถ้าหมวดหมู่ยังไม่มีใน Dropdown ให้เพิ่มตัวเลือกชั่วคราว (กันกรณีโหลดพื้นที่ไม่ทัน)
-            if (![...editCategory.options].some(o => o.value === lockCat)) {
-                editCategory.insertAdjacentHTML('beforeend', `<option value="${lockCat}">${lockCat}</option>`);
-            }
-            editCategory.value = lockCat;
-            filterRoomsForEdit(); // เปิด Dropdown ห้องย่อยตามหมวดหมู่
-            if (editSelect && lockAreaId) editSelect.value = lockAreaId; // ว่าง = ล็อคทั้งหมวด
+        if (lockCats.length && editCategory) {
+            lockCats.forEach(c => {
+                if (![...editCategory.options].some(o => o.value === c)) {
+                    editCategory.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`);
+                }
+            });
+            setSelectedCats('editCategory', lockCats);
+            filterRoomsForEdit();
+            if (editSelect && lockAreaId) editSelect.value = lockAreaId;
         }
         document.getElementById('editUserModal').style.display = 'flex';
     }
@@ -1312,7 +1328,7 @@
         const role = document.getElementById('editRole').value;
         const password = document.getElementById('editPassword').value.trim();
         const assignedArea = document.getElementById('editAssignedArea').value;
-        const assignedCategory = (document.getElementById('editCategory')?.value || '').trim();
+        const assignedCategories = getSelectedCats('editCategory');
 
         const token = localStorage.getItem('authToken');
         
@@ -1323,7 +1339,7 @@
             lastName, 
             role, 
             // 🚀 บังคับส่งค่า "" ไปตรงๆ ถ้าต้องการล้างการล็อคพื้นที่
-            assignedCategory: assignedCategory,
+            assignedCategories: assignedCategories,
                     assignedArea: assignedArea
         };
         

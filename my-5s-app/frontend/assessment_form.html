@@ -444,7 +444,8 @@
                         ...old, ...fresh,
                         assignedArea: fresh.assignedArea || '',
                         assignedAreaName: fresh.assignedAreaName || '',
-                        assignedCategory: fresh.assignedCategory || ''
+                        assignedCategory: fresh.assignedCategory || '',
+                        assignedCategories: fresh.assignedCategories || []
                     };
                     localStorage.setItem('userData', JSON.stringify(merged));
                     return merged;
@@ -517,79 +518,67 @@
         const lockNoticeTag = document.getElementById('lockNoticeTag');
 
         const isAdmin = user && user.role === 'Admin';
-        // ✅ สิทธิ์ล็อคพื้นที่ มี 2 ระดับ (ตรงกับที่ Admin ตั้งในทะเบียนบุคลากร)
-        //   - assignedCategory : ล็อคทั้งหมวดหมู่
-        //   - assignedArea     : ล็อคเฉพาะห้อง (id ของห้อง) — จะมี assignedCategory ของห้องนั้นคู่กันเสมอ
-        let assignedVal = '';
-        let lockedAreaId = '';
-        let lockedAreaName = '';
-        if (user && !isAdmin) {
-            assignedVal = String(user.assignedCategory || '').trim();
-            lockedAreaId = user.assignedArea ? String(user.assignedArea._id || user.assignedArea).trim() : '';
-            lockedAreaName = String(user.assignedAreaName || '').trim();
+        // 🔒 ล็อคเฉพาะ "หมวดหมู่ที่รับผิดชอบ" (ผู้ใช้หนึ่งคนรับได้หลายหมวด) — ห้องย่อยเลือกได้ทุกห้องในหมวด
+        const lockRaw = (user && !isAdmin)
+            ? (Array.isArray(user.assignedCategories) && user.assignedCategories.length
+                ? user.assignedCategories
+                : (user.assignedCategory ? [user.assignedCategory] : []))
+            : [];
+        const dbCats = getDbCategories();
+        const lockedCategories = [...new Set(lockRaw
+            .map(c => String(c || '').trim())
+            .filter(c => c && !c.includes('ไม่ล็อค'))
+            .map(c => dbCats.includes(c) ? c : (dbCats.find(d => d.includes(c) || c.includes(d)) || c)))];
+        const isLocked = lockedCategories.length > 0;
+        // ห้องที่ผูกไว้กับผู้ใช้ (ใช้เป็นค่าเริ่มต้นเท่านั้น ไม่ได้ล็อค)
+        const defaultRoom = (user && !isAdmin && user.assignedArea)
+            ? allAreasData.find(a => a._id === String(user.assignedArea._id || user.assignedArea))
+            : null;
 
-            // รองรับข้อมูลเก่าที่ยังไม่มี assignedCategory: หาหมวดหมู่จากห้องที่ล็อค
-            if (lockedAreaId) {
-                const lockedRoom = allAreasData.find(a => a._id === lockedAreaId);
-                if (lockedRoom) {
-                    assignedVal = assignedVal || String(lockedRoom.category || '').trim();
-                    lockedAreaName = lockedAreaName || lockedRoom.areaName;
-                }
-            }
-        }
-
-        // กรณี Admin หรือ พวกที่ไม่ล็อคพื้นที่ (ประเมินได้หมด)
-        if (isAdmin || (!assignedVal && !lockedAreaId) || assignedVal.includes("ไม่ล็อค")) {
+        if (!isLocked) {
             if (catSelect) {
                 catSelect.disabled = false;
                 catSelect.style.backgroundColor = "#ffffff";
-                
-                // ดึงหมวดหมู่กลับมาให้ครบเผื่อโดนลบทิ้งไปตอนแรก
                 catSelect.innerHTML = '<option value="">-- โปรดเลือกประเภทพื้นที่ --</option>' +
-                    getDbCategories().map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+                    dbCats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
             }
             if (areaSelect) areaSelect.disabled = false;
             if (lockNoticeTag) lockNoticeTag.style.display = 'none';
 
-            if (catSelect && !catSelect.value) catSelect.value = getDbCategories()[0] || "";
+            if (catSelect && !catSelect.value) catSelect.value = dbCats[0] || "";
             onCategoryChanged();
         } else {
-            // 🚨 กรณี User ถูกล็อคพื้นที่!
-            let lockedCategory = assignedVal;
-
-            // ชื่อหมวดหมู่จาก DB (Excel) อาจต่างจากรายการในฟอร์มเล็กน้อย -> จับคู่แบบยืดหยุ่น
-            const knownCats = getDbCategories();
-            if (!knownCats.includes(lockedCategory)) {
-                const fuzzy = knownCats.find(c => c.includes(lockedCategory) || lockedCategory.includes(c));
-                if (fuzzy) lockedCategory = fuzzy;
-            }
-
+            // หมวดที่ล็อคเท่านั้นที่เลือกได้ (ถ้ามีหลายหมวด เลือกสลับได้ในรายการนั้น)
             if (catSelect) {
-                // ลบ Option อื่นทิ้งให้หมด บังคับให้มีแค่หมวดหมู่ที่ถูกล็อค
-                catSelect.innerHTML = `<option value="${lockedCategory}" selected>${lockedCategory}</option>`;
-                catSelect.disabled = true;
-                catSelect.style.backgroundColor = "#e2e8f0";
+                const opts = lockedCategories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+                catSelect.innerHTML = opts;
+                const startCat = (defaultRoom && lockedCategories.includes(String(defaultRoom.category || '').trim()))
+                    ? String(defaultRoom.category).trim()
+                    : lockedCategories[0];
+                catSelect.value = startCat;
+                if (lockedCategories.length === 1) {
+                    catSelect.disabled = true;
+                    catSelect.style.backgroundColor = "#e2e8f0";
+                } else {
+                    catSelect.disabled = false;
+                    catSelect.style.backgroundColor = "#ffffff";
+                }
             }
 
             onCategoryChanged();
 
-            // 🔓 ไม่ล็อคห้องย่อย: ล็อคเฉพาะหมวดหมู่ ห้องย่อยในหมวดนี้เลือกได้ทุกห้อง
-            // (ห้องที่ผูกไว้กับผู้ใช้ยังเป็นค่าเริ่มต้นได้ แต่ไม่บังคับ)
             if (areaSelect) {
                 areaSelect.disabled = false;
                 areaSelect.style.backgroundColor = "#ffffff";
-                if (lockedAreaId) {
-                    const lockedRoom = allAreasData.find(a => a._id === lockedAreaId);
-                    if (lockedRoom && [...areaSelect.options].some(o => o.value === lockedAreaId)) {
-                        areaSelect.value = lockedAreaId;
-                        onAreaChanged();
-                    }
+                if (defaultRoom && [...areaSelect.options].some(o => o.value === defaultRoom._id)) {
+                    areaSelect.value = defaultRoom._id;
+                    onAreaChanged();
                 }
             }
 
             if (lockNoticeTag) {
                 lockNoticeTag.style.display = 'inline-block';
-                lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategory})`;
+                lockNoticeTag.innerText = `🔒 (ระบบล็อคสิทธิ์ตามพื้นที่: ${lockedCategories.join(', ')})`;
             }
         }
     }
