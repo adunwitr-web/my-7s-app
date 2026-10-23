@@ -596,7 +596,7 @@
 
     // หมวดหมู่ทั้งหมดจากฐานข้อมูล (ตรงกับที่นำเข้าจาก Excel)
     function getDbCategories() {
-        return [...new Set(allAreasData.map(a => (a.category || '').trim()).filter(Boolean))];
+        return [...new Set(allAreasData.map(a => (a.category || '').trim()).filter(c => c && !/^\s*[*(\[]|ปิดใช้/.test(c)))];
     }
 
     function escapeHtml(t) {

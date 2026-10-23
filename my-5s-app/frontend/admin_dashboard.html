@@ -1101,7 +1101,8 @@
                 console.log(`✅ โหลดข้อมูลพื้นที่สำเร็จ! จำนวนทั้งหมด: ${allAreasData.length} ห้อง`);
 
                 // ตัดช่องว่างหน้า-หลังคำ ป้องกันปัญหาพิมพ์ผิดใน Excel
-                const categories = [...new Set(allAreasData.map(area => area.category ? area.category.trim() : ''))].filter(cat => cat !== '');
+                const categories = [...new Set(allAreasData.map(area => area.category ? area.category.trim() : ''))]
+                    .filter(cat => cat !== '' && !/^\s*[*(\[]|ปิดใช้/.test(cat)); // ตัดหมายเหตุของห้อง (เช่น *(ปิดใช้...)) ออกจากหมวดหมู่
                 
                 let catOptions = '<option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>';
                 categories.forEach(cat => {
