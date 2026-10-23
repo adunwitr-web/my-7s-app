@@ -38,6 +38,12 @@ const assessmentSchema = new mongoose.Schema({
     correctionData: {
         detail: { type: String, default: '' },
         photoUrl: { type: String, default: '' },
+        // รูปหลังแก้ไขทุกหัวข้อที่ไม่ผ่าน (เก็บครบทุกรูป ไม่ทับกัน)
+        topicPhotos: [{
+            topicIndex: { type: Number },
+            topicName: { type: String, default: '' },
+            photo: { type: String, default: '' }
+        }],
         submittedAt: { type: Date }
     },
     rejectionReason: { type: String, default: '' }
