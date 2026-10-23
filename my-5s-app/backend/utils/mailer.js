@@ -10,6 +10,7 @@ const SystemConfig = require('../models/SystemConfig');
 function activeProvider() {
     if (process.env.RESEND_API_KEY) return 'resend';
     if (process.env.BREVO_API_KEY) return 'brevo';
+    if (process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY) return 'mailjet';
     return 'smtp';
 }
 
@@ -81,6 +82,30 @@ async function sendViaBrevo({ recipients, subject, text, html }) {
     return { sent: true, messageId: data.messageId };
 }
 
+// Mailjet: ใช้ API Key + Secret Key (Basic Auth) ยืนยันแค่อีเมลผู้ส่งก็ใช้ได้ ไม่ต้องมีโดเมน
+async function sendViaMailjet({ recipients, subject, text, html }) {
+    const sender = process.env.MAIL_FROM;
+    if (!sender) throw new Error('ยังไม่ได้ตั้งค่า MAIL_FROM ใน Environment Variables (ใช้อีเมลผู้ส่งที่ยืนยันใน Mailjet แล้ว)');
+    const auth = Buffer.from(`${process.env.MAILJET_API_KEY}:${process.env.MAILJET_SECRET_KEY}`).toString('base64');
+    const message = {
+        From: { Email: sender, Name: 'Green 7S Plus' },
+        To: recipients.map(Email => ({ Email })),
+        Subject: subject,
+        TextPart: text || ' '
+    };
+    if (html) message.HTMLPart = html;
+    const res = await fetch('https://api.mailjet.com/v3.1/send', {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Messages: [message] })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(explainHttpError('Mailjet', res.status, data));
+    const status = data.Messages && data.Messages[0] && data.Messages[0].Status;
+    if (status !== 'success') throw new Error(`Mailjet ตอบสถานะ ${status || 'ไม่ทราบ'}: ${JSON.stringify(data)}`);
+    return { sent: true, messageId: data.Messages[0].To && data.Messages[0].To[0] && data.Messages[0].To[0].MessageID };
+}
+
 async function sendViaSmtp({ recipients, subject, text, html }) {
     const settings = await getSmtpSettings();
     if (!settings) return { skipped: true, reason: 'ยังไม่ได้ตั้งค่าอีเมลผู้ส่งและ App Password ในหน้า Admin' };
@@ -123,6 +148,7 @@ async function sendMail({ to, subject, text, html }) {
         const args = { recipients, subject, text, html };
         const result = provider === 'resend' ? await sendViaResend(args)
             : provider === 'brevo' ? await sendViaBrevo(args)
+            : provider === 'mailjet' ? await sendViaMailjet(args)
             : await sendViaSmtp(args);
 
         if (result.skipped) {
@@ -152,7 +178,9 @@ async function getMailStatus() {
     const smtpReady = !!(cfg && cfg.adminEmail && cfg.appPassword);
     const httpReady = provider === 'resend'
         ? !!(process.env.RESEND_API_KEY && process.env.MAIL_FROM)
-        : provider === 'brevo' ? !!(process.env.BREVO_API_KEY && process.env.MAIL_FROM) : false;
+        : provider === 'brevo' ? !!(process.env.BREVO_API_KEY && process.env.MAIL_FROM)
+        : provider === 'mailjet' ? !!(process.env.MAILJET_API_KEY && process.env.MAILJET_SECRET_KEY && process.env.MAIL_FROM)
+        : false;
     return {
         provider,
         ready: provider === 'smtp' ? smtpReady : httpReady,
