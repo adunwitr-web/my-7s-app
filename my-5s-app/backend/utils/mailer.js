@@ -46,14 +46,15 @@ function toRecipients(to) {
     return [...new Set(list.map(s => String(s).trim()).filter(Boolean))];
 }
 
-async function recordStatus(ok, to, error) {
+async function recordStatus(ok, to, error, messageId) {
     try {
         await SystemConfig.updateOne({}, {
             $set: {
                 lastMailOk: ok,
                 lastMailAt: new Date(),
                 lastMailTo: toRecipients(to).join(', '),
-                lastMailError: ok ? '' : String(error || '')
+                lastMailError: ok ? '' : String(error || ''),
+                lastMailMessageId: ok && messageId ? String(messageId) : ''
             }
         }, { upsert: true });
     } catch (e) {
@@ -176,7 +177,7 @@ async function sendMail({ to, subject, text, html }) {
             await recordStatus(false, recipients, result.reason);
             return result;
         }
-        await recordStatus(true, recipients, '');
+        await recordStatus(true, recipients, '', result.messageId);
         return result;
     } catch (err) {
         console.error(`❌ ส่งอีเมลไม่สำเร็จ (${p.provider}):`, err.message);
@@ -204,7 +205,8 @@ async function getMailStatus() {
         lastMailOk: cfg.lastMailOk ?? null,
         lastMailAt: cfg.lastMailAt || null,
         lastMailTo: cfg.lastMailTo || '',
-        lastMailError: cfg.lastMailError || ''
+        lastMailError: cfg.lastMailError || '',
+        lastMailMessageId: cfg.lastMailMessageId || ''
     };
 }
 

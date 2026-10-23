@@ -636,6 +636,10 @@
             </div>
             <button onclick="saveMailSettings()" style="width:100%; padding:9px; background:var(--gov-primary); color:#fff; border:none; border-radius:6px; font-weight:600; cursor:pointer;">บันทึกการตั้งค่าอีเมล</button>
         </div>
+        <div style="margin-bottom:12px;">
+            <button onclick="checkMailDelivery()" style="width:100%; padding:8px; border:1px solid var(--gov-primary); background:#fff; color:var(--gov-primary-dark); border-radius:6px; cursor:pointer; font-weight:600;">ตรวจสถานะการส่งล่าสุดจาก Mailjet</button>
+            <div id="mailDeliveryBox" style="font-size:0.85em; margin-top:6px;"></div>
+        </div>
         <div id="mailStatusBox" style="background:#f8fafc; border:1px solid var(--gov-border); border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:0.88em;">กำลังตรวจสถานะอีเมล...</div>
         <div style="margin-bottom:14px;">
             <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">ทดสอบส่งอีเมล (ส่งไปที่):</label>
@@ -1610,6 +1614,28 @@
         }
         loadMailSettings();
         loadMailStatus();
+    }
+
+    async function checkMailDelivery() {
+        const box = document.getElementById('mailDeliveryBox');
+        box.innerHTML = 'กำลังตรวจสอบกับ Mailjet...';
+        try {
+            const res = await fetch(`${API_URL}/system-config/mail-delivery`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+            });
+            const d = await res.json();
+            if (!res.ok) { box.innerHTML = `<span style="color:#b91c1c;">❌ ${mailEsc(d.message)}</span>`; return; }
+            if (!d.found) { box.innerHTML = `<span style="color:#b45309;">⚠️ ${mailEsc(d.message)}</span>`; return; }
+            const ok = ['opened', 'clicked', 'sent', 'queued'].includes(String(d.status).toLowerCase());
+            const arrived = d.arrivedAt ? `<div>เวลาถึงปลายทาง: ${new Date(d.arrivedAt).toLocaleString('th-TH')}</div>` : '';
+            box.innerHTML = `
+                <div>ผู้รับ: <b>${mailEsc(d.to)}</b></div>
+                <div>สถานะ Mailjet: <b>${mailEsc(d.status)}</b></div>
+                <div style="color:${ok ? '#15803d' : '#b91c1c'};">${mailEsc(d.message)}</div>
+                ${arrived}`;
+        } catch (err) {
+            box.innerHTML = '<span style="color:#b91c1c;">❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้</span>';
+        }
     }
 
     async function loadMailStatus() {

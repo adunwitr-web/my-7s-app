@@ -263,4 +263,45 @@ router.get('/mail-sender', verifyToken, adminOnly, async (req, res) => {
     }
 });
 
+// GET /api/system-config/mail-delivery (Admin) — ดูสถานะการส่งอีเมลล่าสุดจริงจาก Mailjet
+// (สถานะ "สำเร็จ" ในระบบหมายถึง Mailjet รับคำขอแล้ว ส่วนหน้านี้บอกว่าข้อความไปถึงผู้รับหรือไม่)
+router.get('/mail-delivery', verifyToken, adminOnly, async (req, res) => {
+    try {
+        const cfg = (await SystemConfig.findOne().lean()) || {};
+        const id = String(cfg.lastMailMessageId || '').trim();
+        if (!id) {
+            return res.json({ found: false, message: 'ยังไม่มี MessageID ของการส่งล่าสุด (ลองกดส่งทดสอบใหม่หนึ่งครั้ง)' });
+        }
+        const r = await mailjetCall('GET', `/v3/REST/message/${encodeURIComponent(id)}`);
+        if (!r.ok) {
+            return res.json({ found: false, message: 'Mailjet ไม่พบข้อความนี้ (' + r.status + ') อาจยังไม่ถูกบันทึกหรือบัญชีอยู่ใน Sandbox' });
+        }
+        const item = r.data && r.data.Data && r.data.Data[0];
+        if (!item) return res.json({ found: false, message: 'Mailjet ไม่ส่งรายละเอียดข้อความกลับมา' });
+
+        const hints = {
+            queued: 'อยู่ในคิว กำลังรอส่ง',
+            sent: 'ส่งออกจาก Mailjet แล้ว แต่ยังไม่มีการยืนยันถึงกล่องจดหมาย',
+            opened: 'ผู้รับเปิดอ่านแล้ว (ถึงกล่องจดหมายแล้ว)',
+            clicked: 'ผู้รับคลิกลิงก์ในอีเมลแล้ว (ถึงกล่องจดหมายแล้ว)',
+            bounce: 'ตีกลับ: ที่อยู่ผู้รับไม่มีอยู่จริง หรือเซิร์ฟเวอร์ปลายทางปฏิเสธ',
+            blocked: 'ถูกบล็อก: เซิร์ฟเวอร์ปลายทางไม่รับอีเมลจากผู้ส่งนี้ (มักเกิดจากผู้ส่งไม่ผ่านการตรวจสอบ)',
+            spam: 'ผู้รับแจ้งว่าเป็นสแปม',
+            unsub: 'ผู้รับยกเลิกการรับอีเมล'
+        };
+        const st = String(item.Status || '').toLowerCase();
+        res.json({
+            found: true,
+            status: item.Status,
+            arrivedAt: item.ArrivedAt || null,
+            sentAt: item.SentAt || null,
+            to: cfg.lastMailTo || '',
+            message: hints[st] || ('สถานะ: ' + item.Status),
+            messageId: id
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

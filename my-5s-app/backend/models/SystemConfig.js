@@ -17,7 +17,8 @@ const systemConfigSchema = new mongoose.Schema({
     lastMailOk: { type: Boolean, default: null },
     lastMailAt: { type: Date },
     lastMailTo: { type: String, default: '' },
-    lastMailError: { type: String, default: '' }
+    lastMailError: { type: String, default: '' },
+    lastMailMessageId: { type: String, default: '' }
 });
 
 module.exports = mongoose.model('SystemConfig', systemConfigSchema);
