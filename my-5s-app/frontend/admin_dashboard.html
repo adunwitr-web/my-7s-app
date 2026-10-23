@@ -729,19 +729,7 @@
     let adminLineChartInstance = null;
     let adminBarChartInstance = null;
 
-    const categoriesList = [
-        "สำนักงานฯ - ห้องพักอาจารย์",
-        "ห้องเรียน",
-        "ห้องปฏิบัติการทดลอง",
-        "ห้องสมุด",
-        "โรงฝึกงาน",
-        "ห้องปฏิบัติการวิชาชีพ",
-        "ห้องปฏิบัติคอมพิวเตอร์",
-        "โรงอาหาร - ซุ้มอาหาร",
-        "ภูมิทัศน์และพื้นที่ส่วนกลาง",
-        "ห้องประชุมและหอประชุม",
-        "อาคารสถานที่ และความปลอดภัยอาคาร"
-    ];
+    let categoriesList = []; // กำหนดจากข้อมูลจริงตอนเริ่มหน้า (ดู initAdminDashboard)
 
     function navigatePage(key) {
         if (key === 'index') window.location.href = 'index.html';
@@ -857,6 +845,13 @@
     }
 }
     function initAdminDashboard(data) {
+        // หมวดหมู่จริง = หมวดจากรายการพื้นที่ + หมวดจากผลการประเมิน (ตัดหมายเหตุออก)
+        const fromAreas = (typeof allAreasData !== 'undefined' ? allAreasData : []).map(a => a.category);
+        const fromAssessments = data.map(i => (i.area && typeof i.area === 'object') ? i.area.category : '');
+        categoriesList = [...new Set([...fromAreas, ...fromAssessments]
+            .map(c => String(c || '').trim())
+            .filter(c => c && !/^\s*[*(\[]|ปิดใช้/.test(c)))];
+
         const yearSelect = document.getElementById('adminYearFilter');
         const areaSelect = document.getElementById('adminAreaFilter');
         const currentYearBE = new Date().getFullYear() + 543;
@@ -893,8 +888,8 @@
         let filteredData = rawAdminData;
         if (selectedArea !== 'ALL') {
             filteredData = rawAdminData.filter(item => {
-                const areaName = item.area ? (typeof item.area === 'object' ? (item.area.areaName || item.area.category || '') : item.area) : '';
-                return areaName === selectedArea;
+                const catName = (item.area && typeof item.area === 'object') ? String(item.area.category || '').trim() : '';
+                return catName === selectedArea;
             });
         }
 
@@ -999,11 +994,11 @@
             const yrBE = d.getFullYear() + 543;
             if (yrBE !== selectedYearBE) return;
 
-            const areaName = item.area ? (typeof item.area === 'object' ? (item.area.areaName || item.area.category || '') : item.area) : '';
+            const catName = (item.area && typeof item.area === 'object') ? String(item.area.category || '').trim() : '';
             const pct = parseFloat(item.percentage) || 0;
 
-            if (areaStatsMap.has(areaName)) {
-                const stat = areaStatsMap.get(areaName);
+            if (areaStatsMap.has(catName)) {
+                const stat = areaStatsMap.get(catName);
                 stat.sum += pct;
                 stat.count++;
             }
@@ -1173,6 +1168,19 @@
                 }
 
                 allAreasData = await response.json();
+
+                // ปรับรายการหมวดให้ตรงกับข้อมูลพื้นที่จริง (กรณีโหลดพื้นที่เสร็จหลังผลประเมิน)
+                const areaCats = allAreasData.map(a => String(a.category || '').trim())
+                    .filter(c => c && !/^\s*[*(\[]|ปิดใช้/.test(c));
+                categoriesList = [...new Set([...categoriesList, ...areaCats])];
+                const areaSel = document.getElementById('adminAreaFilter');
+                if (areaSel) {
+                    const cur = areaSel.value;
+                    areaSel.innerHTML = '<option value="ALL">-- ภาพรวมทุกหมวดหมู่ --</option>' +
+                        categoriesList.map(c => `<option value="${c}">${c}</option>`).join('');
+                    if ([...areaSel.options].some(o => o.value === cur)) areaSel.value = cur;
+                }
+                if (rawAdminData.length) updateAdminDashboard();
                 console.log(`✅ โหลดข้อมูลพื้นที่สำเร็จ! จำนวนทั้งหมด: ${allAreasData.length} ห้อง`);
 
                 // ตัดช่องว่างหน้า-หลังคำ ป้องกันปัญหาพิมพ์ผิดใน Excel
