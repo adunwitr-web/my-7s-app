@@ -398,13 +398,7 @@
                 <label style="display:block; font-size: 0.88em; font-weight: 600; margin-bottom: 5px;">รายละเอียดการปรับปรุงจุดที่ไม่ผ่าน:</label>
                 <textarea id="correctionDetail" placeholder="ระบุการดำเนินงานแก้ไข เช่น ได้จัดเก็บสิ่งของ ทำความสะอาดจุดบกพร่องตามที่แจ้งเรียบร้อยแล้ว..." class="form-control" style="height: 85px;"></textarea>
             </div>
-            <div>
-                <label style="display:block; font-size: 0.88em; font-weight: 600; margin-bottom: 5px;">📷 ภาพถ่ายจุดสถานที่หลังแก้ไขเสร็จสิ้น (เพื่อส่งให้ Admin ตรวจแก้ไขคะแนน):</label>
-                <input type="file" id="ownerFixPhotoInput" accept="image/*">
-                <div id="ownerFixPreviewContainer" style="display: none; margin-top: 10px; text-align: center;">
-                    <img id="ownerFixPreview" style="max-width: 100%; max-height: 220px; border-radius: 4px; border: 1px solid var(--gov-border);">
-                </div>
-            </div>
+            <div id="topicPhotoList"></div>
             <div style="text-align: right; margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
                 <button onclick="closeCorrectionModal()" style="padding: 8px 16px; border: 1px solid var(--gov-border); background: white; border-radius: 4px; cursor: pointer;">ยกเลิก</button>
                 <button onclick="submitCorrection()" class="btn-action-gov" style="background: var(--gov-primary); padding: 8px 20px;">
@@ -781,18 +775,81 @@
         });
     }
 
-    document.getElementById('ownerFixPhotoInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                ownerFixPhotoBase64 = event.target.result;
-                document.getElementById('ownerFixPreview').src = ownerFixPhotoBase64;
-                document.getElementById('ownerFixPreviewContainer').style.display = 'block';
-            };
-            reader.readAsDataURL(file);
+    // ---- รูปหลังแก้ไข แยกตามหัวข้อใหญ่ที่ไม่ผ่านเกณฑ์ ----
+    let topicPhotos = {};
+
+    function escHtmlOwner(t) {
+        return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // หัวข้อใหญ่ที่ไม่ผ่านเกณฑ์ (มีข้อย่อยที่ไม่ได้ติ๊ก หรือคะแนนต่ำกว่าเต็ม)
+    function failingTopics(task) {
+        return (task.items || []).map((item, index) => ({ item, index })).filter(({ item }) => {
+            if (item.isNA) return false;
+            if (item.subItems && item.subItems.length) return item.subItems.some(s => !s.checked && !s.isNA);
+            return (Number(item.score) || 0) < (Number(item.maxScore) || 0);
+        });
+    }
+
+    function renderTopicPhotoList(task) {
+        const box = document.getElementById('topicPhotoList');
+        const list = failingTopics(task);
+        topicPhotos = {};
+        if (list.length === 0) {
+            box.innerHTML = '<em>ไม่มีหัวข้อที่ไม่ผ่านเกณฑ์</em>';
+            return;
         }
-    });
+        box.innerHTML = `<label style="display:block; font-size: 0.88em; font-weight: 600; margin-bottom: 8px;">📷 ภาพถ่ายหลังแก้ไข แยกตามหัวข้อที่ไม่ผ่านเกณฑ์ (${list.length} หัวข้อ):</label>` +
+            list.map(({ item, index }) => `
+                <div style="border: 1px solid var(--gov-border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
+                    <div style="font-weight: 600; font-size: 0.9em; margin-bottom: 6px;">${escHtmlOwner(item.topicName || 'หัวข้อ ' + (index + 1))}</div>
+                    <input type="file" accept="image/*" data-topic="${index}" onchange="onTopicPhotoChange(this)">
+                    <div id="topicPreview_${index}" style="display: none; margin-top: 8px; text-align: center;">
+                        <img style="max-width: 100%; max-height: 180px; border-radius: 4px; border: 1px solid var(--gov-border);">
+                    </div>
+                </div>`).join('');
+    }
+
+    // ย่อขนาดรูปก่อนส่ง (ลดขนาดข้อมูลที่ส่งไปเซิร์ฟเวอร์)
+    function compressImage(file, maxSide, quality) {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(url);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('ไฟล์รูปภาพไม่ถูกต้อง')); };
+            img.src = url;
+        });
+    }
+
+    async function onTopicPhotoChange(input) {
+        const idx = Number(input.dataset.topic);
+        const preview = document.getElementById(`topicPreview_${idx}`);
+        const file = input.files[0];
+        if (!file) {
+            delete topicPhotos[idx];
+            preview.style.display = 'none';
+            return;
+        }
+        try {
+            const data = await compressImage(file, 1280, 0.8);
+            topicPhotos[idx] = data;
+            preview.querySelector('img').src = data;
+            preview.style.display = 'block';
+        } catch (err) {
+            alert('ไม่สามารถอ่านไฟล์รูปภาพนี้ได้ กรุณาเลือกไฟล์ใหม่');
+            input.value = '';
+            delete topicPhotos[idx];
+            preview.style.display = 'none';
+        }
+    }
 
     function openCorrectionModal(id) {
         const task = currentTasksList.find(t => t._id === id);
@@ -800,9 +857,7 @@
 
         activeTaskId = id;
         document.getElementById('correctionDetail').value = '';
-        document.getElementById('ownerFixPhotoInput').value = '';
-        document.getElementById('ownerFixPreviewContainer').style.display = 'none';
-        ownerFixPhotoBase64 = '';
+        renderTopicPhotoList(task);
 
         const failedItemsContainer = document.getElementById('failedItemsListContainer');
         failedItemsContainer.innerHTML = '';
@@ -857,6 +912,14 @@
             return;
         }
 
+        const task = currentTasksList.find(t => t._id === activeTaskId);
+        const failing = task ? failingTopics(task) : [];
+        const missing = failing.filter(({ index }) => !topicPhotos[index]).map(({ item }) => item.topicName);
+        if (missing.length > 0 && !confirm(`ยังไม่ได้แนบรูปของหัวข้อ:\n- ${missing.join('\n- ')}\n\nต้องการส่งรายงานต่อโดยไม่มีรูปเหล่านี้หรือไม่?`)) {
+            return;
+        }
+        const orderedPhotos = failing.map(({ index }) => topicPhotos[index]).filter(Boolean);
+
         const token = localStorage.getItem('authToken');
         try {
             const res = await fetch(`${API_URL}/assessment/${activeTaskId}/resolve`, {
@@ -867,7 +930,8 @@
                 },
                 body: JSON.stringify({
                     detail: detail,
-                    photoUrl: ownerFixPhotoBase64
+                    photoUrl: orderedPhotos[0] || '',
+                    topicPhotos: Object.entries(topicPhotos).map(([index, photo]) => ({ index: Number(index), photo }))
                 })
             });
 
