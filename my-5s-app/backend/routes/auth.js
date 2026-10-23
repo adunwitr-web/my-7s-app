@@ -24,7 +24,8 @@ async function buildUserPayload(user) {
         fullName,
         assignedArea: assignment.assignedArea,           // id ห้อง ("" = ไม่ล็อคห้อง)
         assignedAreaName: assignment.assignedAreaName,   // ชื่อห้อง
-        assignedCategory: assignment.assignedCategory    // หมวดหมู่ ("" = ไม่ล็อคหมวด)
+        assignedCategories: assignment.assignedCategories, // รายการหมวดที่รับผิดชอบ ([] = ไม่ล็อค)
+        assignedCategory: assignment.assignedCategory    // หมวดแรก (ความเข้ากันได้ย้อนหลัง)
     };
 }
 

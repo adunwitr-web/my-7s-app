@@ -82,7 +82,8 @@ router.post('/', async (req, res) => {
             fullName: `${firstName} ${lastName || ''}`.trim(),
             role,
             assignedArea: assign.assignedArea,
-            assignedCategory: assign.assignedCategory
+            assignedCategories: assign.assignedCategories,
+            assignedCategory: assign.assignedCategories[0] || ''
         });
         await user.save();
         await syncAreaOwnership(user._id, user.role, user.assignedArea);
@@ -123,13 +124,16 @@ router.patch('/:id', async (req, res) => {
             user.password = await bcrypt.hash(String(b.password).trim(), 10);
         }
 
-        if (b.assignedArea !== undefined || b.assignedCategory !== undefined) {
+        if (b.assignedArea !== undefined || b.assignedCategories !== undefined || b.assignedCategory !== undefined) {
             const assign = await User.normalizeAssignment({
                 assignedArea: b.assignedArea !== undefined ? b.assignedArea : user.assignedArea,
-                assignedCategory: b.assignedCategory !== undefined ? b.assignedCategory : user.assignedCategory
+                assignedCategories: b.assignedCategories !== undefined
+                    ? b.assignedCategories
+                    : (b.assignedCategory !== undefined ? b.assignedCategory : user.assignedCategories)
             });
             user.assignedArea = assign.assignedArea;
-            user.assignedCategory = assign.assignedCategory;
+            user.assignedCategories = assign.assignedCategories;
+            user.assignedCategory = assign.assignedCategories[0] || '';
         }
 
         await user.save();

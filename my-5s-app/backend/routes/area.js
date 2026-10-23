@@ -34,7 +34,7 @@ router.get('/', verifyToken, async (req, res) => {
                 orConditions.push({ assignedUsers: userId });
                 orConditions.push({ owner: userId });
 
-                const me = await User.findById(userId).select('firstName assignedArea assignedCategory').lean();
+                const me = await User.findById(userId).select('firstName assignedArea assignedCategory assignedCategories').lean();
                 if (me) {
                     const lock = await User.describeAssignment(me);
                     if (lock.assignedArea) {
@@ -42,8 +42,9 @@ router.get('/', verifyToken, async (req, res) => {
                         orConditions.push({ _id: lock.assignedArea });
                     } else {
                         // ไม่ได้ผูกห้อง: เห็นทุกห้องในหมวดที่รับผิดชอบ
-                        if (lock.assignedCategory && !lock.assignedCategory.includes('ไม่ล็อค')) {
-                            orConditions.push({ category: { $regex: new RegExp(escapeRegex(lock.assignedCategory), 'i') } });
+                        // ทุกห้องในทุกหมวดที่รับผิดชอบ
+                        if (lock.assignedCategories.length) {
+                            orConditions.push({ category: { $in: lock.assignedCategories } });
                         }
                         const firstName = String(me.firstName || '').replace(/^(ผศ\.|ดร\.|นางสาว|นาง|นาย)/, '').trim();
                         if (firstName.length > 0) {
