@@ -620,6 +620,11 @@
             <div style="margin-bottom:10px;">
                 <label style="display:block; font-size:0.85em; font-weight:600; margin-bottom:4px;">อีเมลผู้ส่ง (ต้องยืนยันแล้วใน Mailjet):</label>
                 <input type="email" id="mailFromInput" class="form-control" placeholder="เช่น green7s.notify@gmail.com">
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button type="button" onclick="requestSenderVerification()" style="flex:1; padding:7px; border:1px solid var(--gov-primary); background:#fff; color:var(--gov-primary-dark); border-radius:6px; cursor:pointer; font-size:0.85em;">ส่งลิงก์ยืนยันอีเมลนี้</button>
+                    <button type="button" onclick="checkSenderStatus()" style="flex:1; padding:7px; border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:6px; cursor:pointer; font-size:0.85em;">ตรวจสถานะการยืนยัน</button>
+                </div>
+                <div id="senderStatusBox" style="font-size:0.85em; margin-top:6px;"></div>
             </div>
             <div style="margin-bottom:10px;">
                 <label style="display:block; font-size:0.85em; font-weight:600; margin-bottom:4px;">API Key: <span id="mailjetKeyHint" style="font-weight:400; color:#64748b;"></span></label>
@@ -1523,6 +1528,48 @@
 
     function mailEsc(t) {
         return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function setSenderStatus(html) {
+        const box = document.getElementById('senderStatusBox');
+        if (box) box.innerHTML = html;
+    }
+
+    async function requestSenderVerification() {
+        const email = document.getElementById('mailFromInput').value.trim();
+        if (!email) { alert('กรุณากรอกอีเมลผู้ส่งก่อน'); return; }
+        setSenderStatus('กำลังส่งลิงก์ยืนยัน...');
+        try {
+            const res = await fetch(`${API_URL}/system-config/mail-sender`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                body: JSON.stringify({ email })
+            });
+            const d = await res.json();
+            if (!res.ok) { setSenderStatus(`<span style="color:#b91c1c;">❌ ${d.message}</span>`); return; }
+            setSenderStatus(`<span style="color:#15803d;">${d.message}</span>`);
+        } catch (err) {
+            setSenderStatus('<span style="color:#b91c1c;">❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้</span>');
+        }
+    }
+
+    async function checkSenderStatus() {
+        const email = document.getElementById('mailFromInput').value.trim();
+        if (!email) { alert('กรุณากรอกอีเมลผู้ส่งก่อน'); return; }
+        setSenderStatus('กำลังตรวจสถานะ...');
+        try {
+            const res = await fetch(`${API_URL}/system-config/mail-sender?email=${encodeURIComponent(email)}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+            });
+            const d = await res.json();
+            if (!res.ok) { setSenderStatus(`<span style="color:#b91c1c;">❌ ${d.message}</span>`); return; }
+            setSenderStatus(d.active
+                ? `<span style="color:#15803d;">✅ ${d.message}</span>`
+                : `<span style="color:#b45309;">⏳ ${d.message}</span>`);
+            loadMailStatus();
+        } catch (err) {
+            setSenderStatus('<span style="color:#b91c1c;">❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้</span>');
+        }
     }
 
     async function loadMailSettings() {

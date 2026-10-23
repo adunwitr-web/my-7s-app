@@ -178,4 +178,89 @@ router.post('/mail-settings', verifyToken, adminOnly, async (req, res) => {
     }
 });
 
+// ---- Mailjet Single Sender Verification ----
+// Mailjet จะส่งลิงก์ยืนยันไปยังกล่องจดหมายของอีเมลนั้น ผู้รับต้องกดลิงก์เพื่อยืนยันก่อนจึงส่งอีเมลได้
+const isEmailAddr = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || ''));
+
+async function mailjetCall(method, path, body) {
+    const cfg = (await SystemConfig.findOne().lean()) || {};
+    const apiKey = cfg.mailjetApiKey || process.env.MAILJET_API_KEY || '';
+    const secret = cfg.mailjetSecretKey || process.env.MAILJET_SECRET_KEY || '';
+    if (!apiKey || !secret) throw new Error('ยังไม่ได้ตั้งค่า API Key และ Secret Key ของ Mailjet');
+    const res = await fetch('https://api.mailjet.com' + path, {
+        method,
+        headers: {
+            'Authorization': 'Basic ' + Buffer.from(`${apiKey}:${secret}`).toString('base64'),
+            'Content-Type': 'application/json'
+        },
+        body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+}
+
+// อ่านสถานะผู้ส่งจาก Mailjet (ไม่พบ = null)
+async function fetchSenderStatus(email) {
+    const r = await mailjetCall('GET', `/v3/REST/sender/${encodeURIComponent(email)}`);
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error((r.data && (r.data.ErrorMessage || r.data.message)) || `Mailjet ตอบ ${r.status}`);
+    const item = r.data && r.data.Data && r.data.Data[0];
+    return item ? String(item.Status || '') : null;
+}
+
+// POST /api/system-config/mail-sender (Admin) — ขอให้ Mailjet ส่งลิงก์ยืนยันไปยังอีเมลผู้ส่ง
+router.post('/mail-sender', verifyToken, adminOnly, async (req, res) => {
+    try {
+        const email = String((req.body && req.body.email) || '').trim();
+        const name = String((req.body && req.body.name) || 'Green 7S Plus').trim();
+        if (!isEmailAddr(email)) return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง' });
+
+        // ถ้าเคยลงทะเบียนแล้ว Mailjet จะตอบ error ซึ่งไม่เป็นไร ให้ไปอ่านสถานะปัจจุบันแทน
+        const created = await mailjetCall('POST', '/v3/REST/sender', { Email: email, Name: name });
+        const status = await fetchSenderStatus(email);
+
+        if (status === null) {
+            const reason = (created.data && (created.data.ErrorMessage || created.data.message)) || `Mailjet ตอบ ${created.status}`;
+            return res.status(400).json({ message: 'ส่งลิงก์ยืนยันไม่สำเร็จ: ' + reason });
+        }
+        if (status === 'Active') {
+            return res.json({ success: true, status, message: `อีเมล ${email} ได้รับการยืนยันแล้ว สามารถใช้เป็นผู้ส่งได้เลย` });
+        }
+        res.json({
+            success: true,
+            status,
+            message: created.ok
+                ? `ส่งลิงก์ยืนยันไปที่ ${email} แล้ว กรุณาเปิดอีเมลแล้วกดยืนยัน (ถ้าไม่เห็น ให้ตรวจโฟลเดอร์ Junk/Spam)`
+                : `อีเมล ${email} ลงทะเบียนไว้แล้ว สถานะปัจจุบัน: ${status} (ถ้ายังไม่ได้ยืนยัน ให้กดลิงก์ในอีเมลที่ Mailjet ส่งไว้)`
+        });
+    } catch (error) {
+        console.error('Mailjet sender error:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// GET /api/system-config/mail-sender?email=... (Admin) — ตรวจว่าอีเมลนี้ยืนยันแล้วหรือยัง
+// ถ้ายืนยันแล้วจะบันทึกเป็นอีเมลผู้ส่งที่ใช้งานจริงให้อัตโนมัติ
+router.get('/mail-sender', verifyToken, adminOnly, async (req, res) => {
+    try {
+        const email = String(req.query.email || '').trim();
+        if (!isEmailAddr(email)) return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง' });
+        const status = await fetchSenderStatus(email);
+        if (status === null) return res.json({ email, status: 'NotFound', active: false, message: 'ยังไม่ได้ส่งลิงก์ยืนยันอีเมลนี้' });
+
+        const active = status === 'Active';
+        if (active) {
+            await SystemConfig.updateOne({}, { $set: { mailFrom: email } }, { upsert: true });
+        }
+        res.json({
+            email,
+            status,
+            active,
+            message: active ? 'ยืนยันแล้ว ใช้เป็นอีเมลผู้ส่งได้' : 'ยังไม่ยืนยัน กรุณากดลิงก์ในอีเมลที่ Mailjet ส่งไปให้'
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
