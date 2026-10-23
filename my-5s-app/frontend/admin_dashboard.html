@@ -608,6 +608,14 @@
             <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">รหัสผ่านแอปพลิเคชัน (App Password 16 หลัก):</label>
             <input type="password" id="settingAppPassword" class="form-control" placeholder="รหัสผ่านความปลอดภัย 16 หลัก">
         </div>
+        <div id="mailStatusBox" style="background:#f8fafc; border:1px solid var(--gov-border); border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:0.88em;">กำลังตรวจสถานะอีเมล...</div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block; font-weight:600; font-size:0.9em; margin-bottom:4px;">ทดสอบส่งอีเมล (ส่งไปที่):</label>
+            <div style="display:flex; gap:8px;">
+                <input type="email" id="testMailTo" class="form-control" placeholder="อีเมลปลายทาง">
+                <button onclick="sendTestMail()" style="white-space:nowrap; padding:0 14px; border:1px solid var(--gov-primary); background:#fff; color:var(--gov-primary-dark); border-radius:6px; cursor:pointer;">ส่งทดสอบ</button>
+            </div>
+        </div>
         <button onclick="saveSettings()" class="btn-table" style="background:var(--gov-primary); color:white; width:100%; padding:10px;">
             บันทึกการตั้งค่าระบบ
         </button>
@@ -1485,8 +1493,58 @@
         document.getElementById('settingsModal').style.display = 'flex';
         document.getElementById('settingsDropdown').classList.remove('show-dropdown');
         loadSettings();
+        loadMailStatus();
     }
     function closeSettingsModal() { document.getElementById('settingsModal').style.display = 'none'; }
+
+    function mailEsc(t) {
+        return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    async function loadMailStatus() {
+        const box = document.getElementById('mailStatusBox');
+        if (!box) return;
+        try {
+            const res = await fetch(`${API_URL}/system-config/mail-status`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+            });
+            const s = await res.json();
+            if (!res.ok) throw new Error(s.message || 'ตรวจสถานะไม่สำเร็จ');
+
+            const providerNames = { resend: 'Resend (HTTP API)', brevo: 'Brevo (HTTP API)', smtp: 'Gmail SMTP (ใช้ไม่ได้บน Render)' };
+            const provider = providerNames[s.provider] || s.provider;
+            const ready = s.ready;
+            const last = s.lastMailAt
+                ? (s.lastMailOk
+                    ? `<span style="color:#15803d;">✅ สำเร็จ</span> ไปยัง ${mailEsc(s.lastMailTo)}`
+                    : `<span style="color:#b91c1c;">❌ ไม่สำเร็จ</span> — ${mailEsc(s.lastMailError)}`)
+                : 'ยังไม่เคยมีการส่งอีเมล';
+            box.innerHTML = `
+                <div>ผู้ให้บริการ: <b>${provider}</b> ${ready ? '<span style="color:#15803d;">ตั้งค่าครบ</span>' : '<span style="color:#b45309;">ตั้งค่ายังไม่ครบ</span>'}</div>
+                ${s.provider !== 'smtp' ? `<div>ผู้ส่ง (MAIL_FROM): ${mailEsc(s.mailFrom || '-')}</div>` : `<div>บัญชีผู้ส่ง: ${mailEsc(s.adminEmail || '-')}</div>`}
+                <div style="margin-top:6px;">ผลการส่งล่าสุด: ${last}</div>
+                ${s.lastMailAt ? `<div style="color:#64748b; font-size:0.9em;">เวลา: ${new Date(s.lastMailAt).toLocaleString('th-TH')}</div>` : ''}`;
+        } catch (err) {
+            box.innerHTML = `<span style="color:#b91c1c;">❌ ตรวจสถานะอีเมลไม่สำเร็จ: ${mailEsc(err.message)}</span>`;
+        }
+    }
+
+    async function sendTestMail() {
+        const to = document.getElementById('testMailTo').value.trim();
+        if (!to) { alert('กรุณาระบุอีเมลปลายทาง'); return; }
+        try {
+            const res = await fetch(`${API_URL}/system-config/test-mail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                body: JSON.stringify({ to })
+            });
+            const data = await res.json();
+            alert(res.ok ? '✅ ' + data.message : '❌ ' + (data.message || 'ส่งอีเมลไม่สำเร็จ'));
+        } catch (err) {
+            alert('❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
+        }
+        loadMailStatus();
+    }
 
     async function loadSettings() {
         try {
@@ -1752,12 +1810,22 @@
                 currentEditItems = data.items;
                 let html = '<div style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">';
                 
-                if (data.correctionData && data.correctionData.photoUrl) {
+                const correction = data.correctionData || {};
+                const gallery = Array.isArray(correction.topicPhotos) ? correction.topicPhotos.filter(p => p && p.photo) : [];
+                const singlePhoto = correction.photoUrl || '';
+                if (gallery.length > 0 || singlePhoto) {
+                    const figs = gallery.length > 0
+                        ? gallery.map(p => `
+                            <figure style="margin:0; width:230px; text-align:center;">
+                                <img src="${p.photo}" style="width:100%; max-height:200px; object-fit:contain; border:1px solid #cbd5e1; border-radius:4px; background:#fff;">
+                                <figcaption style="font-size:0.82em; color:#334155; margin-top:4px;">${p.topicName || 'หัวข้อที่ ' + ((p.topicIndex || 0) + 1)}</figcaption>
+                            </figure>`).join('')
+                        : `<img src="${singlePhoto}" style="max-width:100%; max-height:200px; border-radius:4px; border:1px solid #cbd5e1;">`;
                     html += `
-                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:4px; margin-bottom:12px; text-align:center;">
-                            <b style="color:#166534; display:block; margin-bottom:4px;">📸 รูปภาพการปรับปรุงแก้ไขที่ส่งมาจากเจ้าของพื้นที่:</b>
-                            <img src="${data.correctionData.photoUrl}" style="max-width:100%; max-height:200px; border-radius:4px; border:1px solid #cbd5e1;">
-                            <p style="margin:4px 0 0 0; font-size:0.85em; color:#475569;">${data.correctionData.detail || ''}</p>
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:12px; border-radius:6px; margin-bottom:12px;">
+                            <b style="color:#166534; display:block; margin-bottom:8px;">📸 รูปภาพการปรับปรุงแก้ไขจากเจ้าของพื้นที่ (${gallery.length || 1} รูป)</b>
+                            <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center;">${figs}</div>
+                            <p style="margin:8px 0 0 0; font-size:0.85em; color:#475569;">${correction.detail || ''}</p>
                         </div>
                     `;
                 }
