@@ -14,6 +14,19 @@ function idOf(v) {
     return clean(String(v));
 }
 
+// แปลงรายการหมวดจากค่าใดก็ได้ (array หรือข้อความคั่นด้วย , หรือ |) ให้เป็นรายการสะอาด ไม่ซ้ำ
+function toCategoryList(v) {
+    let items = [];
+    if (Array.isArray(v)) items = v;
+    else if (v !== undefined && v !== null && v !== '') items = String(v).split(/[|,]/);
+    const out = [];
+    for (const it of items) {
+        const c = clean(it);
+        if (c && !out.includes(c)) out.push(c);
+    }
+    return out;
+}
+
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -31,14 +44,17 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
 
-    // ห้องที่ผูกกับเจ้าของพื้นที่ (ใช้กำหนด Area.owner) — ไม่ใช้ล็อคผู้ประเมิน
+    // ห้องที่ผูกกับเจ้าของพื้นที่ (ใช้กำหนด Area.owner)
     assignedArea: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Area',
         default: null
     },
 
-    // 🔒 ล็อคระดับ "ส่วนพื้นที่ / หมวดหมู่" — ใช้ล็อคสิทธิ์ผู้ประเมิน ("" = ไม่ล็อค)
+    // 🔒 หมวดหมู่ที่รับผิดชอบ (ล็อคผู้ประเมิน) — รองรับหลายหมวด ([] = ไม่ล็อค)
+    assignedCategories: { type: [String], default: [] },
+
+    // ค่าเดิมแบบหมวดเดียว เก็บไว้เพื่อความเข้ากันได้ย้อนหลัง (ระบบอ่านจาก assignedCategories ก่อน)
     assignedCategory: { type: String, default: '', trim: true },
 
     firstName: { type: String, required: true },
@@ -56,49 +72,49 @@ const UserSchema = new mongoose.Schema({
 });
 
 /**
- * แปลงค่าที่ Admin ส่งมา ให้เป็นค่าที่เก็บลง DB
- *  - assignedCategory ที่มีค่า           -> ล็อคทั้งหมวดหมู่นั้น
- *  - เลือกห้อง (assignedArea เป็น id จริง) -> เก็บห้องไว้ (ใช้กำหนดเจ้าของ) และดึงหมวดของห้องมาเป็นการล็อค
- *                                          ถ้าไม่ได้ส่งหมวดมาด้วย
- *  - ทั้งคู่ว่าง                          -> ปลดล็อคทั้งหมด
- *  - รองรับของเก่า: assignedArea เป็นชื่อหมวดหมู่ (ไม่ใช่ ObjectId) -> ถือเป็นการล็อคหมวด
+ * แปลงค่าที่ Admin ส่งมาให้เป็นค่าที่เก็บลง DB
+ *  - assignedCategories : รายการหมวดที่รับผิดชอบ (หรือ assignedCategory แบบเดิม)
+ *  - assignedArea       : ห้องที่ผูกกับเจ้าของพื้นที่ (ถ้ามี) — ถ้าไม่ได้ส่งหมวดมา จะใช้หมวดของห้องนั้น
+ *                         และถ้ามีหมวดอยู่แล้วจะเพิ่มหมวดของห้องเข้าไปให้ครบ
  */
 UserSchema.statics.normalizeAssignment = async function (input) {
     input = input || {};
     const Area = mongoose.models.Area || require('./Area');
 
     const rawArea = idOf(input.assignedArea);
-    const rawCat = clean(input.assignedCategory);
-
+    const categories = toCategoryList(
+        input.assignedCategories !== undefined ? input.assignedCategories : input.assignedCategory
+    );
     let assignedArea = null;
-    let assignedCategory = rawCat;
 
     if (rawArea && HEX24.test(rawArea)) {
         try {
             const area = await Area.findById(rawArea).select('category').lean();
             if (area) {
                 assignedArea = area._id;
-                assignedCategory = String(area.category || '').trim() || rawCat;
+                const roomCat = clean(area.category);
+                if (roomCat && !categories.includes(roomCat)) categories.push(roomCat);
             }
         } catch (e) { /* ไม่พบห้อง -> ไม่ผูกห้อง */ }
-    } else if (rawArea && !rawCat) {
-        assignedCategory = rawArea; // ข้อมูลรูปแบบเก่า
+    } else if (rawArea) {
+        // ข้อมูลรูปแบบเก่า: ส่งชื่อหมวดมาในช่องห้อง
+        categories.push(...toCategoryList(rawArea));
     }
 
-    return { assignedArea, assignedCategory };
+    return { assignedArea, assignedCategories: toCategoryList(categories) };
 };
 
 /**
  * แปลงสิทธิ์ของ user เป็นรูปแบบที่ Frontend ใช้ทุกหน้า
- *  { assignedArea: 'idห้อง' | '', assignedAreaName: 'ชื่อห้อง' | '', assignedCategory: 'หมวด' | '' }
- * ถ้าห้องที่ผูกไว้ถูกลบไปแล้ว จะถือว่าไม่มีห้องผูกไว้
+ *  { assignedArea, assignedAreaName, assignedCategories: [..], assignedCategory: 'หมวดแรก' }
  */
 UserSchema.statics.describeAssignment = async function (user) {
     user = user || {};
     const Area = mongoose.models.Area || require('./Area');
 
     let areaId = idOf(user.assignedArea);
-    let category = clean(user.assignedCategory);
+    let categories = toCategoryList(user.assignedCategories);
+    if (categories.length === 0) categories = toCategoryList(user.assignedCategory);
     let areaName = '';
 
     if (areaId && HEX24.test(areaId)) {
@@ -106,7 +122,8 @@ UserSchema.statics.describeAssignment = async function (user) {
             const area = await Area.findById(areaId).select('areaName category').lean();
             if (area) {
                 areaName = String(area.areaName || '').trim();
-                category = String(area.category || '').trim() || category;
+                const roomCat = clean(area.category);
+                if (roomCat && !categories.includes(roomCat)) categories.push(roomCat);
             } else {
                 areaId = '';
             }
@@ -117,7 +134,12 @@ UserSchema.statics.describeAssignment = async function (user) {
         areaId = '';
     }
 
-    return { assignedArea: areaId, assignedAreaName: areaName, assignedCategory: category };
+    return {
+        assignedArea: areaId,
+        assignedAreaName: areaName,
+        assignedCategories: categories,
+        assignedCategory: categories[0] || ''
+    };
 };
 
 module.exports = mongoose.models.User || mongoose.model('User', UserSchema);
