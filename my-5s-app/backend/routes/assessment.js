@@ -275,12 +275,17 @@ router.patch('/:id/resolve', verifyToken, async (req, res) => {
 
         if (!assessment) return res.status(404).json({ message: 'ไม่พบบันทึกรายการนี้' });
 
-        // รูปหลังแก้ไขแยกตามหัวข้อใหญ่ (เก็บที่ items[index].topicPhoto เพื่อให้หน้าแอดมินแสดงตรงหัวข้อ)
+        // รูปหลังแก้ไขทุกหัวข้อ เก็บเป็นรายการใน correctionData.topicPhotos (ไม่ทับกันแม้ส่งหลายรูป)
+        const savedTopicPhotos = [];
         if (Array.isArray(topicPhotos)) {
             for (const tp of topicPhotos) {
                 const idx = Number(tp && tp.index);
                 if (Number.isInteger(idx) && idx >= 0 && idx < assessment.items.length && tp.photo) {
-                    assessment.items[idx].topicPhoto = String(tp.photo);
+                    savedTopicPhotos.push({
+                        topicIndex: idx,
+                        topicName: assessment.items[idx].topicName || '',
+                        photo: String(tp.photo)
+                    });
                 }
             }
         }
@@ -288,7 +293,8 @@ router.patch('/:id/resolve', verifyToken, async (req, res) => {
         assessment.status = 'Corrected';
         assessment.correctionData = {
             detail: detail || '',
-            photoUrl: photoUrl || '',
+            photoUrl: savedTopicPhotos.length ? '' : (photoUrl || ''),
+            topicPhotos: savedTopicPhotos,
             submittedAt: new Date()
         };
 
@@ -346,6 +352,7 @@ router.patch('/:id/reject', verifyToken, adminOnly, async (req, res) => {
         assessment.correctionData = {
             detail: `⚠️ ข้อสั่งการส่งกลับเพื่อปรับปรุง: "${reason || 'ไม่ผ่านเกณฑ์มาตรฐาน'}"\n\n(รายละเอียดเดิม: ${previousDetail})`,
             photoUrl: assessment.correctionData ? assessment.correctionData.photoUrl : '',
+            topicPhotos: assessment.correctionData ? (assessment.correctionData.topicPhotos || []) : [],
             submittedAt: assessment.correctionData ? assessment.correctionData.submittedAt : null
         };
 
