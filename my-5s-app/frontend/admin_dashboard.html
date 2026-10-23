@@ -201,6 +201,39 @@
             .doc-panel { padding: 16px 14px; }
             .modal-content { padding: 18px 14px; }
         }
+        /* ---- หน้าทะเบียนบุคลากร ---- */
+        .um-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:12px; margin-bottom:16px; }
+        .um-header h3 { margin:0; font-size:1.15em; color:var(--gov-primary-dark); }
+        .um-close { border:none; background:none; font-size:24px; cursor:pointer; color:#64748b; line-height:1; }
+        .um-close:hover { color:#0f172a; }
+        .um-wrap { display:flex; flex-direction:column; gap:14px; }
+        .um-card { background:#fff; border:1px solid var(--gov-border); border-radius:10px; padding:16px 18px; }
+        .um-card h4 { margin:0 0 12px 0; font-size:0.98em; color:var(--gov-primary-dark); display:flex; align-items:center; gap:8px; }
+        .um-card h4 small { font-weight:400; color:#64748b; }
+        .um-step { width:22px; height:22px; border-radius:50%; background:var(--gov-primary); color:#fff; font-size:0.8em; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .um-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:12px 14px; }
+        .um-field label { display:block; font-size:0.85em; font-weight:600; margin-bottom:4px; color:#334155; }
+        .um-field .form-control { width:100%; }
+        .um-hint { font-size:0.8em; color:#64748b; margin-top:6px; }
+        .um-soft { background:#f8fafc; }
+        .cat-picker { display:flex; flex-wrap:wrap; gap:8px; }
+        .cat-chip { display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border:1px solid var(--gov-border); border-radius:999px; background:#f8fafc; cursor:pointer; font-size:0.9em; user-select:none; transition:all .15s; }
+        .cat-chip:hover { border-color:#94a3b8; }
+        .cat-chip input { accent-color:var(--gov-primary); margin:0; }
+        .cat-chip.on { background:#e8f5e9; border-color:var(--gov-primary); color:var(--gov-primary-dark); font-weight:600; }
+        .cat-empty { color:#64748b; font-size:0.9em; padding:6px 0; }
+        .um-pw { background:#fff7ed; border:1px solid #fed7aa; }
+        .um-pw h4 { color:#9a3412; }
+        .um-footer { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+        .um-btn { border:none; border-radius:8px; padding:10px 22px; font-weight:600; cursor:pointer; font-size:0.95em; }
+        .um-btn-primary { background:var(--gov-primary); color:#fff; }
+        .um-btn-primary:hover { filter:brightness(1.08); }
+        .um-btn-warn { background:#ea580c; color:#fff; }
+        .um-btn-warn:hover { filter:brightness(1.06); }
+        .um-btn-ghost { background:#f1f5f9; color:#334155; }
+        .um-btn-ghost:hover { background:#e2e8f0; }
+        .um-list-head { padding:14px 18px; border-bottom:1px solid var(--gov-border); }
+        .um-list-head h4 { margin:0; font-size:0.98em; color:var(--gov-primary-dark); }
     </style>
 </head>
 <body>
@@ -418,107 +451,145 @@
 </div>
 
 <div id="userModal" class="modal">
-    <div class="modal-content" style="max-width: 860px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
-            <h3 style="margin:0;">👥 ทะเบียนบุคลากรและสิทธิ์การตรวจประเมิน</h3>
-            <button onclick="closeUserModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
+    <div class="modal-content" style="max-width: 980px; width: 96vw;">
+        <div class="um-header">
+            <h3>👥 ทะเบียนบุคลากรและสิทธิ์การตรวจประเมิน</h3>
+            <button class="um-close" onclick="closeUserModal()" aria-label="ปิด">&times;</button>
         </div>
 
-        <div style="background: #f8fafc; padding: 16px; border: 1px solid var(--gov-border); border-radius: 4px; margin-bottom: 20px;">
-            <h4 style="margin: 0 0 10px 0; color: var(--gov-primary-dark);">➕ เพิ่มข้อมูลบุคลากรในทะเบียน</h4>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
-                <input type="text" id="newUsername" placeholder="ชื่อบัญชี (Username)" class="form-control">
-                <input type="password" id="newPassword" placeholder="รหัสผ่าน (เริ่มต้น 123456)" class="form-control">
-                <input type="email" id="newEmail" placeholder="Email (ex.@rmutsv.ac.th)" class="form-control">
-                <input type="text" id="newFirstName" placeholder="ชื่อจริง" class="form-control">
-                <input type="text" id="newLastName" placeholder="นามสกุล" class="form-control">
-                <select id="newRole" class="form-control">
-                    <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
-                    <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
-                    <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบหมวดหมู่</option>
-                    <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบหมวดหมู่</option>
-                    <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
-                </select>
-                <!-- 🟢 1. กล่องพื้นที่หลัก (จะเรียงต่อใน Grid อย่างสวยงาม) -->
-                <select id="newCategory" multiple size="6" onchange="filterRoomsForNew()" class="form-control">
-                    <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
-                </select>
-
-                <!-- 🟢 2. กล่องห้องย่อย (จะเรียงต่อใน Grid เช่นกัน) -->
-                <select id="newAssignedArea" class="form-control" disabled>
-                    <option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>
-                </select>
+        <div class="um-wrap">
+            <div class="um-card">
+                <h4><span class="um-step">1</span> ข้อมูลบัญชี</h4>
+                <div class="um-grid">
+                    <div class="um-field">
+                        <label for="newUsername">ชื่อบัญชี (Username) *</label>
+                        <input type="text" id="newUsername" class="form-control" placeholder="เช่น somsa.j" autocomplete="off">
+                    </div>
+                    <div class="um-field">
+                        <label for="newEmail">อีเมลองค์กร *</label>
+                        <input type="email" id="newEmail" class="form-control" placeholder="name@rmutsv.ac.th">
+                    </div>
+                    <div class="um-field">
+                        <label for="newFirstName">ชื่อจริง *</label>
+                        <input type="text" id="newFirstName" class="form-control" placeholder="ชื่อจริง">
+                    </div>
+                    <div class="um-field">
+                        <label for="newLastName">นามสกุล</label>
+                        <input type="text" id="newLastName" class="form-control" placeholder="นามสกุล">
+                    </div>
+                    <div class="um-field">
+                        <label for="newRole">สิทธิ์หน้าที่ *</label>
+                        <select id="newRole" class="form-control">
+                        <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
+                        <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
+                        <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบหมวดหมู่</option>
+                        <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบหมวดหมู่</option>
+                        <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
+                        </select>
+                    </div>
+                    <div class="um-field">
+                        <label for="newPassword">รหัสผ่านเริ่มต้น</label>
+                        <input type="password" id="newPassword" class="form-control" placeholder="เว้นว่าง = 123456" autocomplete="new-password">
+                    </div>
+                </div>
             </div>
-            <button onclick="createUser()" class="btn-table" style="background: var(--gov-primary); color:white; margin-top:12px; padding:8px 20px;">
-                บันทึกเข้าทะเบียน
-            </button>
+
+            <div class="um-card">
+                <h4><span class="um-step">2</span> หมวดหมู่ที่รับผิดชอบ <small>(เลือกได้หลายหมวด)</small></h4>
+                <div id="newCategory" class="cat-picker" data-onchange="filterRoomsForNew"></div>
+                <div class="um-hint">ไม่เลือกหมวดเลย = ประเมินได้ทุกพื้นที่</div>
+
+                <div class="um-field" style="margin-top:16px; max-width:460px;">
+                    <label for="newAssignedArea">ห้องย่อย <span style="font-weight:400; color:#64748b;">(ไม่บังคับ)</span></label>
+                    <select id="newAssignedArea" class="form-control" disabled>
+                        <option value="">-- กรุณาเลือกหมวดหมู่ก่อน --</option>
+                    </select>
+                    <div class="um-hint">ถ้าเลือกห้อง ผู้ใช้จะเห็นเฉพาะห้องนั้นในหน้าเจ้าของ</div>
+                </div>
+            </div>
+
+            <div class="um-footer">
+                <button class="um-btn um-btn-primary" onclick="createUser()">💾 บันทึกเข้าทะเบียน</button>
+            </div>
         </div>
 
-        <div class="table-responsive">
-            <table class="gov-table">
-                <thead>
-                    <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>พื้นที่รับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
-                </thead>
-                <tbody id="userTableBody"></tbody>
-            </table>
+        <div class="um-card" style="margin-top:16px; padding:0; overflow:hidden;">
+            <div class="um-list-head"><h4>รายชื่อบุคลากรในทะเบียน</h4></div>
+            <div class="table-responsive">
+                <table class="gov-table">
+                    <thead>
+                        <tr><th>ชื่อบัญชี</th><th>ชื่อ - นามสกุล</th><th>สิทธิ์หน้าที่</th><th>พื้นที่รับผิดชอบ</th><th>การปฏิบัติการ</th></tr>
+                    </thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 <div id="editUserModal" class="modal">
-    <div class="modal-content" style="max-width: 520px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gov-border); padding-bottom:10px; margin-bottom:15px;">
-            <h3 style="margin:0;">ปรับปรุงข้อมูลทะเบียนและกำหนดรหัสผ่านใหม่</h3>
-            <button onclick="closeEditModal()" style="border:none; background:none; font-size:22px; cursor:pointer;">&times;</button>
-        </div>
-        <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">ชื่อบัญชีระบบ:</label>
-            <input type="text" id="editUsername" class="form-control">
-        </div>
-        <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">จดหมายอิเล็กทรอนิกส์:</label>
-            <input type="email" id="editEmail" class="form-control">
-        </div>
-        <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
-            <div style="flex:1; min-width: 140px;">
-                <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">ชื่อจริง:</label>
-                <input type="text" id="editFirstName" class="form-control">
-            </div>
-            <div style="flex:1; min-width: 140px;">
-                <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">นามสกุล:</label>
-                <input type="text" id="editLastName" class="form-control">
-            </div>
-        </div>
-        <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">สิทธิ์หน้าที่:</label>
-            <select id="editRole" class="form-control">
-                <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
-                <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
-                <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบหมวดหมู่</option>
-                <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบหมวดหมู่</option>
-                <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
-            </select>
-        </div>
-        <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">หมวดหมู่ / พื้นที่หลัก:</label>
-            <select id="editCategory" multiple size="6" onchange="filterRoomsForEdit()" class="form-control">
-                <option value="">-- ไม่ล็อคพื้นที่ (ประเมินได้ทุกพื้นที่) --</option>
-            </select>
+    <div class="modal-content" style="max-width: 720px; width: 94vw;">
+        <div class="um-header">
+            <h3>✏️ แก้ไขข้อมูลบุคลากร</h3>
+            <button class="um-close" onclick="closeEditModal()" aria-label="ปิด">&times;</button>
         </div>
 
-        <div style="margin-bottom:15px;">
-            <label style="display:block; font-size:0.9em; font-weight:600; margin-bottom:4px;">พื้นที่รับผิดชอบ (ห้องย่อย):</label>
-            <select id="editAssignedArea" class="form-control" disabled>
-                <option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>
-            </select>
+        <div class="um-wrap">
+            <div class="um-card">
+                <h4><span class="um-step">1</span> ข้อมูลบัญชี</h4>
+                <div class="um-grid">
+                    <div class="um-field">
+                        <label for="editUsername">ชื่อบัญชีระบบ</label>
+                        <input type="text" id="editUsername" class="form-control">
+                    </div>
+                    <div class="um-field">
+                        <label for="editEmail">อีเมล</label>
+                        <input type="email" id="editEmail" class="form-control">
+                    </div>
+                    <div class="um-field">
+                        <label for="editFirstName">ชื่อจริง</label>
+                        <input type="text" id="editFirstName" class="form-control">
+                    </div>
+                    <div class="um-field">
+                        <label for="editLastName">นามสกุล</label>
+                        <input type="text" id="editLastName" class="form-control">
+                    </div>
+                    <div class="um-field" style="grid-column: 1 / -1;">
+                        <label for="editRole">สิทธิ์หน้าที่</label>
+                        <select id="editRole" class="form-control">
+                        <option value="Internal Assessor">คณะกรรมการตรวจประเมินภายใน</option>
+                        <option value="External Assessor">คณะกรรมการตรวจประเมินภายนอก</option>
+                        <option value="Area Owner">หัวหน้างาน/ผู้รับผิดชอบหมวดหมู่</option>
+                        <option value="Internal Assessor & Area Owner">กรรมการภายใน + ผู้รับผิดชอบหมวดหมู่</option>
+                        <option value="External Assessor & Area Owner">กรรมการภายนอก + ผู้รับผิดชอบหมวดหมู่</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="um-card">
+                <h4><span class="um-step">2</span> หมวดหมู่ที่รับผิดชอบ <small>(เลือกได้หลายหมวด)</small></h4>
+                <div id="editCategory" class="cat-picker" data-onchange="filterRoomsForEdit"></div>
+                <div class="um-hint">ไม่เลือกหมวดเลย = ประเมินได้ทุกพื้นที่</div>
+
+                <div class="um-field" style="margin-top:16px; max-width:460px;">
+                    <label for="editAssignedArea">ห้องย่อย <span style="font-weight:400; color:#64748b;">(ไม่บังคับ)</span></label>
+                    <select id="editAssignedArea" class="form-control" disabled>
+                        <option value="">-- กรุณาเลือกหมวดหมู่ก่อน --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="um-card um-pw">
+                <h4>🔑 รหัสผ่านใหม่ <small>(ไม่บังคับ — เว้นว่างไว้หากคงรหัสเดิม)</small></h4>
+                <input type="password" id="editPassword" class="form-control" placeholder="พิมพ์รหัสผ่านใหม่ถ้าต้องการเปลี่ยน" autocomplete="new-password">
+            </div>
+
+            <div class="um-footer">
+                <button class="um-btn um-btn-ghost" onclick="closeEditModal()">ยกเลิก</button>
+                <button class="um-btn um-btn-warn" onclick="submitEditUser()">บันทึกการแก้ไข</button>
+            </div>
         </div>
-        <div style="background:#fff1f2; padding:12px; border-radius:4px; border-left:4px solid #b91c1c; margin-bottom:15px;">
-            <label style="color:#b91c1c; font-weight:700; font-size:0.9em;">🔑 กำหนดรหัสผ่านใหม่ (โดยนายทะเบียน):</label>
-            <input type="password" id="editPassword" placeholder="ระบุรหัสผ่านใหม่ (เว้นว่างไว้หากคงรหัสเดิม)" class="form-control" style="margin-top:6px;">
-        </div>
-        <button onclick="submitEditUser()" class="btn-table" style="background:#ea580c; color:white; width:100%; padding:10px;">
-            บันทึกการปรับปรุงข้อมูลทะเบียน
-        </button>
     </div>
 </div>
 
@@ -1104,15 +1175,8 @@
                 const categories = [...new Set(allAreasData.map(area => area.category ? area.category.trim() : ''))]
                     .filter(cat => cat !== '' && !/^\s*[*(\[]|ปิดใช้/.test(cat)); // ตัดหมายเหตุของห้อง (เช่น *(ปิดใช้...)) ออกจากหมวดหมู่
                 
-                let catOptions = '';
-                categories.forEach(cat => {
-                    catOptions += `<option value="${cat}">${cat}</option>`;
-                });
-
-                const newCatSelect = document.getElementById('newCategory');
-                const editCatSelect = document.getElementById('editCategory');
-                if (newCatSelect) newCatSelect.innerHTML = catOptions;
-                if (editCatSelect) editCatSelect.innerHTML = catOptions;
+                renderCategoryPicker('newCategory', categories, 'filterRoomsForNew');
+                renderCategoryPicker('editCategory', categories, 'filterRoomsForEdit');
 
             } catch (error) {
                 console.error("โหลดข้อมูลพื้นที่ไม่สำเร็จ:", error);
@@ -1137,13 +1201,13 @@
             const roomSelect = document.getElementById(targetSelectId);
             
             if (!category) {
-                roomSelect.innerHTML = '<option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>';
+                roomSelect.innerHTML = '<option value="">-- กรุณาเลือกหมวดหมู่ก่อน --</option>';
                 roomSelect.disabled = true;
                 return;
             }
 
             roomSelect.disabled = false;
-            let roomOptions = '<option value="">-- ทุกห้องในหมวดนี้ (ล็อคทั้งหมวดหมู่) --</option>';
+            let roomOptions = '<option value="">-- ทุกห้องในหมวดที่เลือก --</option>';
             
             // ดึงมาเฉพาะห้องที่ตรงกับหมวด (ใช้ trim() ให้ตรงกัน)
             const filteredRooms = allAreasData.filter(area => area.category && cats.includes(area.category.trim()));
@@ -1155,15 +1219,55 @@
             roomSelect.innerHTML = roomOptions;
         }
 
-    // ---- หมวดหมู่หลายรายการ: อ่าน/ตั้งค่าจาก dropdown แบบ multiple ----
+    // ---- ตัวเลือกหมวดหมู่ (ติ๊กได้หลายหมวด) ----
+    function escAttr(v) {
+        return String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+    function chipHtml(value, checked) {
+        return `<label class="cat-chip${checked ? ' on' : ''}"><input type="checkbox" value="${escAttr(value)}"${checked ? ' checked' : ''}><span>${escAttr(value)}</span></label>`;
+    }
+    function bindPicker(box) {
+        box.querySelectorAll('input[type=checkbox]').forEach(inp => {
+            inp.onchange = () => {
+                inp.closest('.cat-chip').classList.toggle('on', inp.checked);
+                const fn = window[box.dataset.onchange];
+                if (typeof fn === 'function') fn();
+            };
+        });
+    }
+    function renderCategoryPicker(containerId, categories, onChangeFn) {
+        const box = document.getElementById(containerId);
+        if (!box) return;
+        const prev = getSelectedCats(containerId);
+        box.dataset.onchange = onChangeFn;
+        box.innerHTML = categories.length
+            ? categories.map(c => chipHtml(c, prev.includes(c))).join('')
+            : '<div class="cat-empty">ยังไม่มีหมวดหมู่ในฐานข้อมูล (กรุณารัน seed)</div>';
+        bindPicker(box);
+    }
+    function ensureCategoryChip(containerId, value, onChangeFn) {
+        const box = document.getElementById(containerId);
+        if (!box) return;
+        box.dataset.onchange = onChangeFn;
+        const exists = [...box.querySelectorAll('input[type=checkbox]')].some(i => i.value === value);
+        if (!exists) {
+            const empty = box.querySelector('.cat-empty');
+            if (empty) empty.remove();
+            box.insertAdjacentHTML('beforeend', chipHtml(value, false));
+            bindPicker(box);
+        }
+    }
     function getSelectedCats(id) {
-        const el = document.getElementById(id);
-        return el ? [...el.options].filter(o => o.selected && o.value).map(o => o.value) : [];
+        const box = document.getElementById(id);
+        return box ? [...box.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value) : [];
     }
     function setSelectedCats(id, values) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        [...el.options].forEach(o => { o.selected = values.includes(o.value); });
+        const box = document.getElementById(id);
+        if (!box) return;
+        box.querySelectorAll('input[type=checkbox]').forEach(i => {
+            i.checked = values.includes(i.value);
+            i.closest('.cat-chip').classList.toggle('on', i.checked);
+        });
     }
 
     async function loadUsers() {
@@ -1290,28 +1394,18 @@
         document.getElementById('editRole').value = user.role || 'Internal Assessor';
         document.getElementById('editPassword').value = '';
 
-        const editCategory = document.getElementById('editCategory');
         const editSelect = document.getElementById('editAssignedArea');
-        
-        // รีเซ็ตค่าหน้าต่างให้ว่างก่อน
-        if (editCategory) editCategory.value = "";
         if (editSelect) {
-            editSelect.innerHTML = '<option value="">-- กรุณาเลือกพื้นที่หลักก่อน --</option>';
+            editSelect.innerHTML = '<option value="">-- กรุณาเลือกหมวดหมู่ก่อน --</option>';
             editSelect.disabled = true;
         }
 
         const lockCats = (Array.isArray(user.assignedCategories) && user.assignedCategories.length ? user.assignedCategories : [user.assignedCategory || '']).filter(Boolean);
         const lockAreaId = user.assignedArea ? String(user.assignedArea._id || user.assignedArea) : '';
-        if (lockCats.length && editCategory) {
-            lockCats.forEach(c => {
-                if (![...editCategory.options].some(o => o.value === c)) {
-                    editCategory.insertAdjacentHTML('beforeend', `<option value="${c}">${c}</option>`);
-                }
-            });
-            setSelectedCats('editCategory', lockCats);
-            filterRoomsForEdit();
-            if (editSelect && lockAreaId) editSelect.value = lockAreaId;
-        }
+        lockCats.forEach(c => ensureCategoryChip('editCategory', c, 'filterRoomsForEdit'));
+        setSelectedCats('editCategory', lockCats);
+        filterRoomsForEdit();
+        if (editSelect && lockAreaId) editSelect.value = lockAreaId;
         document.getElementById('editUserModal').style.display = 'flex';
     }
 
